@@ -8,7 +8,7 @@ public class TreasureCard extends Card {
     private final TreasureType treasureType;
 
     public TreasureCard(TreasureType type) {
-        super(CardType.TREASURE, type.name() + "之证", "收集" + type + "宝藏的凭证");
+        super(CardType.TREASURE, type.name(), "收集" + type + "宝藏的凭证");
         this.treasureType = type;
     }
 

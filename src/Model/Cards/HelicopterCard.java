@@ -3,7 +3,7 @@ package Model.Cards;
 
 public class HelicopterCard extends SpecialCard {
     public HelicopterCard() {
-        super("直升机", "移动任意玩家到安全位置");
+        super("Helicopter", "移动任意玩家到安全位置");
     }
 
     @Override

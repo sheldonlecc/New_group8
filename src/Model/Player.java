@@ -4,11 +4,13 @@ package Model;
 import Model.Cards.Card;
 import Model.Cards.HandCard;
 import Model.Cards.HandCard.HandCardFullException;
+import Model.Role.Role;
 import Model.Tile;
 
 public class Player {
     private final HandCard handCard = new HandCard();
     private Tile currentTile;
+    private Role role;
 
     public void addCard(Card card) {
         try {
@@ -33,5 +35,13 @@ public class Player {
 
     public Tile getCurrentTile() {
         return currentTile;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

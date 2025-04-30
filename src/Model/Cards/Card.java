@@ -3,6 +3,9 @@ package Model.Cards;
 
 import Model.Enumeration.CardType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class Card {
     private final CardType type;
     private final String name;
@@ -18,4 +21,5 @@ public abstract class Card {
 
     public CardType getType() { return type; }
     public String getName() { return name; }
+    public String getDescription() { return description; }
 }

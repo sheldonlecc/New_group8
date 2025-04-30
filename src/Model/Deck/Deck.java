@@ -24,7 +24,7 @@ public abstract class Deck<T extends Card> {
         discardPile.push(card);
     }
 
-    private void reshuffleDiscardPile() {
+    public void reshuffleDiscardPile() {
         drawPile.addAll(discardPile);
         discardPile.clear();
         shuffle();

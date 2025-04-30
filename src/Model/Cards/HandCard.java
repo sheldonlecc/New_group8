@@ -6,7 +6,7 @@ import java.util.List;
 
 public class HandCard {
     private final List<Card> cards;
-    private static final int MAX_SIZE = 5;
+    private static final int MAX_SIZE = 7;
 
     public HandCard() {
         this.cards = new ArrayList<>();
