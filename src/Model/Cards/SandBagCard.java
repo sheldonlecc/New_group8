@@ -1,6 +1,7 @@
 package Model.Cards;
 
 import Model.Enumeration.CardType;
+import Model.Enumeration.TileState;
 import Model.Tile;
 
 /**
@@ -36,8 +37,9 @@ public class SandbagCard extends Card {
             return false;
         }
 
-        // 检查目标板块是否存在且未被淹没
-        return targetTile.isFlooded() && !targetTile.isSunk();
+        // 检查目标板块是否被淹没但未沉没
+        TileState state = targetTile.getState();
+        return state == TileState.FLOODED;
     }
 
     /**
@@ -50,8 +52,8 @@ public class SandbagCard extends Card {
             return false;
         }
 
-        // 加固目标板块
-        targetTile.dry();
+        // 加固目标板块（将状态从FLOODED改为NORMAL）
+        targetTile.setState(TileState.NORMAL);
         this.targetTile = targetTile;
         
         // 使用后禁用卡牌
@@ -86,7 +88,7 @@ public class SandbagCard extends Card {
     @Override
     public String toString() {
         return String.format("%s - 目标板块: %s", super.toString(), 
-            targetTile != null ? targetTile.getTileName().getDisplayName() : "未指定");
+            targetTile != null ? targetTile.getName().getDisplayName() : "未指定");
     }
 
     /**
