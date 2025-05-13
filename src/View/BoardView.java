@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import Controller.GameController;
 import Model.WaterLevel;
+import Model.Tile;
+import Model.Enumeration.TileName;
 
 public class BoardView extends JPanel {
     private MapView mapView;
@@ -15,7 +17,9 @@ public class BoardView extends JPanel {
 
     public BoardView(int playerCount, String mapType) {
         this.playerCount = playerCount;
-        this.gameController = new GameController(playerCount);
+        // 创建直升机场瓦片（使用FOOLS_LANDING作为直升机场）
+        Tile helicopterTile = new Tile(2, 2, TileName.FOOLS_LANDING);
+        this.gameController = new GameController(playerCount, helicopterTile);
         // 从GameController获取PlayerInfoView实例
         this.playerInfoViews = new PlayerInfoView[playerCount];
         for (int i = 0; i < playerCount; i++) {

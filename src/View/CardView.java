@@ -2,6 +2,7 @@ package View;
 
 import Model.Cards.Card;
 import Model.Cards.TreasureCard;
+import Model.Enumeration.CardType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -63,8 +64,6 @@ public class CardView extends JButton {
         // 设置卡牌布局
         setLayout(new BorderLayout(2, 2));
         
-
-
         updateCardStyle();
     }
     
@@ -75,7 +74,9 @@ public class CardView extends JButton {
                 case FLOOD:
                     setBackground(new Color(30, 144, 255)); // 蓝色
                     break;
-                case SPECIAL:
+                case HELICOPTER:
+                case SAND_BAG:
+                case WATER_RISE:
                     setBackground(new Color(147, 112, 219)); // 紫色
                     break;
                 default:

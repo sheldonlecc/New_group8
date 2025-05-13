@@ -28,6 +28,33 @@ public class Tile {
         }
     }
 
+    /**
+     * 检查瓦片是否被淹没
+     * @return 如果瓦片状态为FLOODED则返回true
+     */
+    public boolean isFlooded() {
+        return state == TileType.FLOODED;
+    }
+
+    /**
+     * 检查瓦片是否已沉没
+     * @return 如果瓦片状态为SUNKEN则返回true
+     */
+    public boolean isSunk() {
+        return state == TileType.SUNKEN;
+    }
+
+    /**
+     * 将瓦片恢复为干燥状态
+     * 如果瓦片已被淹没，则将其恢复为干燥状态
+     * 如果瓦片已沉没，则不做任何操作
+     */
+    public void dry() {
+        if (state == TileType.FLOODED) {
+            state = TileType.DRY;
+        }
+    }
+
     public TileType getState() {
         return state;
     }

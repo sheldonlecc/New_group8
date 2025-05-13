@@ -6,6 +6,9 @@ import View.PlayerInfoView;
 import Model.Deck.TreasureDeck;
 import Model.Cards.Card;
 import Model.Cards.WaterRiseCard;
+import Model.Tile;
+import Model.Enumeration.TileName;
+import Model.Enumeration.TileType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +22,14 @@ public class GameController {
     private final TreasureDeck treasureDeck;
     private int currentPlayerIndex = 0;
     private static final int MAX_ACTIONS_PER_TURN = 3;
+    private final Tile helicopterTile;  // 直升机场位置
 
-    public GameController(int playerCount) {
+    public GameController(int playerCount, Tile helicopterTile) {
+        this.helicopterTile = helicopterTile;
         players = new ArrayList<>();
         playerInfoViews = new ArrayList<>();
         cardController = new CardController(this);
-        treasureDeck = new TreasureDeck();
+        treasureDeck = new TreasureDeck(helicopterTile);
 
         // 初始化玩家和对应的信息视图
         for (int i = 0; i < playerCount; i++) {

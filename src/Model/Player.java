@@ -11,6 +11,7 @@ public class Player {
     private final HandCard handCard = new HandCard();
     private Tile currentTile;
     private Role role;
+    private boolean isRescued = false;  // 是否已获救
 
     public void addCard(Card card) {
         try {
@@ -43,5 +44,20 @@ public class Player {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    /**
+     * 标记玩家为已获救状态
+     */
+    public void rescue() {
+        this.isRescued = true;
+    }
+
+    /**
+     * 检查玩家是否已获救
+     * @return 如果玩家已获救则返回true
+     */
+    public boolean isRescued() {
+        return isRescued;
     }
 }

@@ -3,7 +3,7 @@ package Controller;
 import Model.Cards.Card;
 import Model.Cards.TreasureCard;
 import Model.Cards.FloodCard;
-import Model.Cards.SandBagCard;
+import Model.Cards.SandbagCard;
 import Model.Cards.HelicopterCard;
 import Model.Cards.WaterRiseCard;
 import Model.Player;
@@ -44,24 +44,23 @@ public class CardController implements ActionListener {
                 handleDiscardCard(card);
             }
         } else {
-            if (card instanceof SandBagCard) {
-                handleSandBagCard((SandBagCard) card);
+            if (card instanceof SandbagCard) {
+                handleSandbagCard((SandbagCard) card);
             } else if (card instanceof HelicopterCard) {
                 handleHelicopterCard((HelicopterCard) card);
             } 
         }
     }
 
-    private void handleSandBagCard(SandBagCard card) {
+    private void handleSandbagCard(SandbagCard card) {
         // 处理沙袋卡点击逻辑
-        //gameController.handleSandBagUse(card);
+        //gameController.handleSandbagUse(card);
     }
 
     private void handleHelicopterCard(HelicopterCard card) {
         // 处理直升机卡点击逻辑
         //gameController.handleHelicopterUse(card);
     }
-
 
     public void addCard(PlayerInfoView playerInfoView, Card card) {
         JPanel cardsPanel = playerInfoView.getCardsPanel();
