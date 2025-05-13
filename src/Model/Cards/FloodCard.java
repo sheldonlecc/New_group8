@@ -4,6 +4,7 @@ package Model.Cards;
 import Model.Enumeration.CardType;
 import Model.Enumeration.TileType;
 import Model.Tile;
+import Model.Enumeration.TileState;
 
 /**
  * 洪水卡
@@ -38,7 +39,7 @@ public class FloodCard extends Card {
     public boolean canUse() {
         return super.canUse() && 
                targetTile != null && 
-               targetTile.getState() != TileType.SUNKEN;
+               targetTile.getState() != TileState.SUNK;
     }
 
     /**
@@ -55,13 +56,13 @@ public class FloodCard extends Card {
 
         // 根据地块当前状态执行相应操作
         switch (targetTile.getState()) {
-            case DRY:
+            case NORMAL:
                 // 如果地块是干燥的，将其淹没
-                targetTile.flood();
+                targetTile.setState(TileState.FLOODED);
                 break;
             case FLOODED:
                 // 如果地块已被淹没，使其沉没
-                targetTile.flood();  // 再次调用flood()使其沉没
+                targetTile.setState(TileState.SUNK);
                 break;
             default:
                 // 如果地块已经沉没，不做任何操作
@@ -97,6 +98,6 @@ public class FloodCard extends Card {
      */
     @Override
     public String toString() {
-        return String.format("%s - 目标地块: %s", super.toString(), targetTile.getTileName());
+        return String.format("%s - 目标地块: %s", super.toString(), targetTile.getName());
     }
 }

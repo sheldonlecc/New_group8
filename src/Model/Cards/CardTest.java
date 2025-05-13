@@ -2,6 +2,7 @@ package Model.Cards;
 
 import Model.Enumeration.TreasureType;
 import Model.Enumeration.TileName;
+import Model.Enumeration.TileState;
 import Model.Tile;
 import Model.Player;
 import java.util.ArrayList;
@@ -51,10 +52,10 @@ public class CardTest {
             }
             
             // 测试使用条件
-            Tile testTile = new Tile(2, 2, TileName.FOOLS_LANDING);
+            Tile testTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
             List<Player> players = new ArrayList<>();
             Player player = new Player();
-            player.moveTo(testTile);  // 使用moveTo方法设置玩家位置
+            player.setCurrentTile(testTile);  // 使用setCurrentTile方法设置玩家位置
             players.add(player);
             
             if (card.canUse(players, testTile)) {
@@ -69,7 +70,7 @@ public class CardTest {
         System.out.println("\n=== 测试特殊卡 ===");
         
         // 测试直升机卡
-        Tile helicopterTile = new Tile(2, 2, TileName.FOOLS_LANDING);
+        Tile helicopterTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
         HelicopterCard helicopterCard = new HelicopterCard(helicopterTile);
         testBasicCardInfo(helicopterCard, "直升机救援卡");
         
@@ -78,13 +79,13 @@ public class CardTest {
         testBasicCardInfo(sandbagCard, "沙袋卡");
         
         // 测试沙袋卡使用功能
-        Tile floodedTile = new Tile(1, 1, TileName.CORAL_PALACE);
-        floodedTile.flood(); // 将瓦片设置为被淹没状态
+        Tile floodedTile = new Tile(TileName.CORAL_PALACE, 1, 1);
+        floodedTile.setState(TileState.FLOODED); // 将瓦片设置为被淹没状态
         if (sandbagCard.canUse(floodedTile)) {
             addTestResult("✓ 沙袋卡可以用于被淹没的瓦片");
             if (sandbagCard.useCard(floodedTile)) {
                 addTestResult("✓ 沙袋卡成功加固瓦片");
-                if (!floodedTile.isFlooded()) {
+                if (floodedTile.getState() == TileState.NORMAL) {
                     addTestResult("✓ 瓦片成功恢复干燥状态");
                 } else {
                     addTestResult("✗ 瓦片状态未正确更新");
@@ -105,7 +106,7 @@ public class CardTest {
         System.out.println("\n=== 测试洪水卡 ===");
         
         // 测试洪水卡
-        Tile targetTile = new Tile(1, 1, TileName.CORAL_PALACE);
+        Tile targetTile = new Tile(TileName.CORAL_PALACE, 1, 1);
         FloodCard floodCard = new FloodCard(targetTile);
         testBasicCardInfo(floodCard, "洪水卡");
         
@@ -113,7 +114,7 @@ public class CardTest {
         if (floodCard.canUse()) {
             addTestResult("✓ 洪水卡可以使用");
             floodCard.use();
-            if (targetTile.isFlooded()) {
+            if (targetTile.getState() == TileState.FLOODED) {
                 addTestResult("✓ 洪水卡成功淹没目标瓦片");
             } else {
                 addTestResult("✗ 洪水卡未能正确淹没目标瓦片");

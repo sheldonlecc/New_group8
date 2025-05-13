@@ -9,6 +9,7 @@ import Model.Cards.WaterRiseCard;
 import Model.Tile;
 import Model.Enumeration.TileName;
 import Model.Enumeration.TileType;
+import Model.Cards.HandCard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +59,14 @@ public class GameController {
             for (int j = 0; j < 2; j++) {
                 Card card = treasureDeck.drawInitialCard();
                 if (card != null) {
-                    player.addCard(card);
-                    playerInfoViews.get(i).addCard(card);
+                    try {
+                        player.addCard(card);
+                        playerInfoViews.get(i).addCard(card);
+                    } catch (HandCard.HandCardFullException e) {
+                        System.err.println("初始发牌时手牌已满: " + e.getMessage());
+                        // 如果手牌已满，将卡牌放回牌堆
+                        treasureDeck.discard(card);
+                    }
                 }
             }
         }
@@ -179,9 +186,15 @@ public class GameController {
             Card card = treasureDeck.draw();
             if (card != null) {
                 drawnCards.add(card);
-                currentPlayer.addCard(card);
-                PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
-                cardController.addCard(playerInfoView, card);
+                try {
+                    currentPlayer.addCard(card);
+                    PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
+                    cardController.addCard(playerInfoView, card);
+                } catch (HandCard.HandCardFullException e) {
+                    System.err.println("回合结束时手牌已满: " + e.getMessage());
+                    // 如果手牌已满，将卡牌放回牌堆
+                    treasureDeck.discard(card);
+                }
             }
         }
 

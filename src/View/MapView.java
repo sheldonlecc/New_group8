@@ -79,10 +79,10 @@ public class MapView extends JPanel {
                 if (currentMapTiles.contains(currentPoint)) {
                     mapButtons[i][j].setEnabled(true);
                     // 创建Tile对象并分配随机名称
-                    tiles[i][j] = new Tile(i, j, availableTileNames.get(tileNameIndex++));
+                    tiles[i][j] = new Tile(availableTileNames.get(tileNameIndex++), i, j);
                     
                     // 设置按钮文本为地点名称
-                    mapButtons[i][j].setText(tiles[i][j].getTileName().getDisplayName());
+                    mapButtons[i][j].setText(tiles[i][j].getName().getDisplayName());
                     
                     // 尝试加载并设置图片
                     try {
