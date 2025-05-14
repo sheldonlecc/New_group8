@@ -34,11 +34,18 @@ public class CardController implements ActionListener {
         Object source = e.getSource();
         if (source instanceof CardView) {
             CardView cardView = (CardView) source;
-            handleCardClick(cardView.getCard());
+            System.out.println("卡牌被点击 - 是否在弃牌模式: " + isDiscardMode); // 调试信息
+            if (isDiscardMode) {
+                System.out.println("当前正在弃牌模式，处理卡牌点击"); // 调试信息
+                handleCardClick(cardView.getCard());
+            } else {
+                System.out.println("不在弃牌模式，忽略卡牌点击"); // 调试信息
+            }
         }
     }
 
     private void handleCardClick(Card card) {
+        System.out.println("处理卡牌点击 - 卡牌类型: " + (card != null ? card.getClass().getSimpleName() : "null")); // 调试信息
         if (isDiscardMode && currentDiscardingPlayer != null) {
             if (card != null) {
                 handleDiscardCard(card);
@@ -98,15 +105,40 @@ public class CardController implements ActionListener {
     }
 
     public void enableDiscardMode(PlayerInfoView playerInfoView, int numCardsToDiscard) {
+        // 如果不需要弃牌，直接返回
+        if (numCardsToDiscard <= 0) {
+            System.out.println("不需要弃牌，跳过弃牌模式"); // 调试信息
+            return;
+        }
+        
+        System.out.println("进入弃牌模式 - 需要弃掉 " + numCardsToDiscard + " 张卡牌"); // 调试信息
         isDiscardMode = true;
         cardsToDiscard = numCardsToDiscard;
         cardsDiscarded = 0;
         currentDiscardingPlayer = playerInfoView;
+        
+        // 启用所有卡牌的点击事件
+        JPanel cardsPanel = playerInfoView.getCardsPanel();
+        System.out.println("当前卡牌面板中的组件数量: " + cardsPanel.getComponentCount()); // 调试信息
+        
+        for (Component component : cardsPanel.getComponents()) {
+            if (component instanceof CardView) {
+                CardView cardView = (CardView) component;
+                cardView.setEnabled(true);
+                cardView.setToolTipText("点击弃掉此卡牌");
+                System.out.println("启用卡牌点击事件: " + cardView.getCard().getClass().getSimpleName()); // 调试信息
+            }
+        }
+        
         // 显示弃牌提示
-        JOptionPane.showMessageDialog(null, "请选择" + cardsToDiscard + "张卡牌弃掉");
+        JOptionPane.showMessageDialog(null, 
+            "您的手牌超过了5张，请选择" + cardsToDiscard + "张卡牌弃掉",
+            "弃牌阶段",
+            JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void handleDiscardCard(Card card) {
+        System.out.println("处理弃牌 - 当前已弃掉 " + cardsDiscarded + "/" + cardsToDiscard + " 张卡牌"); // 调试信息
         if (cardsDiscarded < cardsToDiscard) {
             // 获取当前玩家
             Player currentPlayer = gameController.getCurrentPlayer();
@@ -114,8 +146,10 @@ public class CardController implements ActionListener {
             currentPlayer.getHandCard().removeCard(card);
             removeCard(currentDiscardingPlayer, card);
             cardsDiscarded++;
+            System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
 
             if (cardsDiscarded == cardsToDiscard) {
+                System.out.println("弃牌完成，退出弃牌模式"); // 调试信息
                 // 弃牌完成，退出弃牌模式
                 isDiscardMode = false;
                 // 更新玩家手牌显示
@@ -125,7 +159,10 @@ public class CardController implements ActionListener {
                 gameController.startNewTurn();
             } else {
                 // 显示还需要弃掉多少张牌
-                JOptionPane.showMessageDialog(null, "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌");
+                JOptionPane.showMessageDialog(null, 
+                    "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
+                    "弃牌阶段",
+                    JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }

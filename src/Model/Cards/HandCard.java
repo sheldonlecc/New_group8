@@ -56,6 +56,19 @@ public class HandCard implements Serializable {
     }
 
     /**
+     * 添加卡牌到手牌，不检查手牌上限
+     * @param card 要添加的卡牌
+     */
+    public void addCardWithoutCheck(Card card) {
+        if (card == null) {
+            throw new IllegalArgumentException("卡牌不能为空");
+        }
+        cards.add(card);
+        notifyCardAdded(card);
+        notifyHandCardChanged();
+    }
+
+    /**
      * 添加卡牌到手牌
      * @param card 要添加的卡牌
      * @throws HandCardFullException 当手牌已满时抛出

@@ -193,15 +193,10 @@ public class GameController {
             Card card = treasureDeck.draw();
             if (card != null) {
                 drawnCards.add(card);
-                try {
-                    currentPlayer.addCard(card);
-                    PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
-                    cardController.addCard(playerInfoView, card);
-                } catch (HandCard.HandCardFullException e) {
-                    System.err.println("回合结束时手牌已满: " + e.getMessage());
-                    // 如果手牌已满，将卡牌放回牌堆
-                    treasureDeck.discard(card);
-                }
+                // 直接添加卡牌到玩家手中，不检查手牌上限
+                currentPlayer.getHandCard().addCardWithoutCheck(card);
+                PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
+                cardController.addCard(playerInfoView, card);
             }
         }
 
@@ -222,13 +217,22 @@ public class GameController {
 
         // 检查手牌数量，如果超过5张，进入弃牌阶段
         int cardCount = currentPlayer.getHandCard().getCards().size();
+        System.out.println("当前玩家手牌数量: " + cardCount); // 调试信息
+        
+        // 修改判断条件，当手牌数量大于5张时就进入弃牌阶段
         if (cardCount > 5) {
             int cardsToDiscard = cardCount - 5;
+            System.out.println("需要弃掉 " + cardsToDiscard + " 张卡牌"); // 调试信息
+            
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+            
             // 禁用所有动作按钮，只允许选择弃牌
             playerView.setButtonsEnabled(false);
+            
             // 启用卡牌选择模式
+            System.out.println("准备进入弃牌模式，当前玩家: " + playerIndex); // 调试信息
             cardController.enableDiscardMode(playerView, cardsToDiscard);
+            System.out.println("已进入弃牌模式"); // 调试信息
             return; // 不开始新回合，等待玩家选择弃牌
         }
         
