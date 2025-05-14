@@ -3,6 +3,7 @@ package Controller;
 import Model.Player;
 import Model.Role.Role;
 import View.PlayerInfoView;
+import View.WaterLevelView;
 import Model.Deck.TreasureDeck;
 import Model.Cards.Card;
 import Model.Cards.WaterRiseCard;
@@ -24,13 +25,19 @@ public class GameController {
     private int currentPlayerIndex = 0;
     private static final int MAX_ACTIONS_PER_TURN = 3;
     private final Tile helicopterTile;  // 直升机场位置
+    private WaterLevelView waterLevelView;  // 添加水位视图
+    private int currentWaterLevel = 1;  // 初始水位设置为1
 
-    public GameController(int playerCount, Tile helicopterTile) {
+    public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         this.helicopterTile = helicopterTile;
+        this.waterLevelView = waterLevelView;
         players = new ArrayList<>();
         playerInfoViews = new ArrayList<>();
         cardController = new CardController(this);
         treasureDeck = new TreasureDeck(helicopterTile);
+
+        // 初始化水位
+        waterLevelView.updateWaterLevel(currentWaterLevel);
 
         // 初始化玩家和对应的信息视图
         for (int i = 0; i < playerCount; i++) {
@@ -206,7 +213,10 @@ public class GameController {
                 currentPlayer.getHandCard().removeCard(card);
                 playerInfoViews.get(playerIndex).removeCard(card);
                 treasureDeck.discard(card);
-                JOptionPane.showMessageDialog(null, "水位上升了一格！");
+                // 更新水位
+                currentWaterLevel++;
+                waterLevelView.updateWaterLevel(currentWaterLevel);
+                JOptionPane.showMessageDialog(null, "水位上升了一格！当前水位：" + currentWaterLevel);
             }
         }
 

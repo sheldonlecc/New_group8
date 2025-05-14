@@ -19,7 +19,13 @@ public class BoardView extends JPanel {
         this.playerCount = playerCount;
         // 创建直升机场瓦片（使用FOOLS_LANDING作为直升机场）
         Tile helicopterTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
-        this.gameController = new GameController(playerCount, helicopterTile);
+        
+        // 先创建WaterLevelView实例
+        this.waterLevelView = new WaterLevelView();
+        
+        // 创建GameController时传入waterLevelView
+        this.gameController = new GameController(playerCount, helicopterTile, waterLevelView);
+        
         // 从GameController获取PlayerInfoView实例
         this.playerInfoViews = new PlayerInfoView[playerCount];
         for (int i = 0; i < playerCount; i++) {
@@ -79,7 +85,6 @@ public class BoardView extends JPanel {
         contentPanel.add(mapView, gbc);
 
         // 右侧水位计
-        waterLevelView = new WaterLevelView();
         waterLevelView.updateWaterLevel(WaterLevel.getInstance().getCurrentLevel()); // 初始化时设置当前水位
         WaterLevel.setWaterLevelView(waterLevelView); // 设置WaterLevelView实例
         gbc.gridx = 2;
