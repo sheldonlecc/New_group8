@@ -219,11 +219,9 @@ public class GameController {
         int cardCount = currentPlayer.getHandCard().getCards().size();
         System.out.println("当前玩家手牌数量: " + cardCount); // 调试信息
         
-        // 修改判断条件，当手牌数量大于5张时就进入弃牌阶段
         if (cardCount > 5) {
             int cardsToDiscard = cardCount - 5;
             System.out.println("需要弃掉 " + cardsToDiscard + " 张卡牌"); // 调试信息
-            
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             
             // 禁用所有动作按钮，只允许选择弃牌
