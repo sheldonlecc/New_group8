@@ -22,22 +22,37 @@ public class WaterLevelView extends JPanel {
         waterLevelImage = new JLabel();
         waterLevelImage.setPreferredSize(new Dimension(IMAGE_WIDTH, IMAGE_HEIGHT));
         waterLevelImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // 添加水位标签用于调试
+        waterLevelLabel = new JLabel("当前水位: 0");
+        waterLevelLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(waterLevelLabel);
+        
         updateWaterLevelImage(0);
         add(waterLevelImage);
     }
 
     private void updateWaterLevelImage(int level) {
         String imagePath = "/resources/WaterLevel/" + level + ".png";
+        System.out.println("正在尝试加载水位图像: " + imagePath); // 调试信息
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(imagePath));
-            Image img = icon.getImage().getScaledInstance(IMAGE_WIDTH, IMAGE_HEIGHT, Image.SCALE_SMOOTH);
-            waterLevelImage.setIcon(new ImageIcon(img));
+            if (icon.getImageLoadStatus() == MediaTracker.COMPLETE) {
+                Image img = icon.getImage().getScaledInstance(IMAGE_WIDTH, IMAGE_HEIGHT, Image.SCALE_SMOOTH);
+                waterLevelImage.setIcon(new ImageIcon(img));
+                System.out.println("成功加载水位图像: " + level); // 调试信息
+            } else {
+                System.err.println("无法加载水位图像: " + level); // 调试信息
+            }
         } catch (Exception e) {
+            System.err.println("加载水位图像时发生错误: " + e.getMessage()); // 调试信息
             e.printStackTrace();
         }
     }
 
     public void updateWaterLevel(int level) {
+        System.out.println("收到水位更新请求: " + level); // 调试信息
+        waterLevelLabel.setText("当前水位: " + level);
         updateWaterLevelImage(level);
     }
 }
