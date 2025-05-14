@@ -21,7 +21,7 @@ public class HelicopterCard extends Card {
      * @param targetTile 目标位置（直升机场）
      */
     public HelicopterCard(Tile targetTile) {
-        super(CardType.HELICOPTER, "直升机救援卡", "将所有玩家带离岛屿");
+        super(CardType.HELICOPTER, "Helicopter", "将所有玩家带离岛屿");
         this.targetTile = targetTile;
     }
 
