@@ -30,7 +30,7 @@ public class Player {
 
     /**
      * 构造函数
-     * 初始化玩家基本属性和事件监听器
+     * 初始化玩家基本属性
      */
     public Player() {
         this.handCard = new HandCard();
