@@ -54,4 +54,5 @@ public enum WaterLevel {
                 return null;
         }
     }
+    // 示例使用
 } 
