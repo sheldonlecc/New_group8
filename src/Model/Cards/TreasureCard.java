@@ -22,7 +22,7 @@ public class TreasureCard extends Card {
      */
     public TreasureCard(TreasureType treasureType) {
         super(CardType.TREASURE, 
-              String.format("%s宝藏卡", treasureType.getDisplayName()),
+              String.format("%s", treasureType.getDisplayName()),
               String.format("用于收集%s", treasureType.getDisplayName()));
         this.treasureType = treasureType;
     }

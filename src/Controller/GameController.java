@@ -202,7 +202,7 @@ public class GameController {
         List<Card> cards = currentPlayer.getHandCard().getCards();
         for (Card card : new ArrayList<>(cards)) {
             if (card instanceof WaterRiseCard) {
-                ((WaterRiseCard) card).use();
+                ((WaterRiseCard) card).useCard();
                 currentPlayer.getHandCard().removeCard(card);
                 playerInfoViews.get(playerIndex).removeCard(card);
                 treasureDeck.discard(card);

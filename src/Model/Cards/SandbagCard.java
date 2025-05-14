@@ -16,7 +16,7 @@ public class SandbagCard extends Card {
      * 创建沙袋卡
      */
     public SandbagCard() {
-        super(CardType.SAND_BAG, "沙袋卡", "加固一个即将被淹没的岛屿板块");
+        super(CardType.SAND_BAG, "SandBag", "加固一个即将被淹没的岛屿板块");
     }
 
     /**
@@ -102,4 +102,3 @@ public class SandbagCard extends Card {
             "请使用useCard(Tile targetTile)方法，该方法需要目标板块参数");
     }
 }
-//asdasdasdad

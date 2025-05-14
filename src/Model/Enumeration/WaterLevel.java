@@ -6,11 +6,11 @@ package Model.Enumeration;
  * 水位等级会影响抽牌数量和板块淹没速度
  */
 public enum WaterLevel {
-    LEVEL_1("水位1", 2),  // 初始水位，每回合抽2张洪水卡
-    LEVEL_2("水位2", 3),  // 每回合抽3张洪水卡
-    LEVEL_3("水位3", 4),  // 每回合抽4张洪水卡
-    LEVEL_4("水位4", 5),  // 每回合抽5张洪水卡
-    LEVEL_5("水位5", 6);  // 最高水位，每回合抽6张洪水卡
+    LEVEL_1("1", 2),  // 初始水位，每回合抽2张洪水卡
+    LEVEL_2("2", 3),  // 每回合抽3张洪水卡
+    LEVEL_3("3", 4),  // 每回合抽4张洪水卡
+    LEVEL_4("4", 5),  // 每回合抽5张洪水卡
+    LEVEL_5("5", 6);  // 最高水位，每回合抽6张洪水卡
 
     private final String displayName;  // 显示名称
     private final int floodCardCount;  // 每回合抽牌数量
@@ -54,4 +54,5 @@ public enum WaterLevel {
                 return null;
         }
     }
+    // 示例使用
 } 

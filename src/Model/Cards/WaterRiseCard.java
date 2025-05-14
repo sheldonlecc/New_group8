@@ -16,7 +16,7 @@ public class WaterRiseCard extends Card {
      * 创建水位上升卡
      */
     public WaterRiseCard() {
-        super(CardType.WATER_RISE, "水位上升卡", "提高水位等级，增加游戏难度");
+        super(CardType.WATER_RISE, "WaterRise", "提高水位等级，增加游戏难度");
     }
 
     /**

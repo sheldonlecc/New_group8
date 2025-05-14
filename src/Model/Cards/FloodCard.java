@@ -19,7 +19,7 @@ public class FloodCard extends Card {
      * @param targetTile 目标地块
      */
     public FloodCard(Tile targetTile) {
-        super(CardType.FLOOD, "洪水卡", "淹没指定地块，如果地块已被淹没则使其沉没");
+        super(CardType.FLOOD, "Flood", "淹没指定地块，如果地块已被淹没则使其沉没");
         this.targetTile = targetTile;
     }
 
