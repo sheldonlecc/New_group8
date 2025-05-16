@@ -63,6 +63,10 @@ public class MapController implements ActionListener {
         Tile targetTile = mapView.getTile(row, col);
         if (targetTile == null) {
             System.out.println("错误：目标板块不存在");
+            JOptionPane.showMessageDialog(mapView, 
+                "您点击了海洋区域，请选择有效的陆地板块进行移动", 
+                "无效移动", 
+                JOptionPane.WARNING_MESSAGE);
             exitMoveMode();
             return;
         }
@@ -111,6 +115,19 @@ public class MapController implements ActionListener {
     public void enterMoveMode(int playerIndex) {
         System.out.println("\n========== 进入移动模式 ==========");
         System.out.println("当前玩家: " + (playerIndex + 1));
+        
+        // 获取当前玩家并输出其位置信息
+        Player currentPlayer = gameController.getCurrentPlayer();
+        if (currentPlayer != null) {
+            Tile currentTile = currentPlayer.getCurrentTile();
+            if (currentTile != null) {
+                System.out.printf("当前位置: %s [%d, %d]\n", 
+                    currentTile.getName(),
+                    currentTile.getRow(),
+                    currentTile.getCol());
+            }
+        }
+        
         isMoveMode = true;
         currentPlayerIndex = playerIndex;
         System.out.println("========== 移动模式已进入 ==========\n");
