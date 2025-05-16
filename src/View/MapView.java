@@ -3,6 +3,7 @@ package View;
 import Model.Enumeration.TileType;
 import Model.Enumeration.TileName;
 import Model.Tile;
+import Model.TilePosition;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Point;
@@ -17,6 +18,7 @@ public class MapView extends JPanel {
     private static final int MAP_SIZE = 6;
     private static final int GAP_SIZE = 1;
     private static final int BUTTON_SIZE = 100;
+    private TilePosition tilePosition;
     
     private static final List<Point> CLASSIC_MAP = Arrays.asList(
         new Point(0, 2), new Point(0, 3),
@@ -48,6 +50,7 @@ public class MapView extends JPanel {
     private List<Point> currentMapTiles = CLASSIC_MAP;
 
     public MapView() {
+        tilePosition = new TilePosition();
         initializeUI();
     }
 
@@ -79,7 +82,10 @@ public class MapView extends JPanel {
                 if (currentMapTiles.contains(currentPoint)) {
                     mapButtons[i][j].setEnabled(true);
                     // 创建Tile对象并分配随机名称
-                    tiles[i][j] = new Tile(availableTileNames.get(tileNameIndex++), i, j);
+                    tiles[i][j] = new Tile(availableTileNames.get(tileNameIndex), i, j);
+                    
+                    // 将板块位置信息添加到TilePosition对象中
+                    tilePosition.addTilePosition(tiles[i][j].getName().name(), i, j);
                     
                     // 设置按钮文本为地点名称
                     mapButtons[i][j].setText(tiles[i][j].getName().getDisplayName());
@@ -95,6 +101,7 @@ public class MapView extends JPanel {
                     } catch (Exception e) {
                         System.err.println("无法加载图片: " + tiles[i][j].getImagePath());
                     }
+                    tileNameIndex++;
                 } else {
                     mapButtons[i][j].setEnabled(false);
                     mapButtons[i][j].setText(TileType.SUNKEN.name());
@@ -151,5 +158,9 @@ public class MapView extends JPanel {
         }
         revalidate();
         repaint();
+    }
+
+    public TilePosition getTilePosition() {
+        return tilePosition;
     }
 }

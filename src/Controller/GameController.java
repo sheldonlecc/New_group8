@@ -4,16 +4,19 @@ import Model.Player;
 import Model.Role.Role;
 import View.PlayerInfoView;
 import View.WaterLevelView;
+import View.MapView;
 import Model.Deck.TreasureDeck;
 import Model.Cards.Card;
 import Model.Cards.WaterRiseCard;
 import Model.Tile;
+import Model.TilePosition;
 import Model.Enumeration.TileName;
 import Model.Enumeration.TileType;
 import Model.Cards.HandCard;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 
@@ -27,36 +30,44 @@ public class GameController {
     private final Tile helicopterTile;  // 直升机场位置
     private WaterLevelView waterLevelView;  // 添加水位视图
     private int currentWaterLevel = 1;  // 初始水位设置为1
+    private TilePosition tilePosition;  // 添加TilePosition对象
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
+        System.out.println("\n========== 开始初始化游戏控制器 ==========");
+        this.players = new ArrayList<>();
+        this.playerInfoViews = new ArrayList<>();
+        this.cardController = new CardController(this);
+        this.treasureDeck = new TreasureDeck(helicopterTile);
         this.helicopterTile = helicopterTile;
         this.waterLevelView = waterLevelView;
-        players = new ArrayList<>();
-        playerInfoViews = new ArrayList<>();
-        cardController = new CardController(this);
-        treasureDeck = new TreasureDeck(helicopterTile);
+        this.tilePosition = null;  // 初始化为null，将在设置MapView时更新
 
-        // 初始化水位
-        waterLevelView.updateWaterLevel(currentWaterLevel);
-
-        // 初始化玩家和对应的信息视图
+        System.out.println("正在初始化 " + playerCount + " 个玩家...");
+        // 初始化玩家
         for (int i = 0; i < playerCount; i++) {
             Player player = new Player();
             players.add(player);
-            
             PlayerInfoView playerInfoView = new PlayerInfoView(this);
             playerInfoView.setPlayerName("Player " + (i + 1));
             playerInfoViews.add(playerInfoView);
         }
 
+        // 初始化水位
+        waterLevelView.updateWaterLevel(currentWaterLevel);
+
+        System.out.println("正在分配角色...");
         // 分配角色
         assignRoles();
         
+        System.out.println("正在发放初始卡牌...");
         // 初始发牌
         dealInitialCards();
         
+        System.out.println("正在初始化第一个玩家的回合...");
         // 初始化第一个玩家的回合
         initializeFirstTurn();
+        
+        System.out.println("========== 游戏控制器初始化完成 ==========\n");
     }
 
     private void dealInitialCards() {
@@ -237,5 +248,131 @@ public class GameController {
         startNewTurn();
     }
 
+    // 添加设置MapView的方法
+    public void setMapView(MapView mapView) {
+        System.out.println("\n========== 设置MapView ==========");
+        System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
+        this.tilePosition = mapView.getTilePosition();
+        System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
+        if (this.tilePosition != null) {
+            Map<String, int[]> positions = this.tilePosition.getAllTilePositions();
+            System.out.println("可用板块数量: " + (positions != null ? positions.size() : 0));
+            if (positions != null) {
+                System.out.println("可用板块列表:");
+                positions.forEach((name, pos) -> 
+                    System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
+            }
+            
+            // 在设置完tilePosition后初始化玩家位置
+            System.out.println("正在初始化玩家位置...");
+            initializePlayerPositions();
+        }
+        System.out.println("========== MapView设置完成 ==========\n");
+    }
 
+    // 获取特定板块的位置
+    public int[] getTilePosition(String tileName) {
+        if (tilePosition != null) {
+            return tilePosition.getTilePosition(tileName);
+        }
+        return null;
+    }
+
+    // 获取所有板块位置信息
+    public Map<String, int[]> getAllTilePositions() {
+        if (tilePosition != null) {
+            return tilePosition.getAllTilePositions();
+        }
+        return null;
+    }
+
+    /**
+     * 初始化玩家位置
+     * 将玩家随机分配到不同的板块上
+     */
+    private void initializePlayerPositions() {
+        System.out.println("\n========== 开始初始化玩家位置 ==========");
+        System.out.println("当前玩家数量: " + players.size());
+        
+        if (tilePosition == null) {
+            System.err.println("错误：tilePosition未初始化");
+            System.out.println("tilePosition对象: " + (tilePosition != null ? "非空" : "为空"));
+            System.out.println("========== 玩家位置初始化失败 ==========\n");
+            return;
+        }
+
+        // 获取所有可用的板块位置
+        Map<String, int[]> allPositions = tilePosition.getAllTilePositions();
+        System.out.println("获取到的板块位置信息: " + (allPositions != null ? "非空" : "为空"));
+        
+        if (allPositions == null || allPositions.isEmpty()) {
+            System.err.println("错误：没有可用的板块位置");
+            System.out.println("可用板块数量: " + (allPositions != null ? allPositions.size() : 0));
+            System.out.println("========== 玩家位置初始化失败 ==========\n");
+            return;
+        }
+
+        System.out.println("可用板块数量: " + allPositions.size());
+        System.out.println("可用板块列表:");
+        allPositions.forEach((name, pos) -> 
+            System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
+
+        // 将板块位置转换为列表，方便随机选择
+        List<String> availableTiles = new ArrayList<>(allPositions.keySet());
+        System.out.println("随机打乱前的板块顺序:");
+        availableTiles.forEach(tile -> System.out.println("  - " + tile));
+        
+        java.util.Collections.shuffle(availableTiles); // 随机打乱顺序
+        
+        System.out.println("随机打乱后的板块顺序:");
+        availableTiles.forEach(tile -> System.out.println("  - " + tile));
+
+        // 为每个玩家分配位置
+        System.out.println("\n开始为玩家分配位置:");
+        for (int i = 0; i < players.size(); i++) {
+            if (i >= availableTiles.size()) {
+                System.err.println("警告：可用板块数量不足");
+                break;
+            }
+
+            String tileName = availableTiles.get(i);
+            int[] position = allPositions.get(tileName);
+            
+            System.out.printf("正在为玩家 %d 分配位置:\n", i + 1);
+            System.out.printf("  选择的板块: %s\n", tileName);
+            System.out.printf("  板块位置: [%d, %d]\n", position[0], position[1]);
+            
+            // 创建新的Tile对象并设置玩家位置
+            Tile tile = new Tile(Model.Enumeration.TileName.valueOf(tileName), position[0], position[1]);
+            players.get(i).setCurrentTile(tile);
+            
+            System.out.printf("  玩家 %d 位置设置完成\n", i + 1);
+        }
+
+        // 显示所有玩家的位置信息
+        displayPlayerPositions();
+        System.out.println("========== 玩家位置初始化完成 ==========\n");
+    }
+
+    /**
+     * 显示所有玩家的位置信息
+     */
+    private void displayPlayerPositions() {
+        System.out.println("\n========== 玩家位置信息 ==========");
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            Tile currentTile = player.getCurrentTile();
+            if (currentTile != null) {
+                System.out.printf("玩家 %d (%s):\n", 
+                    i + 1, 
+                    player.getRole() != null ? player.getRole().getClass().getSimpleName() : "未分配角色");
+                System.out.printf("  板块: %s\n", currentTile.getName());
+                System.out.printf("  位置: [%d, %d]\n", currentTile.getRow(), currentTile.getCol());
+                System.out.printf("  状态: %s\n", currentTile.getState());
+            } else {
+                System.out.printf("玩家 %d: 未分配位置\n", i + 1);
+            }
+        }
+        System.out.println("================================\n");
+    }
 }

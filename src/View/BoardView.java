@@ -23,8 +23,15 @@ public class BoardView extends JPanel {
         // 先创建WaterLevelView实例
         this.waterLevelView = new WaterLevelView();
         
+        // 先创建和初始化MapView
+        this.mapView = new MapView();
+        this.mapView.setMapType(mapType);
+        
         // 创建GameController时传入waterLevelView
         this.gameController = new GameController(playerCount, helicopterTile, waterLevelView);
+        
+        // 将MapView设置到GameController
+        this.gameController.setMapView(mapView);
         
         // 从GameController获取PlayerInfoView实例
         this.playerInfoViews = new PlayerInfoView[playerCount];
@@ -78,15 +85,13 @@ public class BoardView extends JPanel {
         contentPanel.add(treasureView, gbc);
 
         // 中间地图
-        mapView = new MapView();
-        mapView.setMapType(mapType);
         gbc.gridx = 1;
         gbc.weightx = 0.9;
         contentPanel.add(mapView, gbc);
 
         // 右侧水位计
         waterLevelView.updateWaterLevel(WaterLevel.getInstance().getCurrentLevel()); // 初始化时设置当前水位
-        WaterLevel.setWaterLevelView(waterLevelView); // 设置WaterLevelView实例
+        WaterLevel.setWaterLevelView(waterLevelView);
         gbc.gridx = 2;
         gbc.weightx = 0.2;
         contentPanel.add(waterLevelView, gbc);
