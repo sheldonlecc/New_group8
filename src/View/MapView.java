@@ -163,4 +163,11 @@ public class MapView extends JPanel {
     public TilePosition getTilePosition() {
         return tilePosition;
     }
+
+    public Tile getTile(int row, int col) {
+        if (row >= 0 && row < MAP_SIZE && col >= 0 && col < MAP_SIZE) {
+            return tiles[row][col];
+        }
+        return null;
+    }
 }

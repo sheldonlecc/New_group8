@@ -31,6 +31,7 @@ public class GameController {
     private WaterLevelView waterLevelView;  // 添加水位视图
     private int currentWaterLevel = 1;  // 初始水位设置为1
     private TilePosition tilePosition;  // 添加TilePosition对象
+    private MapController mapController;  // 添加MapController成员变量
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
@@ -41,6 +42,7 @@ public class GameController {
         this.helicopterTile = helicopterTile;
         this.waterLevelView = waterLevelView;
         this.tilePosition = null;  // 初始化为null，将在设置MapView时更新
+        this.mapController = null;  // 初始化为null，将在设置MapView时更新
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家
@@ -182,14 +184,91 @@ public class GameController {
                                actionName.equals("Special Skill");
 
         if (!consumesAction || currentActions > 0) {
-            // 如果是消耗行动点的动作，减少行动点
-            if (consumesAction) {
+            // 处理具体的动作
+            switch (actionName) {
+                case "Move":
+                    // 移动动作特殊处理：不立即减少行动点，而是在成功移动后才减少
+                    handleMove(playerIndex);
+                    break;
+                case "Shore up":
+                    // 其他动作立即减少行动点
+                    playerView.setActionPoints(currentActions - 1);
+                    currentActions--;
+                    // TODO: 实现加固功能
+                    break;
+                case "Give Cards":
+                    playerView.setActionPoints(currentActions - 1);
+                    currentActions--;
+                    // TODO: 实现给卡牌功能
+                    break;
+                case "Special Skill":
                 playerView.setActionPoints(currentActions - 1);
                 currentActions--;
+                    // TODO: 实现特殊技能功能
+                    break;
+                case "Skip":
+                    endTurn(playerIndex);
+                    break;
             }
 
             // 如果是Skip或行动点用完，结束回合
             if (actionName.equals("Skip") || currentActions == 0) {
+                endTurn(playerIndex);
+            }
+        }
+    }
+
+    /**
+     * 处理玩家移动
+     * @param playerIndex 玩家索引
+     */
+    private void handleMove(int playerIndex) {
+        System.out.println("\n========== 处理玩家移动 ==========");
+        // 进入移动模式，等待玩家点击目标位置
+        mapController.enterMoveMode(playerIndex);
+        System.out.println("========== 移动处理完成 ==========\n");
+    }
+
+    /**
+     * 移动玩家到指定位置
+     * @param playerIndex 玩家索引
+     * @param row 目标行
+     * @param col 目标列
+     */
+    public void movePlayer(int playerIndex, int row, int col) {
+        if (playerIndex < 0 || playerIndex >= players.size()) {
+            return;
+        }
+
+        Player player = players.get(playerIndex);
+        Tile currentTile = player.getCurrentTile();
+        System.out.printf("玩家 %d 当前位置: %s [%d, %d]\n", 
+            playerIndex + 1,
+            currentTile.getName(),
+            currentTile.getRow(),
+            currentTile.getCol());
+
+        // 获取目标板块名称
+        String targetTileName = tilePosition.getTileName(row, col);
+        if (targetTileName != null) {
+            // 创建新的Tile对象并设置玩家位置
+            Tile targetTile = new Tile(Model.Enumeration.TileName.valueOf(targetTileName), row, col);
+            player.setCurrentTile(targetTile);
+            
+            // 减少行动点数
+            PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+            String actionText = playerView.getActionPointsLabel().getText();
+            int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+            playerView.setActionPoints(currentActions - 1);
+            
+            System.out.printf("玩家 %d 移动到: %s [%d, %d]\n", 
+                playerIndex + 1,
+                targetTile.getName(),
+                targetTile.getRow(),
+                targetTile.getCol());
+
+            // 检查行动点数是否为0，如果是则自动结束回合
+            if (currentActions - 1 == 0) {
                 endTurn(playerIndex);
             }
         }
@@ -253,6 +332,7 @@ public class GameController {
         System.out.println("\n========== 设置MapView ==========");
         System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
         this.tilePosition = mapView.getTilePosition();
+        this.mapController = new MapController(this, mapView);  // 创建MapController
         System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
         if (this.tilePosition != null) {
             Map<String, int[]> positions = this.tilePosition.getAllTilePositions();

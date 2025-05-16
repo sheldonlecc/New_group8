@@ -34,4 +34,14 @@ public class TilePosition {
     public void clear() {
         tilePositions.clear();
     }
+
+    public String getTileName(int row, int col) {
+        for (Map.Entry<String, int[]> entry : tilePositions.entrySet()) {
+            int[] pos = entry.getValue();
+            if (pos[0] == row && pos[1] == col) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
 } 
