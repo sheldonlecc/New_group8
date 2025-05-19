@@ -263,6 +263,8 @@ public class GameController {
                     currentActions--;
                     break;
                 case "Skip":
+                    playerView.setActionPoints(0);
+                    currentActions = 0;
                     endTurn(playerIndex);
                     return;
             }
@@ -329,7 +331,7 @@ public class GameController {
         }
     }
 
-    private void endTurn(int playerIndex) {
+    public void endTurn(int playerIndex) {
         Player currentPlayer = players.get(playerIndex);
 
         // 在回合结束时抽两张宝藏卡
@@ -379,7 +381,15 @@ public class GameController {
             return; // 不开始新回合，等待玩家选择弃牌
         }
 
-        startNewTurn();
+        // 检查行动点数是否为0，如果是则开始新回合
+        PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+        String actionText = playerView.getActionPointsLabel().getText();
+        int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+
+        if (currentActions == 0) {
+            // 只有在不需要弃牌时才直接开始新回合
+            startNewTurn();
+        }
     }
 
     // 添加设置MapView的方法
@@ -685,5 +695,17 @@ public class GameController {
 
     public TreasureDeck getTreasureDeck() {
         return treasureDeck;
+    }
+
+    public int getCurrentPlayerIndex() {
+        return currentPlayerIndex;
+    }
+
+    public void endGameWithWin() {
+        for (PlayerInfoView view : playerInfoViews) {
+            view.setButtonsEnabled(false);
+        }
+        JOptionPane.showMessageDialog(null, "恭喜！你们集齐宝物并成功逃脱，获得胜利！");
+        System.out.println("========== 游戏胜利 ==========");
     }
 }

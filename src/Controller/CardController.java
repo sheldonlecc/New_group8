@@ -18,6 +18,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import java.util.List;
+
 public class CardController implements ActionListener {
     private static final int MAX_CARDS = 7;
     private final GameController gameController;
@@ -141,25 +143,24 @@ public class CardController implements ActionListener {
     private void handleDiscardCard(Card card) {
         System.out.println("处理弃牌 - 当前已弃掉 " + cardsDiscarded + "/" + cardsToDiscard + " 张卡牌"); // 调试信息
         if (cardsDiscarded < cardsToDiscard) {
-            // 获取当前玩家
-            Player currentPlayer = gameController.getCurrentPlayer();
-            // 从玩家手中移除卡牌
-            currentPlayer.getHandCard().removeCard(card);
+            // 获取正在弃牌的玩家
+            int discardingPlayerIndex = gameController.getPlayerInfoViews().indexOf(currentDiscardingPlayer);
+            Player discardingPlayer = gameController.getPlayers().get(discardingPlayerIndex);
+            // 从该玩家手中移除卡牌
+            discardingPlayer.getHandCard().removeCard(card);
             removeCard(currentDiscardingPlayer, card);
             cardsDiscarded++;
             System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
 
             if (cardsDiscarded == cardsToDiscard) {
                 System.out.println("弃牌完成，退出弃牌模式"); // 调试信息
-                // 弃牌完成，退出弃牌模式
                 isDiscardMode = false;
-                // 更新玩家手牌显示
-                gameController.updatePlayerView(gameController.getPlayerInfoViews().indexOf(currentDiscardingPlayer));
+                gameController.updatePlayerView(discardingPlayerIndex);
+                // 恢复当前弃牌玩家的按钮
+                currentDiscardingPlayer.setButtonsEnabled(true);
                 currentDiscardingPlayer = null;
-                // 开始新回合
-                gameController.startNewTurn();
+                // 不再调用gameController.startNewTurn();
             } else {
-                // 显示还需要弃掉多少张牌
                 JOptionPane.showMessageDialog(null,
                         "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
                         "弃牌阶段",
@@ -185,22 +186,23 @@ public class CardController implements ActionListener {
             System.out.println("[日志] 给牌玩家没有这张卡。");
             return false;
         }
-        if (toPlayer.getHandCard().isFull()) {
-            System.out.println("[日志] 收牌玩家手牌已满。");
-            return false;
-        }
 
         // 执行转移
         fromPlayer.removeCard(card);
-        try {
-            toPlayer.addCard(card);
-        } catch (Exception e) {
-            System.out.println("[日志] 收牌玩家手牌已满（异常）。");
-            return false;
-        }
-        // 更新视图（如有需要可加接口）
+        toPlayer.getHandCard().addCardWithoutCheck(card);
+        // 更新视图
         gc.updatePlayerView(fromPlayerIndex);
         gc.updatePlayerView(toPlayerIndex);
+
+        // 检查对方是否超限，超限则进入弃牌模式
+        int cardCount = toPlayer.getHandCard().getCards().size();
+        if (cardCount > 5) {
+            int cardsToDiscard = cardCount - 5;
+            System.out.println("[日志] 收牌玩家手牌超限，需弃掉 " + cardsToDiscard + " 张卡牌");
+            PlayerInfoView playerView = gc.getPlayerInfoView(toPlayerIndex);
+            playerView.setButtonsEnabled(false);
+            this.enableDiscardMode(playerView, cardsToDiscard);
+        }
         return true;
     }
 
@@ -235,5 +237,53 @@ public class CardController implements ActionListener {
             System.out.println("[日志] 沙袋卡加固失败");
             return false;
         }
+    }
+
+    /**
+     * 使用直升机救援卡尝试获胜
+     * 
+     * @param playerIndex 玩家索引
+     * @return 是否胜利
+     */
+    public boolean useHelicopterCardForWin(int playerIndex) {
+        // 1. 检查是否集齐四个宝物
+        if (!gameController.getTreasureDeck().allTreasuresCollected()) {
+            System.out.println("[日志] 宝物未集齐，不能使用直升机卡获胜。");
+            JOptionPane.showMessageDialog(null, "还没有集齐所有宝物，不能逃脱！");
+            return false;
+        }
+        // 2. 检查所有玩家是否都在愚人码头
+        List<Player> players = gameController.getPlayers();
+        boolean allAtFoolsLanding = players.stream().allMatch(
+                p -> p.getCurrentTile() != null && p.getCurrentTile().getName().name().equals("FOOLS_LANDING"));
+        if (!allAtFoolsLanding) {
+            System.out.println("[日志] 并非所有玩家都在愚人码头，不能使用直升机卡获胜。");
+            JOptionPane.showMessageDialog(null, "所有玩家必须都在愚人码头才能逃脱！");
+            return false;
+        }
+        // 3. 检查玩家是否有直升机卡
+        Player player = players.get(playerIndex);
+        Card heliCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof HelicopterCard) {
+                heliCard = card;
+                break;
+            }
+        }
+        if (heliCard == null) {
+            System.out.println("[日志] 没有直升机卡，不能获胜。");
+            JOptionPane.showMessageDialog(null, "你没有直升机救援卡！");
+            return false;
+        }
+        // 4. 弃掉直升机卡
+        player.getHandCard().removeCard(heliCard);
+        gameController.getPlayerInfoView(playerIndex).removeCard(heliCard);
+        gameController.getTreasureDeck().discard(heliCard);
+
+        // 5. 游戏胜利
+        System.out.println("[日志] 使用直升机救援卡，所有玩家逃脱，游戏胜利！");
+        JOptionPane.showMessageDialog(null, "所有玩家乘坐直升机逃脱，游戏胜利！");
+        gameController.endGameWithWin();
+        return true;
     }
 }
