@@ -12,10 +12,11 @@ import Model.Enumeration.TileState;
  * 当板块已经被淹没时，会使其沉没
  */
 public class FloodCard extends Card {
-    private final Tile targetTile;  // 目标地块
+    private final Tile targetTile; // 目标地块
 
     /**
      * 创建一张洪水卡
+     * 
      * @param targetTile 目标地块
      */
     public FloodCard(Tile targetTile) {
@@ -25,6 +26,7 @@ public class FloodCard extends Card {
 
     /**
      * 获取目标地块
+     * 
      * @return 目标地块
      */
     public Tile getTargetTile() {
@@ -33,19 +35,21 @@ public class FloodCard extends Card {
 
     /**
      * 检查卡牌是否可以使用
+     * 
      * @return 如果目标地块存在且未被沉没则返回true
      */
     @Override
     public boolean canUse() {
-        return super.canUse() && 
-               targetTile != null && 
-               targetTile.getState() != TileState.SUNK;
+        return super.canUse() &&
+                targetTile != null &&
+                targetTile.getState() != TileState.SUNK;
     }
 
     /**
      * 使用洪水卡
      * 如果地块未被淹没，则将其淹没
      * 如果地块已被淹没，则使其沉没
+     * 
      * @return 使用是否成功
      */
     @Override
@@ -54,20 +58,15 @@ public class FloodCard extends Card {
             return;
         }
 
-        // 根据地块当前状态执行相应操作
-        switch (targetTile.getState()) {
-            case NORMAL:
-                // 如果地块是干燥的，将其淹没
-                targetTile.setState(TileState.FLOODED);
-                break;
-            case FLOODED:
-                // 如果地块已被淹没，使其沉没
-                targetTile.setState(TileState.SUNK);
-                break;
-            default:
-                // 如果地块已经沉没，不做任何操作
-                break;
+        Tile tile = getTargetTile();
+        TileState before = tile.getState();
+        if (before == TileState.NORMAL) {
+            tile.setState(TileState.FLOODED);
+        } else if (before == TileState.FLOODED) {
+            tile.setState(TileState.SUNK);
         }
+        System.out.println("[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: "
+                + before + " -> " + tile.getState());
 
         // 使用后禁用卡牌
         setUsable(false);
@@ -79,8 +78,10 @@ public class FloodCard extends Card {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) return false;
-        if (!(obj instanceof FloodCard)) return false;
+        if (!super.equals(obj))
+            return false;
+        if (!(obj instanceof FloodCard))
+            return false;
         FloodCard other = (FloodCard) obj;
         return targetTile.equals(other.targetTile);
     }

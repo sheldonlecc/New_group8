@@ -16,6 +16,7 @@ import Model.Cards.HandCard;
 import Model.Enumeration.TileState;
 import Model.Deck.FloodDeck;
 import Model.Cards.FloodCard;
+import Model.Cards.SandbagCard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class GameController {
     private int currentWaterLevel = 1; // 初始水位设置为1
     private TilePosition tilePosition; // 添加TilePosition对象
     private MapController mapController; // 添加MapController成员变量
-    private final FloodDeck floodDeck;
+    private FloodDeck floodDeck;
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
@@ -45,9 +46,20 @@ public class GameController {
         this.treasureDeck = new TreasureDeck(helicopterTile);
         this.helicopterTile = helicopterTile;
         this.waterLevelView = waterLevelView;
-        this.tilePosition = null; // 初始化为null，将在设置MapView时更新
-        this.mapController = null; // 初始化为null，将在设置MapView时更新
+        this.tilePosition = null;
+        this.mapController = null;
         this.floodDeck = new FloodDeck(new ArrayList<>());
+
+        // 初始化洪水牌堆
+        List<Tile> allTiles = new ArrayList<>();
+        if (tilePosition != null) {
+            Map<String, int[]> positions = tilePosition.getAllTilePositions();
+            for (Map.Entry<String, int[]> entry : positions.entrySet()) {
+                Tile tile = new Tile(TileName.valueOf(entry.getKey()), entry.getValue()[0], entry.getValue()[1]);
+                allTiles.add(tile);
+            }
+        }
+        this.floodDeck = new FloodDeck(allTiles);
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家
@@ -162,14 +174,37 @@ public class GameController {
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
         }
 
-        int floodCardCount = currentWaterLevel;
+        // 检查水位是否达到10
+        if (currentWaterLevel >= 10) {
+            System.out.println("\n========== 游戏结束 ==========");
+            System.out.println("水位已达到10，游戏失败！");
+            JOptionPane.showMessageDialog(null, "水位已达到10，游戏失败！");
+            return;
+        }
+
+        System.out.println("\n========== 开始抽取洪水卡 ==========");
+        int floodCardCount;
+        // 根据水位决定抽取的洪水卡数量
+        if (currentWaterLevel <= 2) {
+            floodCardCount = 2;
+        } else if (currentWaterLevel <= 5) {
+            floodCardCount = 3;
+        } else if (currentWaterLevel <= 7) {
+            floodCardCount = 4;
+        } else {
+            floodCardCount = 5;
+        }
+
+        System.out.println("当前水位: " + currentWaterLevel + "，需要抽取 " + floodCardCount + " 张洪水卡");
+
         for (int i = 0; i < floodCardCount; i++) {
             FloodCard card = floodDeck.draw();
             if (card != null) {
                 card.use();
                 floodDeck.discard(card);
+                Tile targetTile = card.getTargetTile();
                 String stateMsg = "";
-                switch (card.getTargetTile().getState()) {
+                switch (targetTile.getState()) {
                     case FLOODED:
                         stateMsg = "被淹没";
                         break;
@@ -180,9 +215,14 @@ public class GameController {
                         stateMsg = "正常";
                         break;
                 }
-                System.out.println("[日志] 洪水卡抽取：" + card.getTargetTile().getName() + "，当前状态：" + stateMsg);
+                System.out.println("[日志] 洪水卡抽取：" + targetTile.getName() +
+                        " [坐标: " + targetTile.getRow() + "," + targetTile.getCol() + "]" +
+                        "，当前状态：" + stateMsg);
+            } else {
+                System.out.println("[警告] 洪水牌堆已空！");
             }
         }
+        System.out.println("========== 洪水卡抽取完成 ==========\n");
     }
 
     public Player getCurrentPlayer() {
@@ -205,7 +245,6 @@ public class GameController {
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
 
         boolean consumesAction = actionName.equals("Move") ||
-                actionName.equals("Shore up") ||
                 actionName.equals("Give Cards") ||
                 actionName.equals("Special Skill");
 
@@ -215,8 +254,7 @@ public class GameController {
                     handleMove(playerIndex);
                     break;
                 case "Shore up":
-                    playerView.setActionPoints(currentActions - 1);
-                    currentActions--;
+                    handleShoreUp(playerIndex);
                     break;
                 case "Give Cards":
                     playerView.setActionPoints(currentActions - 1);
@@ -270,11 +308,9 @@ public class GameController {
                 currentTile.getRow(),
                 currentTile.getCol());
 
-        // 获取目标板块名称
-        String targetTileName = tilePosition.getTileName(row, col);
-        if (targetTileName != null) {
-            // 创建新的Tile对象并设置玩家位置
-            Tile targetTile = new Tile(Model.Enumeration.TileName.valueOf(targetTileName), row, col);
+        // 获取目标板块对象（唯一Tile）
+        Tile targetTile = mapController.getMapView().getTile(row, col);
+        if (targetTile != null) {
             player.setCurrentTile(targetTile);
 
             // 减少行动点数
@@ -354,7 +390,12 @@ public class GameController {
         System.out.println("\n========== 设置MapView ==========");
         System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
         this.tilePosition = mapView.getTilePosition();
-        this.mapController = new MapController(this, mapView); // 创建MapController
+        this.mapController = new MapController(this, mapView);
+
+        // 只用MapView的Tile对象
+        List<Tile> allTiles = mapView.getAllTiles();
+        this.floodDeck = new FloodDeck(allTiles);
+
         System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
         if (this.tilePosition != null) {
             Map<String, int[]> positions = this.tilePosition.getAllTilePositions();
@@ -366,7 +407,7 @@ public class GameController {
 
             // 在设置完tilePosition后初始化玩家位置
             System.out.println("正在初始化玩家位置...");
-            initializePlayerPositions();
+            initializePlayerPositions(mapView);
         }
         System.out.println("========== MapView设置完成 ==========\n");
     }
@@ -391,7 +432,7 @@ public class GameController {
      * 初始化玩家位置
      * 将玩家随机分配到不同的板块上
      */
-    private void initializePlayerPositions() {
+    private void initializePlayerPositions(MapView mapView) {
         System.out.println("\n========== 开始初始化玩家位置 ==========");
         System.out.println("当前玩家数量: " + players.size());
 
@@ -442,8 +483,8 @@ public class GameController {
             System.out.printf("  选择的板块: %s\n", tileName);
             System.out.printf("  板块位置: [%d, %d]\n", position[0], position[1]);
 
-            // 创建新的Tile对象并设置玩家位置
-            Tile tile = new Tile(Model.Enumeration.TileName.valueOf(tileName), position[0], position[1]);
+            // 用MapView的Tile对象
+            Tile tile = mapView.getTile(position[0], position[1]);
             players.get(i).setCurrentTile(tile);
 
             System.out.printf("  玩家 %d 位置设置完成\n", i + 1);
@@ -586,6 +627,92 @@ public class GameController {
                     + (toPlayerIndex + 1));
         } else {
             System.out.println("[日志] 给牌失败！");
+        }
+    }
+
+    /**
+     * 处理加固操作
+     * 
+     * @param playerIndex 玩家索引
+     */
+    private void handleShoreUp(int playerIndex) {
+        Player player = players.get(playerIndex);
+        // 检查玩家是否有沙袋卡
+        boolean hasSandbag = false;
+        Card sandbagCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof SandbagCard) {
+                hasSandbag = true;
+                sandbagCard = card;
+                break;
+            }
+        }
+
+        if (!hasSandbag) {
+            System.out.println("[日志] 玩家没有沙袋卡，无法使用加固功能");
+            JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用加固功能！");
+            return;
+        }
+
+        // 进入加固模式，等待玩家选择要加固的瓦片
+        System.out.println("[日志] 进入加固模式，请选择要加固的瓦片");
+        mapController.enterShoreUpMode(playerIndex);
+
+        Tile currentTile = player.getCurrentTile();
+        System.out.printf("玩家位置: [%d, %d], 当前瓦片状态: %s\n", currentTile.getRow(), currentTile.getCol(),
+                currentTile.getState());
+        List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
+        shoreableTiles.add(currentTile);
+        for (Tile t : shoreableTiles) {
+            System.out.printf("可加固检测: [%d, %d], 状态: %s, isShoreable: %b\n", t.getRow(), t.getCol(), t.getState(),
+                    t.isShoreable());
+        }
+    }
+
+    /**
+     * 加固指定瓦片
+     * 
+     * @param playerIndex 玩家索引
+     * @param row         目标行
+     * @param col         目标列
+     */
+    public void shoreUpTile(int playerIndex, int row, int col) {
+        if (playerIndex < 0 || playerIndex >= players.size()) {
+            return;
+        }
+
+        Player player = players.get(playerIndex);
+        Tile currentTile = player.getCurrentTile();
+        Tile targetTile = mapController.getMapView().getTile(row, col);
+
+        // 检查是否可以加固
+        if (!canShoreUpTile(playerIndex, targetTile)) {
+            System.out.println("[日志] 无法加固该瓦片");
+            return;
+        }
+
+        // 找到并移除沙袋卡
+        Card sandbagCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof SandbagCard) {
+                sandbagCard = card;
+                break;
+            }
+        }
+
+        if (sandbagCard != null) {
+            // 使用沙袋卡加固瓦片
+            if (((SandbagCard) sandbagCard).useCard(targetTile)) {
+                // 从玩家手中移除沙袋卡
+                player.getHandCard().removeCard(sandbagCard);
+                playerInfoViews.get(playerIndex).removeCard(sandbagCard);
+                treasureDeck.discard(sandbagCard);
+
+                System.out.println("[日志] 成功加固瓦片：" + targetTile.getName() +
+                        " [坐标: " + targetTile.getRow() + "," + targetTile.getCol() + "]");
+            } else {
+                System.out.println("[日志] 加固瓦片失败");
+            }
         }
     }
 
