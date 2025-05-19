@@ -7,6 +7,7 @@ import Model.Cards.SandbagCard;
 import Model.Cards.HelicopterCard;
 import Model.Cards.WaterRiseCard;
 import Model.Player;
+import Model.Tile;
 import View.CardView;
 import View.PlayerInfoView;
 
@@ -201,5 +202,38 @@ public class CardController implements ActionListener {
         gc.updatePlayerView(fromPlayerIndex);
         gc.updatePlayerView(toPlayerIndex);
         return true;
+    }
+
+    /**
+     * 使用沙袋卡加固指定瓦片
+     * 
+     * @param playerIndex 玩家索引
+     * @param targetTile  目标瓦片
+     * @return 是否加固成功
+     */
+    public boolean useSandbagCard(int playerIndex, Tile targetTile) {
+        Player player = gameController.getPlayers().get(playerIndex);
+        Card sandbagCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof SandbagCard) {
+                sandbagCard = card;
+                break;
+            }
+        }
+        if (sandbagCard == null) {
+            System.out.println("[日志] 玩家没有沙袋卡，无法加固");
+            return false;
+        }
+        if (((SandbagCard) sandbagCard).useCard(targetTile)) {
+            player.getHandCard().removeCard(sandbagCard);
+            gameController.getPlayerInfoView(playerIndex).removeCard(sandbagCard);
+            gameController.getTreasureDeck().discard(sandbagCard);
+            System.out.println("[日志] 成功用沙袋卡加固瓦片：" + targetTile.getName() + " [坐标: " + targetTile.getRow() + ","
+                    + targetTile.getCol() + "]");
+            return true;
+        } else {
+            System.out.println("[日志] 沙袋卡加固失败");
+            return false;
+        }
     }
 }

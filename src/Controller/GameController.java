@@ -639,11 +639,9 @@ public class GameController {
         Player player = players.get(playerIndex);
         // 检查玩家是否有沙袋卡
         boolean hasSandbag = false;
-        Card sandbagCard = null;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
                 hasSandbag = true;
-                sandbagCard = card;
                 break;
             }
         }
@@ -657,16 +655,6 @@ public class GameController {
         // 进入加固模式，等待玩家选择要加固的瓦片
         System.out.println("[日志] 进入加固模式，请选择要加固的瓦片");
         mapController.enterShoreUpMode(playerIndex);
-
-        Tile currentTile = player.getCurrentTile();
-        System.out.printf("玩家位置: [%d, %d], 当前瓦片状态: %s\n", currentTile.getRow(), currentTile.getCol(),
-                currentTile.getState());
-        List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
-        shoreableTiles.add(currentTile);
-        for (Tile t : shoreableTiles) {
-            System.out.printf("可加固检测: [%d, %d], 状态: %s, isShoreable: %b\n", t.getRow(), t.getCol(), t.getState(),
-                    t.isShoreable());
-        }
     }
 
     /**
@@ -681,42 +669,24 @@ public class GameController {
             return;
         }
 
-        Player player = players.get(playerIndex);
-        Tile currentTile = player.getCurrentTile();
         Tile targetTile = mapController.getMapView().getTile(row, col);
-
         // 检查是否可以加固
         if (!canShoreUpTile(playerIndex, targetTile)) {
             System.out.println("[日志] 无法加固该瓦片");
             return;
         }
-
-        // 找到并移除沙袋卡
-        Card sandbagCard = null;
-        for (Card card : player.getHandCard().getCards()) {
-            if (card instanceof SandbagCard) {
-                sandbagCard = card;
-                break;
-            }
-        }
-
-        if (sandbagCard != null) {
-            // 使用沙袋卡加固瓦片
-            if (((SandbagCard) sandbagCard).useCard(targetTile)) {
-                // 从玩家手中移除沙袋卡
-                player.getHandCard().removeCard(sandbagCard);
-                playerInfoViews.get(playerIndex).removeCard(sandbagCard);
-                treasureDeck.discard(sandbagCard);
-
-                System.out.println("[日志] 成功加固瓦片：" + targetTile.getName() +
-                        " [坐标: " + targetTile.getRow() + "," + targetTile.getCol() + "]");
-            } else {
-                System.out.println("[日志] 加固瓦片失败");
-            }
+        // 调用CardController的useSandbagCard方法
+        boolean success = cardController.useSandbagCard(playerIndex, targetTile);
+        if (!success) {
+            System.out.println("[日志] 沙袋卡加固失败");
         }
     }
 
     public List<Player> getPlayers() {
         return players;
+    }
+
+    public TreasureDeck getTreasureDeck() {
+        return treasureDeck;
     }
 }
