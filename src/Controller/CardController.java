@@ -55,18 +55,18 @@ public class CardController implements ActionListener {
                 handleSandbagCard((SandbagCard) card);
             } else if (card instanceof HelicopterCard) {
                 handleHelicopterCard((HelicopterCard) card);
-            } 
+            }
         }
     }
 
     private void handleSandbagCard(SandbagCard card) {
         // 处理沙袋卡点击逻辑
-        //gameController.handleSandbagUse(card);
+        // gameController.handleSandbagUse(card);
     }
 
     private void handleHelicopterCard(HelicopterCard card) {
         // 处理直升机卡点击逻辑
-        //gameController.handleHelicopterUse(card);
+        // gameController.handleHelicopterUse(card);
     }
 
     public void addCard(PlayerInfoView playerInfoView, Card card) {
@@ -110,17 +110,17 @@ public class CardController implements ActionListener {
             System.out.println("不需要弃牌，跳过弃牌模式"); // 调试信息
             return;
         }
-        
+
         System.out.println("进入弃牌模式 - 需要弃掉 " + numCardsToDiscard + " 张卡牌"); // 调试信息
         isDiscardMode = true;
         cardsToDiscard = numCardsToDiscard;
         cardsDiscarded = 0;
         currentDiscardingPlayer = playerInfoView;
-        
+
         // 启用所有卡牌的点击事件
         JPanel cardsPanel = playerInfoView.getCardsPanel();
         System.out.println("当前卡牌面板中的组件数量: " + cardsPanel.getComponentCount()); // 调试信息
-        
+
         for (Component component : cardsPanel.getComponents()) {
             if (component instanceof CardView) {
                 CardView cardView = (CardView) component;
@@ -129,12 +129,12 @@ public class CardController implements ActionListener {
                 System.out.println("启用卡牌点击事件: " + cardView.getCard().getClass().getSimpleName()); // 调试信息
             }
         }
-        
+
         // 显示弃牌提示
-        JOptionPane.showMessageDialog(null, 
-            "您的手牌超过了5张，请选择" + cardsToDiscard + "张卡牌弃掉",
-            "弃牌阶段",
-            JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null,
+                "您的手牌超过了5张，请选择" + cardsToDiscard + "张卡牌弃掉",
+                "弃牌阶段",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void handleDiscardCard(Card card) {
@@ -159,11 +159,47 @@ public class CardController implements ActionListener {
                 gameController.startNewTurn();
             } else {
                 // 显示还需要弃掉多少张牌
-                JOptionPane.showMessageDialog(null, 
-                    "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
-                    "弃牌阶段",
-                    JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null,
+                        "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
+                        "弃牌阶段",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         }
+    }
+
+    /**
+     * 实际执行给牌操作
+     */
+    public boolean giveCard(int fromPlayerIndex, int toPlayerIndex, Card card) {
+        GameController gc = this.gameController;
+        Player fromPlayer = gc.getPlayers().get(fromPlayerIndex);
+        Player toPlayer = gc.getPlayers().get(toPlayerIndex);
+
+        // 检查条件
+        if (!fromPlayer.getCurrentTile().equals(toPlayer.getCurrentTile())) {
+            System.out.println("[日志] 两个玩家不在同一位置，不能给牌。");
+            return false;
+        }
+        if (!fromPlayer.getHandCard().getCards().contains(card)) {
+            System.out.println("[日志] 给牌玩家没有这张卡。");
+            return false;
+        }
+        if (toPlayer.getHandCard().isFull()) {
+            System.out.println("[日志] 收牌玩家手牌已满。");
+            return false;
+        }
+
+        // 执行转移
+        fromPlayer.removeCard(card);
+        try {
+            toPlayer.addCard(card);
+        } catch (Exception e) {
+            System.out.println("[日志] 收牌玩家手牌已满（异常）。");
+            return false;
+        }
+        // 更新视图（如有需要可加接口）
+        gc.updatePlayerView(fromPlayerIndex);
+        gc.updatePlayerView(toPlayerIndex);
+        return true;
     }
 }

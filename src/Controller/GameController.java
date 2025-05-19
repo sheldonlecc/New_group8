@@ -13,6 +13,7 @@ import Model.TilePosition;
 import Model.Enumeration.TileName;
 import Model.Enumeration.TileType;
 import Model.Cards.HandCard;
+import Model.Enumeration.TileState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +28,11 @@ public class GameController {
     private final TreasureDeck treasureDeck;
     private int currentPlayerIndex = 0;
     private static final int MAX_ACTIONS_PER_TURN = 3;
-    private final Tile helicopterTile;  // 直升机场位置
-    private WaterLevelView waterLevelView;  // 添加水位视图
-    private int currentWaterLevel = 1;  // 初始水位设置为1
-    private TilePosition tilePosition;  // 添加TilePosition对象
-    private MapController mapController;  // 添加MapController成员变量
+    private final Tile helicopterTile; // 直升机场位置
+    private WaterLevelView waterLevelView; // 添加水位视图
+    private int currentWaterLevel = 1; // 初始水位设置为1
+    private TilePosition tilePosition; // 添加TilePosition对象
+    private MapController mapController; // 添加MapController成员变量
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
@@ -41,8 +42,8 @@ public class GameController {
         this.treasureDeck = new TreasureDeck(helicopterTile);
         this.helicopterTile = helicopterTile;
         this.waterLevelView = waterLevelView;
-        this.tilePosition = null;  // 初始化为null，将在设置MapView时更新
-        this.mapController = null;  // 初始化为null，将在设置MapView时更新
+        this.tilePosition = null; // 初始化为null，将在设置MapView时更新
+        this.mapController = null; // 初始化为null，将在设置MapView时更新
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家
@@ -60,15 +61,15 @@ public class GameController {
         System.out.println("正在分配角色...");
         // 分配角色
         assignRoles();
-        
+
         System.out.println("正在发放初始卡牌...");
         // 初始发牌
         dealInitialCards();
-        
+
         System.out.println("正在初始化第一个玩家的回合...");
         // 初始化第一个玩家的回合
         initializeFirstTurn();
-        
+
         System.out.println("========== 游戏控制器初始化完成 ==========\n");
     }
 
@@ -100,7 +101,7 @@ public class GameController {
             Player player = players.get(i);
             Role role = randomRoles.get(i);
             player.setRole(role);
-            
+
             // 更新玩家信息视图中的角色显示
             PlayerInfoView playerInfoView = playerInfoViews.get(i);
             playerInfoView.setRole(role.getClass().getSimpleName());
@@ -114,19 +115,19 @@ public class GameController {
     public CardController getCardController() {
         return cardController;
     }
-   
+
     public void updatePlayerView(int playerIndex) {
         if (playerIndex < 0 || playerIndex >= players.size()) {
             return;
         }
         Player player = players.get(playerIndex);
         PlayerInfoView view = playerInfoViews.get(playerIndex);
-        
+
         // 更新角色信息
         if (player.getRole() != null) {
             view.setRole(player.getRole().getClass().getSimpleName());
         }
-        
+
         // 更新手牌显示
         view.clearCards();
         for (Card card : player.getHandCard().getCards()) {
@@ -139,7 +140,7 @@ public class GameController {
         PlayerInfoView currentPlayerView = playerInfoViews.get(currentPlayerIndex);
         currentPlayerView.setActionPoints(MAX_ACTIONS_PER_TURN);
         updatePlayerView(currentPlayerIndex);
-        
+
         // 更新所有玩家的按钮状态
         for (int i = 0; i < playerInfoViews.size(); i++) {
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
@@ -151,7 +152,7 @@ public class GameController {
         PlayerInfoView currentPlayerView = playerInfoViews.get(currentPlayerIndex);
         currentPlayerView.setActionPoints(MAX_ACTIONS_PER_TURN);
         updatePlayerView(currentPlayerIndex);
-        
+
         // 更新所有玩家的按钮状态
         for (int i = 0; i < playerInfoViews.size(); i++) {
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
@@ -179,9 +180,9 @@ public class GameController {
 
         // 判断动作类型是否消耗行动点
         boolean consumesAction = actionName.equals("Move") ||
-                               actionName.equals("Shore up") ||
-                               actionName.equals("Give Cards") ||
-                               actionName.equals("Special Skill");
+                actionName.equals("Shore up") ||
+                actionName.equals("Give Cards") ||
+                actionName.equals("Special Skill");
 
         if (!consumesAction || currentActions > 0) {
             // 处理具体的动作
@@ -199,11 +200,11 @@ public class GameController {
                 case "Give Cards":
                     playerView.setActionPoints(currentActions - 1);
                     currentActions--;
-                    // TODO: 实现给卡牌功能
+                    requestGiveCard(playerIndex);
                     break;
                 case "Special Skill":
-                playerView.setActionPoints(currentActions - 1);
-                currentActions--;
+                    playerView.setActionPoints(currentActions - 1);
+                    currentActions--;
                     // TODO: 实现特殊技能功能
                     break;
                 case "Skip":
@@ -220,6 +221,7 @@ public class GameController {
 
     /**
      * 处理玩家移动
+     * 
      * @param playerIndex 玩家索引
      */
     private void handleMove(int playerIndex) {
@@ -231,9 +233,10 @@ public class GameController {
 
     /**
      * 移动玩家到指定位置
+     * 
      * @param playerIndex 玩家索引
-     * @param row 目标行
-     * @param col 目标列
+     * @param row         目标行
+     * @param col         目标列
      */
     public void movePlayer(int playerIndex, int row, int col) {
         if (playerIndex < 0 || playerIndex >= players.size()) {
@@ -242,11 +245,11 @@ public class GameController {
 
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        System.out.printf("玩家 %d 当前位置: %s [%d, %d]\n", 
-            playerIndex + 1,
-            currentTile.getName(),
-            currentTile.getRow(),
-            currentTile.getCol());
+        System.out.printf("玩家 %d 当前位置: %s [%d, %d]\n",
+                playerIndex + 1,
+                currentTile.getName(),
+                currentTile.getRow(),
+                currentTile.getCol());
 
         // 获取目标板块名称
         String targetTileName = tilePosition.getTileName(row, col);
@@ -254,18 +257,18 @@ public class GameController {
             // 创建新的Tile对象并设置玩家位置
             Tile targetTile = new Tile(Model.Enumeration.TileName.valueOf(targetTileName), row, col);
             player.setCurrentTile(targetTile);
-            
+
             // 减少行动点数
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             String actionText = playerView.getActionPointsLabel().getText();
             int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
             playerView.setActionPoints(currentActions - 1);
-            
-            System.out.printf("玩家 %d 移动到: %s [%d, %d]\n", 
-                playerIndex + 1,
-                targetTile.getName(),
-                targetTile.getRow(),
-                targetTile.getCol());
+
+            System.out.printf("玩家 %d 移动到: %s [%d, %d]\n",
+                    playerIndex + 1,
+                    targetTile.getName(),
+                    targetTile.getRow(),
+                    targetTile.getCol());
 
             // 检查行动点数是否为0，如果是则自动结束回合
             if (currentActions - 1 == 0) {
@@ -276,7 +279,7 @@ public class GameController {
 
     private void endTurn(int playerIndex) {
         Player currentPlayer = players.get(playerIndex);
-        
+
         // 在回合结束时抽两张宝藏卡
         List<Card> drawnCards = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -308,22 +311,22 @@ public class GameController {
         // 检查手牌数量，如果超过5张，进入弃牌阶段
         int cardCount = currentPlayer.getHandCard().getCards().size();
         System.out.println("当前玩家手牌数量: " + cardCount); // 调试信息
-        
+
         if (cardCount > 5) {
             int cardsToDiscard = cardCount - 5;
             System.out.println("需要弃掉 " + cardsToDiscard + " 张卡牌"); // 调试信息
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
-            
+
             // 禁用所有动作按钮，只允许选择弃牌
             playerView.setButtonsEnabled(false);
-            
+
             // 启用卡牌选择模式
             System.out.println("准备进入弃牌模式，当前玩家: " + playerIndex); // 调试信息
             cardController.enableDiscardMode(playerView, cardsToDiscard);
             System.out.println("已进入弃牌模式"); // 调试信息
             return; // 不开始新回合，等待玩家选择弃牌
         }
-        
+
         startNewTurn();
     }
 
@@ -332,17 +335,16 @@ public class GameController {
         System.out.println("\n========== 设置MapView ==========");
         System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
         this.tilePosition = mapView.getTilePosition();
-        this.mapController = new MapController(this, mapView);  // 创建MapController
+        this.mapController = new MapController(this, mapView); // 创建MapController
         System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
         if (this.tilePosition != null) {
             Map<String, int[]> positions = this.tilePosition.getAllTilePositions();
             System.out.println("可用板块数量: " + (positions != null ? positions.size() : 0));
             if (positions != null) {
                 System.out.println("可用板块列表:");
-                positions.forEach((name, pos) -> 
-                    System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
+                positions.forEach((name, pos) -> System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
             }
-            
+
             // 在设置完tilePosition后初始化玩家位置
             System.out.println("正在初始化玩家位置...");
             initializePlayerPositions();
@@ -373,7 +375,7 @@ public class GameController {
     private void initializePlayerPositions() {
         System.out.println("\n========== 开始初始化玩家位置 ==========");
         System.out.println("当前玩家数量: " + players.size());
-        
+
         if (tilePosition == null) {
             System.err.println("错误：tilePosition未初始化");
             System.out.println("tilePosition对象: " + (tilePosition != null ? "非空" : "为空"));
@@ -384,7 +386,7 @@ public class GameController {
         // 获取所有可用的板块位置
         Map<String, int[]> allPositions = tilePosition.getAllTilePositions();
         System.out.println("获取到的板块位置信息: " + (allPositions != null ? "非空" : "为空"));
-        
+
         if (allPositions == null || allPositions.isEmpty()) {
             System.err.println("错误：没有可用的板块位置");
             System.out.println("可用板块数量: " + (allPositions != null ? allPositions.size() : 0));
@@ -394,16 +396,15 @@ public class GameController {
 
         System.out.println("可用板块数量: " + allPositions.size());
         System.out.println("可用板块列表:");
-        allPositions.forEach((name, pos) -> 
-            System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
+        allPositions.forEach((name, pos) -> System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
 
         // 将板块位置转换为列表，方便随机选择
         List<String> availableTiles = new ArrayList<>(allPositions.keySet());
         System.out.println("随机打乱前的板块顺序:");
         availableTiles.forEach(tile -> System.out.println("  - " + tile));
-        
+
         java.util.Collections.shuffle(availableTiles); // 随机打乱顺序
-        
+
         System.out.println("随机打乱后的板块顺序:");
         availableTiles.forEach(tile -> System.out.println("  - " + tile));
 
@@ -417,15 +418,15 @@ public class GameController {
 
             String tileName = availableTiles.get(i);
             int[] position = allPositions.get(tileName);
-            
+
             System.out.printf("正在为玩家 %d 分配位置:\n", i + 1);
             System.out.printf("  选择的板块: %s\n", tileName);
             System.out.printf("  板块位置: [%d, %d]\n", position[0], position[1]);
-            
+
             // 创建新的Tile对象并设置玩家位置
             Tile tile = new Tile(Model.Enumeration.TileName.valueOf(tileName), position[0], position[1]);
             players.get(i).setCurrentTile(tile);
-            
+
             System.out.printf("  玩家 %d 位置设置完成\n", i + 1);
         }
 
@@ -443,9 +444,9 @@ public class GameController {
             Player player = players.get(i);
             Tile currentTile = player.getCurrentTile();
             if (currentTile != null) {
-                System.out.printf("玩家 %d (%s):\n", 
-                    i + 1, 
-                    player.getRole() != null ? player.getRole().getClass().getSimpleName() : "未分配角色");
+                System.out.printf("玩家 %d (%s):\n",
+                        i + 1,
+                        player.getRole() != null ? player.getRole().getClass().getSimpleName() : "未分配角色");
                 System.out.printf("  板块: %s\n", currentTile.getName());
                 System.out.printf("  位置: [%d, %d]\n", currentTile.getRow(), currentTile.getCol());
                 System.out.printf("  状态: %s\n", currentTile.getState());
@@ -454,5 +455,122 @@ public class GameController {
             }
         }
         System.out.println("================================\n");
+    }
+
+    /**
+     * 检查玩家是否可以加固指定瓦片
+     * 
+     * @param playerIndex 玩家索引
+     * @param targetTile  目标瓦片
+     * @return 如果可以加固则返回true
+     */
+    public boolean canShoreUpTile(int playerIndex, Tile targetTile) {
+        if (playerIndex != currentPlayerIndex || targetTile == null) {
+            return false;
+        }
+        Player player = players.get(playerIndex);
+        Tile currentTile = player.getCurrentTile();
+        boolean isAdjacent = currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile);
+        boolean isShoreable = targetTile.isShoreable();
+        return isAdjacent && isShoreable;
+    }
+
+    /**
+     * 检查玩家是否可以给卡
+     * 
+     * @param fromPlayerIndex 给卡玩家索引
+     * @param toPlayerIndex   收卡玩家索引
+     * @param card            要给的卡牌
+     * @return 如果可以给卡则返回true
+     */
+    public boolean canGiveCard(int fromPlayerIndex, int toPlayerIndex, Card card) {
+        if (fromPlayerIndex != currentPlayerIndex ||
+                toPlayerIndex < 0 || toPlayerIndex >= players.size() ||
+                fromPlayerIndex == toPlayerIndex || card == null) {
+            return false;
+        }
+        Player fromPlayer = players.get(fromPlayerIndex);
+        Player toPlayer = players.get(toPlayerIndex);
+        boolean sameLocation = fromPlayer.getCurrentTile().equals(toPlayer.getCurrentTile());
+        boolean hasCard = fromPlayer.getHandCard().getCards().contains(card);
+        boolean handNotFull = !toPlayer.getHandCard().isFull();
+        return sameLocation && hasCard && handNotFull;
+    }
+
+    /**
+     * 检查玩家是否可以使用特殊技能
+     * 
+     * @param playerIndex 玩家索引
+     * @return 如果可以使用特殊技能则返回true
+     */
+    public boolean canUseSpecialSkill(int playerIndex) {
+        if (playerIndex != currentPlayerIndex) {
+            return false;
+        }
+        Player player = players.get(playerIndex);
+        Role role = player.getRole();
+        if (role == null) {
+            return false;
+        }
+        String roleName = role.getClass().getSimpleName();
+        switch (roleName) {
+            case "Pilot":
+                return true;
+            case "Navigator":
+                return players.size() > 1;
+            case "Engineer":
+                return true;
+            case "Explorer":
+                return true;
+            case "Diver":
+                return true;
+            case "Messenger":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * View层调用此方法发起给牌流程
+     */
+    public void requestGiveCard(int fromPlayerIndex) {
+        Player fromPlayer = players.get(fromPlayerIndex);
+        // 找到同一位置的其他玩家
+        List<Integer> candidateIndexes = new ArrayList<>();
+        for (int i = 0; i < players.size(); i++) {
+            if (i != fromPlayerIndex && players.get(i).getCurrentTile().equals(fromPlayer.getCurrentTile())) {
+                candidateIndexes.add(i);
+            }
+        }
+        if (candidateIndexes.isEmpty()) {
+            System.out.println("[日志] 没有其他玩家在同一位置，无法给牌。");
+            return;
+        }
+        // 日志模拟选择目标玩家
+        int toPlayerIndex = candidateIndexes.get(0); // 默认选第一个
+        System.out.println("[日志] 选择目标玩家: 玩家" + (toPlayerIndex + 1));
+
+        // 日志模拟选择卡牌
+        List<Card> handCards = fromPlayer.getHandCard().getCards();
+        if (handCards.isEmpty()) {
+            System.out.println("[日志] 没有可给出的卡牌。");
+            return;
+        }
+        Card cardToGive = handCards.get(0); // 默认选第一张
+        System.out.println("[日志] 选择要给出的卡牌: " + cardToGive.getName());
+
+        // 调用CardController执行给牌
+        boolean success = cardController.giveCard(fromPlayerIndex, toPlayerIndex, cardToGive);
+        if (success) {
+            System.out.println("[日志] 成功将卡牌[" + cardToGive.getName() + "]从玩家" + (fromPlayerIndex + 1) + "给到玩家"
+                    + (toPlayerIndex + 1));
+        } else {
+            System.out.println("[日志] 给牌失败！");
+        }
+    }
+
+    public List<Player> getPlayers() {
+        return players;
     }
 }
