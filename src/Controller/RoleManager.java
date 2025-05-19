@@ -33,4 +33,19 @@ public class RoleManager {
         Collections.shuffle(shuffledRoles);
         return shuffledRoles.subList(0, playerCount);
     }
+
+    /**
+     * 随机分配角色给玩家，并设置双向绑定
+     * 
+     * @param players 玩家列表
+     */
+    public static void assignRolesToPlayers(List<Model.Player> players) {
+        List<Role> randomRoles = getRandomRoles(players.size());
+        for (int i = 0; i < players.size(); i++) {
+            Model.Player player = players.get(i);
+            Role role = randomRoles.get(i);
+            player.setRole(role);
+            role.setPlayer(player);
+        }
+    }
 }

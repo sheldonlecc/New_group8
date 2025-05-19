@@ -112,13 +112,10 @@ public class GameController {
     }
 
     private void assignRoles() {
-        List<Role> randomRoles = RoleManager.getRandomRoles(players.size());
+        RoleManager.assignRolesToPlayers(players);
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
-            Role role = randomRoles.get(i);
-            player.setRole(role);
-
-            // 更新玩家信息视图中的角色显示
+            Role role = player.getRole();
             PlayerInfoView playerInfoView = playerInfoViews.get(i);
             playerInfoView.setRole(role.getClass().getSimpleName());
         }
