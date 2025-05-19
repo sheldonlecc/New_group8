@@ -14,6 +14,8 @@ import Model.Enumeration.TileName;
 import Model.Enumeration.TileType;
 import Model.Cards.HandCard;
 import Model.Enumeration.TileState;
+import Model.Deck.FloodDeck;
+import Model.Cards.FloodCard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ public class GameController {
     private int currentWaterLevel = 1; // 初始水位设置为1
     private TilePosition tilePosition; // 添加TilePosition对象
     private MapController mapController; // 添加MapController成员变量
+    private final FloodDeck floodDeck;
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
@@ -44,6 +47,7 @@ public class GameController {
         this.waterLevelView = waterLevelView;
         this.tilePosition = null; // 初始化为null，将在设置MapView时更新
         this.mapController = null; // 初始化为null，将在设置MapView时更新
+        this.floodDeck = new FloodDeck(new ArrayList<>());
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家
@@ -157,6 +161,28 @@ public class GameController {
         for (int i = 0; i < playerInfoViews.size(); i++) {
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
         }
+
+        int floodCardCount = currentWaterLevel;
+        for (int i = 0; i < floodCardCount; i++) {
+            FloodCard card = floodDeck.draw();
+            if (card != null) {
+                card.use();
+                floodDeck.discard(card);
+                String stateMsg = "";
+                switch (card.getTargetTile().getState()) {
+                    case FLOODED:
+                        stateMsg = "被淹没";
+                        break;
+                    case SUNK:
+                        stateMsg = "沉没";
+                        break;
+                    default:
+                        stateMsg = "正常";
+                        break;
+                }
+                System.out.println("[日志] 洪水卡抽取：" + card.getTargetTile().getName() + "，当前状态：" + stateMsg);
+            }
+        }
     }
 
     public Player getCurrentPlayer() {
@@ -178,24 +204,19 @@ public class GameController {
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
 
-        // 判断动作类型是否消耗行动点
         boolean consumesAction = actionName.equals("Move") ||
                 actionName.equals("Shore up") ||
                 actionName.equals("Give Cards") ||
                 actionName.equals("Special Skill");
 
         if (!consumesAction || currentActions > 0) {
-            // 处理具体的动作
             switch (actionName) {
                 case "Move":
-                    // 移动动作特殊处理：不立即减少行动点，而是在成功移动后才减少
                     handleMove(playerIndex);
                     break;
                 case "Shore up":
-                    // 其他动作立即减少行动点
                     playerView.setActionPoints(currentActions - 1);
                     currentActions--;
-                    // TODO: 实现加固功能
                     break;
                 case "Give Cards":
                     playerView.setActionPoints(currentActions - 1);
@@ -205,15 +226,13 @@ public class GameController {
                 case "Special Skill":
                     playerView.setActionPoints(currentActions - 1);
                     currentActions--;
-                    // TODO: 实现特殊技能功能
                     break;
                 case "Skip":
                     endTurn(playerIndex);
-                    break;
+                    return;
             }
 
-            // 如果是Skip或行动点用完，结束回合
-            if (actionName.equals("Skip") || currentActions == 0) {
+            if (currentActions == 0) {
                 endTurn(playerIndex);
             }
         }
