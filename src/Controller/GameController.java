@@ -364,7 +364,7 @@ public class GameController {
                     handleMove(playerIndex);
                     break;
                 case "Shore up":
-                    handleShoreUp(playerIndex);
+                    actionSuccess = handleShoreUp(playerIndex);
                     if (actionSuccess) {
                         playerView.setActionPoints(currentActions - 1);
                         currentActions--;
@@ -966,8 +966,9 @@ public class GameController {
      * 处理加固操作
      * 
      * @param playerIndex 玩家索引
+     * @return 如果成功发起加固操作返回true，否则返回false
      */
-    public void handleShoreUp(int playerIndex) {
+    public boolean handleShoreUp(int playerIndex) {
         Player player = players.get(playerIndex);
         Role role = player.getRole();
 
@@ -985,7 +986,7 @@ public class GameController {
         if (!hasSandbag) {
             System.out.println("[日志] 玩家没有沙袋卡，无法使用加固功能");
             JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用加固功能！");
-            return;
+            return false;
         }
 
         // 如果是工程师，可以加固两个板块
@@ -995,18 +996,18 @@ public class GameController {
             engineerShoreUpCount = 0;
             isEngineerShoreUpMode = true;
             engineerSandbagConsumed = false;
-            // 工程师加固前先消耗一张沙袋卡
+        } else {
+            isEngineerShoreUpMode = false;
+            // 非工程师角色直接消耗一张沙袋卡
             player.getHandCard().removeCard(sandbagCard);
             playerInfoViews.get(playerIndex).removeCard(sandbagCard);
             treasureDeck.discard(sandbagCard);
-            engineerSandbagConsumed = true;
-        } else {
-            isEngineerShoreUpMode = false;
         }
 
         // 进入加固模式，等待玩家选择要加固的瓦片
         System.out.println("[日志] 进入加固模式，请选择要加固的瓦片");
         mapController.enterShoreUpMode(playerIndex);
+        return true;
     }
 
     /**
@@ -1258,7 +1259,7 @@ public class GameController {
             return;
         }
 
-        // 实际加固操作（不再每次都消耗沙袋卡）
+        // 实际加固操作
         targetTile.setState(TileState.NORMAL);
         System.out.println("[调试] Tile " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol()
                 + "] 状态: FLOODED -> NORMAL");
@@ -1269,6 +1270,21 @@ public class GameController {
         Player player = players.get(playerIndex);
         if (isEngineerShoreUpMode && player.getRole() instanceof Model.Role.Engineer) {
             engineerShoreUpCount++;
+            
+            // 如果是第一次加固，消耗沙袋卡
+            if (!engineerSandbagConsumed) {
+                // 找到并消耗一张沙袋卡
+                for (Card card : player.getHandCard().getCards()) {
+                    if (card instanceof SandbagCard) {
+                        player.getHandCard().removeCard(card);
+                        playerInfoViews.get(playerIndex).removeCard(card);
+                        treasureDeck.discard(card);
+                        engineerSandbagConsumed = true;
+                        break;
+                    }
+                }
+            }
+            
             // 检查周围是否还有可加固的瓦片
             Tile currentTile = player.getCurrentTile();
             List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
