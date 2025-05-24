@@ -159,7 +159,8 @@ public class CardController implements ActionListener {
                 // 恢复当前弃牌玩家的按钮
                 currentDiscardingPlayer.setButtonsEnabled(true);
                 currentDiscardingPlayer = null;
-                // 不再调用gameController.startNewTurn();
+                // 弃牌完成后，开始新回合
+                gameController.startNewTurn();
             } else {
                 JOptionPane.showMessageDialog(null,
                         "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",

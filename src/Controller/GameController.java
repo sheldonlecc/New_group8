@@ -17,12 +17,20 @@ import Model.Enumeration.TileState;
 import Model.Deck.FloodDeck;
 import Model.Cards.FloodCard;
 import Model.Cards.SandbagCard;
+import Model.Cards.TreasureCard;
+import Model.Enumeration.TreasureType;
+import View.BoardView;
+import View.TreasureView;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import javax.swing.JOptionPane;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 public class GameController {
     private final List<Player> players;
@@ -243,7 +251,8 @@ public class GameController {
 
         boolean consumesAction = actionName.equals("Move") ||
                 actionName.equals("Give Cards") ||
-                actionName.equals("Special Skill");
+                actionName.equals("Special Skill") ||
+                actionName.equals("Get Treasure");
 
         if (!consumesAction || currentActions > 0) {
             switch (actionName) {
@@ -261,6 +270,9 @@ public class GameController {
                 case "Special Skill":
                     playerView.setActionPoints(currentActions - 1);
                     currentActions--;
+                    break;
+                case "Get Treasure":
+                    handleGetTreasure(playerIndex);
                     break;
                 case "Skip":
                     playerView.setActionPoints(0);
@@ -285,6 +297,182 @@ public class GameController {
         // 进入移动模式，等待玩家点击目标位置
         mapController.enterMoveMode(playerIndex);
         System.out.println("========== 移动处理完成 ==========\n");
+    }
+
+    /**
+     * 处理获取宝物
+     * 
+     * @param playerIndex 玩家索引
+     */
+    private void handleGetTreasure(int playerIndex) {
+        System.out.println("\n========== 处理获取宝物 ==========");
+        Player player = players.get(playerIndex);
+        Tile currentTile = player.getCurrentTile();
+
+        // 计算玩家拥有的每种宝物卡的数量
+        Map<TreasureType, Integer> treasureCardCounts = countTreasureCards(player);
+
+        // 检查玩家是否在对应的宝物地点
+        TreasureType matchingTreasureType = getTreasureTypeForTile(currentTile.getName());
+
+        if (matchingTreasureType == null) {
+            System.out.println("当前位置不是宝物地点");
+            JOptionPane.showMessageDialog(null, "当前位置不是宝物地点，无法获取宝物！");
+            return;
+        }
+
+        // 检查是否有足够的宝物卡
+        Integer cardCount = treasureCardCounts.getOrDefault(matchingTreasureType, 0);
+        if (cardCount < 4) {
+            System.out.println("没有足够的宝物卡，需要4张" + matchingTreasureType.getDisplayName() + "宝物卡，当前只有" + cardCount + "张");
+            JOptionPane.showMessageDialog(null,
+                    "没有足够的宝物卡，需要4张" + matchingTreasureType.getDisplayName() + "宝物卡，当前只有" + cardCount + "张");
+            return;
+        }
+
+        // 移除4张宝物卡
+        List<Card> cardsToRemove = new ArrayList<>();
+        int removed = 0;
+
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof TreasureCard) {
+                TreasureCard treasureCard = (TreasureCard) card;
+                if (treasureCard.getTreasureType() == matchingTreasureType && removed < 4) {
+                    cardsToRemove.add(card);
+                    removed++;
+                }
+            }
+        }
+
+        // 从玩家手牌中移除这些卡并丢弃
+        for (Card card : cardsToRemove) {
+            player.getHandCard().removeCard(card);
+            playerInfoViews.get(playerIndex).removeCard(card);
+            treasureDeck.discard(card);
+        }
+
+        // 记录宝物收集
+        treasureDeck.recordTreasureCollection(matchingTreasureType);
+
+        // 更新宝物视图
+        int treasureIndex = getTreasureIndex(matchingTreasureType);
+        updateTreasureViewStatus(treasureIndex, true);
+
+        System.out.println("成功获取宝物：" + matchingTreasureType.getDisplayName());
+        JOptionPane.showMessageDialog(null, "成功获取宝物：" + matchingTreasureType.getDisplayName() + "！");
+
+        // 检查是否收集齐所有宝物
+        if (treasureDeck.allTreasuresCollected()) {
+            System.out.println("已收集齐全部宝物！");
+            JOptionPane.showMessageDialog(null, "恭喜！已收集齐全部宝物！现在前往直升机场逃离岛屿吧！");
+        }
+
+        // 消耗一个行动点
+        PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+        String actionText = playerView.getActionPointsLabel().getText();
+        int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+        playerView.setActionPoints(currentActions - 1);
+
+        System.out.println("========== 获取宝物处理完成 ==========\n");
+    }
+
+    /**
+     * 统计玩家拥有的每种宝物卡的数量
+     * 
+     * @param player 玩家
+     * @return 每种宝物卡的数量
+     */
+    private Map<TreasureType, Integer> countTreasureCards(Player player) {
+        Map<TreasureType, Integer> treasureCardCounts = new HashMap<>();
+
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof TreasureCard) {
+                TreasureCard treasureCard = (TreasureCard) card;
+                TreasureType type = treasureCard.getTreasureType();
+                treasureCardCounts.put(type, treasureCardCounts.getOrDefault(type, 0) + 1);
+            }
+        }
+
+        return treasureCardCounts;
+    }
+
+    /**
+     * 根据瓦片名称获取对应的宝物类型
+     * 
+     * @param tileName 瓦片名称
+     * @return 对应的宝物类型，如果不是宝物地点则返回null
+     */
+    private TreasureType getTreasureTypeForTile(TileName tileName) {
+        switch (tileName) {
+            case TEMPLE_OF_THE_MOON:
+            case TEMPLE_OF_THE_SUN:
+                return TreasureType.EARTH; // 地球宝藏 - 神庙
+            case WHISPERING_GARDEN:
+            case HOWLING_GARDEN:
+                return TreasureType.WIND; // 风之宝藏 - 花园
+            case CAVE_OF_SHADOWS:
+            case CAVE_OF_EMBERS:
+                return TreasureType.FIRE; // 火焰宝藏 - 洞穴
+            case CORAL_PALACE:
+            case TIDAL_PALACE:
+                return TreasureType.WATER; // 水之宝藏 - 宫殿
+            default:
+                return null; // 不是宝物地点
+        }
+    }
+
+    /**
+     * 获取宝物类型对应的宝物视图索引
+     * 
+     * @param treasureType 宝物类型
+     * @return 宝物视图索引
+     */
+    private int getTreasureIndex(TreasureType treasureType) {
+        switch (treasureType) {
+            case EARTH:
+                return 0; // Earth索引为0
+            case FIRE:
+                return 1; // Fire索引为1
+            case WIND:
+                return 2; // Wind索引为2
+            case WATER:
+                return 3; // Water索引为3
+            default:
+                return -1;
+        }
+    }
+
+    /**
+     * 更新宝物视图的状态
+     * 
+     * @param treasureIndex 宝物索引
+     * @param found         是否已找到宝物
+     */
+    private void updateTreasureViewStatus(int treasureIndex, boolean found) {
+        // 由于MapView和TreasureView没有直接关联，我们需要通过BoardView获取TreasureView
+        // 假设我们有一个方法可以获取BoardView，在这里直接使用
+        if (mapController != null && mapController.getMapView() != null) {
+            try {
+                // 在这里尝试获取TreasureView
+                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(mapController.getMapView());
+                if (frame != null) {
+                    for (Component comp : frame.getContentPane().getComponents()) {
+                        if (comp instanceof BoardView) {
+                            BoardView boardView = (BoardView) comp;
+                            TreasureView treasureView = boardView.getTreasureView();
+                            if (treasureView != null) {
+                                treasureView.updateTreasureStatus(treasureIndex, found);
+                                return;
+                            }
+                        }
+                    }
+                }
+                System.out.println("无法找到TreasureView，宝物状态更新失败");
+            } catch (Exception e) {
+                System.err.println("更新宝物视图状态时出错: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
