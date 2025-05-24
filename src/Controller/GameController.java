@@ -364,11 +364,7 @@ public class GameController {
                     handleMove(playerIndex);
                     break;
                 case "Shore up":
-                    actionSuccess = handleShoreUp(playerIndex);
-                    if (actionSuccess) {
-                        playerView.setActionPoints(currentActions - 1);
-                        currentActions--;
-                    }
+                    handleShoreUp(playerIndex);
                     break;
                 case "Give Cards":
                     // 先尝试给牌，如果成功才消耗行动点
@@ -974,11 +970,9 @@ public class GameController {
 
         // 检查玩家是否有沙袋卡
         boolean hasSandbag = false;
-        Card sandbagCard = null;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
                 hasSandbag = true;
-                sandbagCard = card;
                 break;
             }
         }
@@ -998,10 +992,6 @@ public class GameController {
             engineerSandbagConsumed = false;
         } else {
             isEngineerShoreUpMode = false;
-            // 非工程师角色直接消耗一张沙袋卡
-            player.getHandCard().removeCard(sandbagCard);
-            playerInfoViews.get(playerIndex).removeCard(sandbagCard);
-            treasureDeck.discard(sandbagCard);
         }
 
         // 进入加固模式，等待玩家选择要加固的瓦片
@@ -1259,6 +1249,22 @@ public class GameController {
             return;
         }
 
+        Player player = players.get(playerIndex);
+        
+        // 消耗沙袋卡
+        Card sandbagCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof SandbagCard) {
+                sandbagCard = card;
+                break;
+            }
+        }
+        
+        if (sandbagCard == null) {
+            System.out.println("[日志] 没有找到沙袋卡，无法加固");
+            return;
+        }
+
         // 实际加固操作
         targetTile.setState(TileState.NORMAL);
         System.out.println("[调试] Tile " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol()
@@ -1266,24 +1272,20 @@ public class GameController {
         System.out.println("[日志] 成功加固瓦片：" + targetTile.getName() + " [坐标: " + targetTile.getRow() + ","
                 + targetTile.getCol() + "]");
 
+        // 消耗沙袋卡
+        player.getHandCard().removeCard(sandbagCard);
+        playerInfoViews.get(playerIndex).removeCard(sandbagCard);
+        treasureDeck.discard(sandbagCard);
+
+        // 减少行动点数
+        PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+        String actionText = playerView.getActionPointsLabel().getText();
+        int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+        playerView.setActionPoints(currentActions - 1);
+
         // 工程师加固两次逻辑
-        Player player = players.get(playerIndex);
         if (isEngineerShoreUpMode && player.getRole() instanceof Model.Role.Engineer) {
             engineerShoreUpCount++;
-            
-            // 如果是第一次加固，消耗沙袋卡
-            if (!engineerSandbagConsumed) {
-                // 找到并消耗一张沙袋卡
-                for (Card card : player.getHandCard().getCards()) {
-                    if (card instanceof SandbagCard) {
-                        player.getHandCard().removeCard(card);
-                        playerInfoViews.get(playerIndex).removeCard(card);
-                        treasureDeck.discard(card);
-                        engineerSandbagConsumed = true;
-                        break;
-                    }
-                }
-            }
             
             // 检查周围是否还有可加固的瓦片
             Tile currentTile = player.getCurrentTile();
@@ -1309,6 +1311,11 @@ public class GameController {
         } else {
             // 不是工程师或不是工程师加固模式，直接退出
             mapController.exitShoreUpMode();
+        }
+
+        // 如果行动点用完，结束回合
+        if (currentActions - 1 == 0) {
+            endTurn(playerIndex);
         }
     }
 
