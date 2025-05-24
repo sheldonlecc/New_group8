@@ -2,12 +2,13 @@ package Model.Role;
 
 import Model.Player;
 import Model.Tile;
+import Model.Enumeration.TileState;
 import java.util.List;
 
 public abstract class Role {
     private String name;
     private String ability;
-    private Player player;  // 持有该角色的玩家
+    private Player player; // 持有该角色的玩家
 
     public Role(String name, String ability) {
         this.name = name;
@@ -44,4 +45,13 @@ public abstract class Role {
 
     // 检查是否可以加固指定瓦片
     public abstract boolean canShoreUp(Tile tile);
+
+    // 检查瓦片是否可以移动（基础检查）
+    protected boolean isTileMovable(Tile tile) {
+        if (tile == null) {
+            return false;
+        }
+        // 只检查是否沉没，被淹没的瓦片可以移动
+        return tile.getState() != TileState.SUNK;
+    }
 }

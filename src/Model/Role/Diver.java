@@ -13,7 +13,7 @@ public class Diver extends Role {
 
     @Override
     public boolean canUseAbility() {
-        return true;  // 潜水员的能力是永久的，不需要特殊条件
+        return true; // 潜水员的能力是永久的，不需要特殊条件
     }
 
     @Override
@@ -25,17 +25,19 @@ public class Diver extends Role {
     public List<Tile> getMovableTiles() {
         List<Tile> movableTiles = new ArrayList<>();
         Player player = getPlayer();
-        if (player == null) return movableTiles;
+        if (player == null)
+            return movableTiles;
 
         Tile currentTile = player.getCurrentTile();
-        if (currentTile == null) return movableTiles;
+        if (currentTile == null)
+            return movableTiles;
 
         // 获取所有相邻瓦片
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
-        
+
         // 潜水员可以移动到任何相邻的瓦片，包括被淹没的和缺失的
         for (Tile tile : adjacentTiles) {
-            if (tile.getState() != TileState.SUNK) {  // 不能移动到已沉没的瓦片
+            if (tile.getState() != TileState.SUNK) { // 不能移动到已沉没的瓦片
                 movableTiles.add(tile);
             }
         }
@@ -45,8 +47,9 @@ public class Diver extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        if (tile == null) return false;
-        return tile.getState() != TileState.SUNK;  // 不能移动到已沉没的瓦片
+        if (tile == null)
+            return false;
+        return tile.getState() != TileState.SUNK; // 不能移动到已沉没的瓦片
     }
 
     @Override

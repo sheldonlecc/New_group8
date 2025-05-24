@@ -4,6 +4,7 @@ import Model.Tile;
 import Model.TilePosition;
 import Model.Player;
 import Model.Enumeration.TileState;
+import Model.Role.Role;
 import View.MapView;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -17,7 +18,9 @@ public class MapController implements ActionListener {
     private final MapView mapView;
     private boolean isMoveMode = false;
     private boolean isInShoreUpMode = false;
+    private boolean isNavigatorMoveMode = false;
     private int currentPlayerIndex = -1;
+    private int targetPlayerIndex = -1; // 领航员移动模式下的目标玩家索引
 
     public MapController(GameController gameController, MapView mapView) {
         this.gameController = gameController;
@@ -36,7 +39,7 @@ public class MapController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!isMoveMode && !isInShoreUpMode) {
+        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode) {
             return;
         }
 
@@ -54,6 +57,12 @@ public class MapController implements ActionListener {
     private void handleTileClick(int row, int col) {
         System.out.println("\n========== 处理板块点击 ==========");
         System.out.printf("点击位置: [%d, %d]\n", row, col);
+
+        if (isNavigatorMoveMode) {
+            // 处理领航员移动其他玩家
+            gameController.moveOtherPlayer(currentPlayerIndex, targetPlayerIndex, row, col);
+            return;
+        }
 
         // 获取当前玩家
         Player currentPlayer = gameController.getCurrentPlayer();
@@ -89,25 +98,39 @@ public class MapController implements ActionListener {
             exitMoveMode();
         } else if (isInShoreUpMode) {
             gameController.shoreUpTile(currentPlayerIndex, row, col);
-            exitShoreUpMode();
         }
 
         System.out.println("========== 板块点击处理完成 ==========\n");
     }
 
     private boolean isValidMove(Player player, Tile targetTile) {
-        // 检查目标板块是否被淹没
+        // 检查目标板块是否被沉没
         if (targetTile.getState() == TileState.SUNK) {
+            System.out.println("目标板块已沉没，无法移动");
             return false;
         }
 
         // 获取当前板块
         Tile currentTile = player.getCurrentTile();
         if (currentTile == null) {
+            System.out.println("无法获取当前板块");
             return false;
         }
 
-        // 检查是否相邻
+        // 获取角色
+        Role role = player.getRole();
+        if (role == null) {
+            System.out.println("玩家没有角色，无法移动");
+            return false;
+        }
+
+        // 检查角色是否可以移动到该瓦片
+        if (!role.canMoveTo(targetTile)) {
+            System.out.println("当前角色无法移动到该板块");
+            return false;
+        }
+
+        // 检查是否相邻（考虑探险家的斜向移动）
         int currentRow = currentTile.getRow();
         int currentCol = currentTile.getCol();
         int targetRow = targetTile.getRow();
@@ -116,7 +139,17 @@ public class MapController implements ActionListener {
         // 计算曼哈顿距离
         int distance = Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
 
-        // 如果距离为1，说明是相邻的
+        // 如果是探险家，允许斜向移动（距离为2）
+        if (role instanceof Model.Role.Explorer) {
+            return distance <= 2;
+        }
+
+        // 如果是飞行员且能力可用，可以移动到任何位置
+        if (role instanceof Model.Role.Pilot && role.canUseAbility()) {
+            return true;
+        }
+
+        // 其他角色只能移动到相邻位置
         return distance == 1;
     }
 
@@ -223,7 +256,7 @@ public class MapController implements ActionListener {
     /**
      * 退出加固模式
      */
-    private void exitShoreUpMode() {
+    public void exitShoreUpMode() {
         isInShoreUpMode = false;
         currentPlayerIndex = -1;
 
@@ -233,5 +266,90 @@ public class MapController implements ActionListener {
             button.setEnabled(true);
             button.setBackground(null); // 恢复默认背景色
         }
+    }
+
+    /**
+     * 进入领航员移动模式
+     * 
+     * @param navigatorIndex    领航员玩家索引
+     * @param targetPlayerIndex 目标玩家索引
+     */
+    public void enterNavigatorMoveMode(int navigatorIndex, int targetPlayerIndex) {
+        System.out.println("\n========== 进入领航员移动模式 ==========");
+        System.out.println("领航员玩家: " + (navigatorIndex + 1));
+        System.out.println("目标玩家: " + (targetPlayerIndex + 1));
+
+        isNavigatorMoveMode = true;
+        isMoveMode = false;
+        isInShoreUpMode = false;
+        currentPlayerIndex = navigatorIndex;
+        this.targetPlayerIndex = targetPlayerIndex;
+
+        // 高亮显示可移动的区域
+        highlightNavigatorMovableTiles(targetPlayerIndex);
+        System.out.println("========== 领航员移动模式已进入 ==========\n");
+    }
+
+    /**
+     * 高亮显示领航员可移动的区域
+     * 
+     * @param targetPlayerIndex 目标玩家索引
+     */
+    private void highlightNavigatorMovableTiles(int targetPlayerIndex) {
+        Player targetPlayer = gameController.getPlayers().get(targetPlayerIndex);
+        Tile currentTile = targetPlayer.getCurrentTile();
+
+        // 重置所有按钮状态
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null) {
+                button.setEnabled(true);
+                button.setBackground(null);
+            }
+        }
+
+        // 高亮显示可移动的区域（距离为2以内的所有非沉没板块）
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                Tile tile = mapView.getTile(i, j);
+                if (tile != null && tile.getState() != TileState.SUNK) {
+                    int distance = Math.abs(currentTile.getRow() - i) + Math.abs(currentTile.getCol() - j);
+                    if (distance <= 2) {
+                        JButton button = mapView.getButton(i, j);
+                        if (button != null) {
+                            button.setBackground(new Color(200, 255, 200)); // 浅绿色高亮
+                        }
+                    }
+                }
+            }
+        }
+
+        // 禁用不可移动的区域
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null && button.getBackground() == null) {
+                button.setEnabled(false);
+            }
+        }
+    }
+
+    /**
+     * 退出领航员移动模式
+     */
+    public void exitNavigatorMoveMode() {
+        System.out.println("\n========== 退出领航员移动模式 ==========");
+        isNavigatorMoveMode = false;
+        currentPlayerIndex = -1;
+        targetPlayerIndex = -1;
+
+        // 重置所有按钮状态
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null) {
+                button.setEnabled(true);
+                button.setBackground(null);
+            }
+        }
+        System.out.println("========== 领航员移动模式已退出 ==========\n");
     }
 }

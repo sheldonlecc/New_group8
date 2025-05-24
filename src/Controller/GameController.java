@@ -45,6 +45,12 @@ public class GameController {
     private TilePosition tilePosition; // 添加TilePosition对象
     private MapController mapController; // 添加MapController成员变量
     private FloodDeck floodDeck;
+    private boolean floodDeckInitialized = false;
+
+    // ========== 工程师加固两次机制 ==========
+    private int engineerShoreUpCount = 0;
+    private boolean isEngineerShoreUpMode = false;
+    private boolean engineerSandbagConsumed = false;
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
@@ -56,18 +62,8 @@ public class GameController {
         this.waterLevelView = waterLevelView;
         this.tilePosition = null;
         this.mapController = null;
-        this.floodDeck = new FloodDeck(new ArrayList<>());
-
-        // 初始化洪水牌堆
-        List<Tile> allTiles = new ArrayList<>();
-        if (tilePosition != null) {
-            Map<String, int[]> positions = tilePosition.getAllTilePositions();
-            for (Map.Entry<String, int[]> entry : positions.entrySet()) {
-                Tile tile = new Tile(TileName.valueOf(entry.getKey()), entry.getValue()[0], entry.getValue()[1]);
-                allTiles.add(tile);
-            }
-        }
-        this.floodDeck = new FloodDeck(allTiles);
+        // floodDeck 不在这里初始化
+        // this.floodDeck = new FloodDeck(new ArrayList<>());
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家
@@ -205,9 +201,11 @@ public class GameController {
         for (int i = 0; i < floodCardCount; i++) {
             FloodCard card = floodDeck.draw();
             if (card != null) {
+                Tile targetTile = card.getTargetTile();
+                TileState beforeState = targetTile.getState();
                 card.use();
                 floodDeck.discard(card);
-                Tile targetTile = card.getTargetTile();
+
                 String stateMsg = "";
                 switch (targetTile.getState()) {
                     case FLOODED:
@@ -220,8 +218,17 @@ public class GameController {
                         stateMsg = "正常";
                         break;
                 }
+
+                String stateChange = "";
+                if (beforeState == TileState.NORMAL && targetTile.getState() == TileState.FLOODED) {
+                    stateChange = "正常 -> 被淹没";
+                } else if (beforeState == TileState.FLOODED && targetTile.getState() == TileState.SUNK) {
+                    stateChange = "被淹没 -> 沉没";
+                }
+
                 System.out.println("[日志] 洪水卡抽取：" + targetTile.getName() +
                         " [坐标: " + targetTile.getRow() + "," + targetTile.getCol() + "]" +
+                        "，状态变化：" + stateChange +
                         "，当前状态：" + stateMsg);
             } else {
                 System.out.println("[警告] 洪水牌堆已空！");
@@ -251,25 +258,34 @@ public class GameController {
 
         boolean consumesAction = actionName.equals("Move") ||
                 actionName.equals("Give Cards") ||
-                actionName.equals("Special Skill") ||
-                actionName.equals("Get Treasure");
+                actionName.equals("Get Treasure") ||
+                actionName.equals("Shore up"); // 添加加固操作到消耗行动点的操作列表中
 
         if (!consumesAction || currentActions > 0) {
+            boolean actionSuccess = true;
+
             switch (actionName) {
                 case "Move":
                     handleMove(playerIndex);
                     break;
                 case "Shore up":
                     handleShoreUp(playerIndex);
+                    if (actionSuccess) {
+                        playerView.setActionPoints(currentActions - 1);
+                        currentActions--;
+                    }
                     break;
                 case "Give Cards":
-                    playerView.setActionPoints(currentActions - 1);
-                    currentActions--;
-                    requestGiveCard(playerIndex);
+                    // 先尝试给牌，如果成功才消耗行动点
+                    actionSuccess = requestGiveCard(playerIndex);
+                    if (actionSuccess) {
+                        playerView.setActionPoints(currentActions - 1);
+                        currentActions--;
+                    }
                     break;
                 case "Special Skill":
-                    playerView.setActionPoints(currentActions - 1);
-                    currentActions--;
+                    // 特殊技能不在这里消耗行动点，而是在技能完成后消耗
+                    handleSpecialSkill(playerIndex);
                     break;
                 case "Get Treasure":
                     handleGetTreasure(playerIndex);
@@ -586,11 +602,12 @@ public class GameController {
         System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
         this.tilePosition = mapView.getTilePosition();
         this.mapController = new MapController(this, mapView);
-
-        // 只用MapView的Tile对象
-        List<Tile> allTiles = mapView.getAllTiles();
-        this.floodDeck = new FloodDeck(allTiles);
-
+        // 只在第一次设置地图时初始化洪水牌堆
+        if (!floodDeckInitialized) {
+            List<Tile> allTiles = mapView.getAllTiles();
+            this.floodDeck = new FloodDeck(allTiles);
+            floodDeckInitialized = true;
+        }
         System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
         if (this.tilePosition != null) {
             Map<String, int[]> positions = this.tilePosition.getAllTilePositions();
@@ -599,7 +616,6 @@ public class GameController {
                 System.out.println("可用板块列表:");
                 positions.forEach((name, pos) -> System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
             }
-
             // 在设置完tilePosition后初始化玩家位置
             System.out.println("正在初始化玩家位置...");
             initializePlayerPositions(mapView);
@@ -724,8 +740,17 @@ public class GameController {
             return false;
         }
         Player player = players.get(playerIndex);
+        Role role = player.getRole();
         Tile currentTile = player.getCurrentTile();
-        boolean isAdjacent = currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile);
+
+        // 检查是否是探险家
+        boolean isExplorer = role instanceof Model.Role.Explorer;
+
+        // 如果是探险家，允许斜向加固
+        boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 &&
+                Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1)
+                : (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
+
         boolean isShoreable = targetTile.isShoreable();
         return isAdjacent && isShoreable;
     }
@@ -788,20 +813,30 @@ public class GameController {
 
     /**
      * View层调用此方法发起给牌流程
+     * 
+     * @return 如果成功发起给牌流程返回true，否则返回false
      */
-    public void requestGiveCard(int fromPlayerIndex) {
+    public boolean requestGiveCard(int fromPlayerIndex) {
         Player fromPlayer = players.get(fromPlayerIndex);
-        // 找到同一位置的其他玩家
+        // 找到可以给牌的玩家（考虑信使的特殊能力）
         List<Integer> candidateIndexes = new ArrayList<>();
+        boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
+
         for (int i = 0; i < players.size(); i++) {
-            if (i != fromPlayerIndex && players.get(i).getCurrentTile().equals(fromPlayer.getCurrentTile())) {
-                candidateIndexes.add(i);
+            if (i != fromPlayerIndex) {
+                Player targetPlayer = players.get(i);
+                if (isMessenger || fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile())) {
+                    candidateIndexes.add(i);
+                }
             }
         }
+
         if (candidateIndexes.isEmpty()) {
-            System.out.println("[日志] 没有其他玩家在同一位置，无法给牌。");
-            return;
+            System.out.println("[日志] 没有可以给牌的玩家。");
+            JOptionPane.showMessageDialog(null, "没有可以给牌的玩家！");
+            return false;
         }
+
         // 日志模拟选择目标玩家
         int toPlayerIndex = candidateIndexes.get(0); // 默认选第一个
         System.out.println("[日志] 选择目标玩家: 玩家" + (toPlayerIndex + 1));
@@ -810,7 +845,8 @@ public class GameController {
         List<Card> handCards = fromPlayer.getHandCard().getCards();
         if (handCards.isEmpty()) {
             System.out.println("[日志] 没有可给出的卡牌。");
-            return;
+            JOptionPane.showMessageDialog(null, "没有可给出的卡牌！");
+            return false;
         }
         Card cardToGive = handCards.get(0); // 默认选第一张
         System.out.println("[日志] 选择要给出的卡牌: " + cardToGive.getName());
@@ -823,6 +859,7 @@ public class GameController {
         } else {
             System.out.println("[日志] 给牌失败！");
         }
+        return success;
     }
 
     /**
@@ -830,13 +867,17 @@ public class GameController {
      * 
      * @param playerIndex 玩家索引
      */
-    private void handleShoreUp(int playerIndex) {
+    public void handleShoreUp(int playerIndex) {
         Player player = players.get(playerIndex);
+        Role role = player.getRole();
+
         // 检查玩家是否有沙袋卡
         boolean hasSandbag = false;
+        Card sandbagCard = null;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
                 hasSandbag = true;
+                sandbagCard = card;
                 break;
             }
         }
@@ -847,9 +888,255 @@ public class GameController {
             return;
         }
 
+        // 如果是工程师，可以加固两个板块
+        if (role instanceof Model.Role.Engineer) {
+            System.out.println("[日志] 工程师可以加固两个板块");
+            JOptionPane.showMessageDialog(null, "作为工程师，你可以连续加固最多两个板块！");
+            engineerShoreUpCount = 0;
+            isEngineerShoreUpMode = true;
+            engineerSandbagConsumed = false;
+            // 工程师加固前先消耗一张沙袋卡
+            player.getHandCard().removeCard(sandbagCard);
+            playerInfoViews.get(playerIndex).removeCard(sandbagCard);
+            treasureDeck.discard(sandbagCard);
+            engineerSandbagConsumed = true;
+        } else {
+            isEngineerShoreUpMode = false;
+        }
+
         // 进入加固模式，等待玩家选择要加固的瓦片
         System.out.println("[日志] 进入加固模式，请选择要加固的瓦片");
         mapController.enterShoreUpMode(playerIndex);
+    }
+
+    /**
+     * 处理特殊技能
+     * 
+     * @param playerIndex 玩家索引
+     */
+    private void handleSpecialSkill(int playerIndex) {
+        Player player = players.get(playerIndex);
+        Role role = player.getRole();
+
+        if (role == null) {
+            System.out.println("[日志] 玩家没有角色，无法使用特殊技能");
+            return;
+        }
+
+        // 检查是否可以使用特殊技能
+        if (!role.canUseAbility()) {
+            System.out.println("[日志] 当前无法使用特殊技能");
+            JOptionPane.showMessageDialog(null, "当前无法使用特殊技能！");
+            return;
+        }
+
+        // 根据角色类型处理特殊技能
+        if (role instanceof Model.Role.Pilot) {
+            // 飞行员可以飞到任何位置
+            System.out.println("[日志] 飞行员可以使用飞行能力");
+            mapController.enterMoveMode(playerIndex);
+            role.useSpecialAbility();
+
+            // 飞行员使用特殊技能后立即消耗一个行动点
+            PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+            String actionText = playerView.getActionPointsLabel().getText();
+            int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+            playerView.setActionPoints(currentActions - 1);
+
+            // 如果行动点用完，结束回合
+            if (currentActions - 1 == 0) {
+                endTurn(playerIndex);
+            }
+        } else if (role instanceof Model.Role.Navigator) {
+            // 领航员可以移动其他玩家
+            System.out.println("[日志] 领航员可以使用移动其他玩家的能力");
+            handleNavigatorAbility(playerIndex);
+        } else {
+            System.out.println("[日志] 该角色没有需要主动使用的特殊技能");
+            JOptionPane.showMessageDialog(null, "该角色没有需要主动使用的特殊技能！");
+        }
+    }
+
+    /**
+     * 处理领航员的特殊能力
+     * 
+     * @param navigatorIndex 领航员玩家索引
+     */
+    private void handleNavigatorAbility(int navigatorIndex) {
+        // 获取所有其他玩家
+        List<Player> otherPlayers = new ArrayList<>();
+        for (int i = 0; i < players.size(); i++) {
+            if (i != navigatorIndex) {
+                otherPlayers.add(players.get(i));
+            }
+        }
+
+        if (otherPlayers.isEmpty()) {
+            System.out.println("[日志] 没有其他玩家可以移动");
+            JOptionPane.showMessageDialog(null, "没有其他玩家可以移动！");
+            return;
+        }
+
+        // 创建玩家选择对话框
+        String[] playerOptions = new String[otherPlayers.size()];
+        for (int i = 0; i < otherPlayers.size(); i++) {
+            Player p = otherPlayers.get(i);
+            playerOptions[i] = "玩家 " + (players.indexOf(p) + 1) + " (" + p.getRole().getClass().getSimpleName() + ")";
+        }
+
+        // 显示玩家选择对话框
+        int selectedPlayerIndex = JOptionPane.showOptionDialog(
+                null,
+                "选择要移动的玩家：",
+                "领航员能力",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                playerOptions,
+                playerOptions[0]);
+
+        if (selectedPlayerIndex == -1) {
+            System.out.println("[日志] 玩家取消了选择");
+            return;
+        }
+
+        // 获取选中的玩家
+        Player targetPlayer = otherPlayers.get(selectedPlayerIndex);
+        int targetPlayerIndex = players.indexOf(targetPlayer);
+
+        // 设置目标玩家的移动次数为2
+        PlayerInfoView targetPlayerView = playerInfoViews.get(targetPlayerIndex);
+        targetPlayerView.setActionPoints(2);
+
+        // 使用领航员的能力
+        Role navigatorRole = players.get(navigatorIndex).getRole();
+        if (navigatorRole != null) {
+            navigatorRole.useSpecialAbility();
+        }
+
+        // 进入移动模式，但移动的是目标玩家
+        System.out.println("[日志] 进入领航员移动模式，移动玩家 " + (targetPlayerIndex + 1));
+        mapController.enterNavigatorMoveMode(navigatorIndex, targetPlayerIndex);
+
+        // 显示提示信息
+        JOptionPane.showMessageDialog(null,
+                "玩家 " + (targetPlayerIndex + 1) + " 现在可以移动两次！\n" +
+                        "完成两次移动后，将消耗领航员的一个行动点。",
+                "领航员能力",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * 移动其他玩家到指定位置（领航员使用）
+     * 
+     * @param navigatorIndex    领航员玩家索引
+     * @param targetPlayerIndex 目标玩家索引
+     * @param row               目标行
+     * @param col               目标列
+     */
+    public void moveOtherPlayer(int navigatorIndex, int targetPlayerIndex, int row, int col) {
+        if (navigatorIndex < 0 || navigatorIndex >= players.size() ||
+                targetPlayerIndex < 0 || targetPlayerIndex >= players.size() ||
+                navigatorIndex == targetPlayerIndex) {
+            return;
+        }
+
+        Player targetPlayer = players.get(targetPlayerIndex);
+        Tile currentTile = targetPlayer.getCurrentTile();
+        System.out.printf("玩家 %d 当前位置: %s [%d, %d]\n",
+                targetPlayerIndex + 1,
+                currentTile.getName(),
+                currentTile.getRow(),
+                currentTile.getCol());
+
+        // 获取目标板块对象
+        Tile targetTile = mapController.getMapView().getTile(row, col);
+        if (targetTile != null) {
+            // 检查移动是否合法
+            if (isValidNavigatorMove(targetPlayer, targetTile)) {
+                targetPlayer.setCurrentTile(targetTile);
+                System.out.printf("领航员移动玩家 %d 到: %s [%d, %d]\n",
+                        targetPlayerIndex + 1,
+                        targetTile.getName(),
+                        targetTile.getRow(),
+                        targetTile.getCol());
+
+                // 减少目标玩家的移动次数
+                PlayerInfoView targetPlayerView = playerInfoViews.get(targetPlayerIndex);
+                String actionText = targetPlayerView.getActionPointsLabel().getText();
+                int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+                targetPlayerView.setActionPoints(currentActions - 1);
+
+                // 如果目标玩家没有剩余移动次数，消耗领航员的一个行动点并退出移动模式
+                if (currentActions - 1 == 0) {
+                    // 退出领航员移动模式
+                    mapController.exitNavigatorMoveMode();
+
+                    // 显示提示信息
+                    JOptionPane.showMessageDialog(null,
+                            "目标玩家已完成两次移动！\n" +
+                                    "已消耗领航员的一个行动点。",
+                            "领航员能力",
+                            JOptionPane.INFORMATION_MESSAGE);
+
+                    // 消耗领航员的一个行动点
+                    PlayerInfoView navigatorView = playerInfoViews.get(navigatorIndex);
+                    String navigatorActionText = navigatorView.getActionPointsLabel().getText();
+                    int navigatorActions = Integer.parseInt(navigatorActionText.split(":")[1].trim());
+                    navigatorView.setActionPoints(navigatorActions - 1);
+
+                    // 如果领航员没有剩余行动点，结束回合
+                    if (navigatorActions - 1 == 0) {
+                        endTurn(navigatorIndex);
+                    }
+                } else {
+                    // 显示剩余移动次数
+                    JOptionPane.showMessageDialog(null,
+                            "玩家 " + (targetPlayerIndex + 1) + " 还可以移动 " + (currentActions - 1) + " 次！",
+                            "领航员能力",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+            } else {
+                System.out.println("[日志] 非法移动：目标位置不可到达");
+                JOptionPane.showMessageDialog(null, "非法移动：目标位置不可到达", "移动错误", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    /**
+     * 检查领航员移动其他玩家是否合法
+     * 
+     * @param targetPlayer 目标玩家
+     * @param targetTile   目标板块
+     * @return 如果移动合法则返回true
+     */
+    private boolean isValidNavigatorMove(Player targetPlayer, Tile targetTile) {
+        // 只检查是否沉没，被淹没的瓦片可以移动
+        if (targetTile.getState() == TileState.SUNK) {
+            System.out.println("目标板块已沉没，无法移动");
+            return false;
+        }
+
+        Tile currentTile = targetPlayer.getCurrentTile();
+        if (currentTile == null) {
+            System.out.println("无法获取当前板块");
+            return false;
+        }
+
+        // 检查目标玩家是否是探险家
+        boolean isExplorer = targetPlayer.getRole() instanceof Model.Role.Explorer;
+
+        // 计算曼哈顿距离
+        int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
+        int colDistance = Math.abs(currentTile.getCol() - targetTile.getCol());
+
+        // 如果是探险家，允许斜向移动
+        if (isExplorer) {
+            return rowDistance <= 1 && colDistance <= 1;
+        }
+
+        // 其他玩家只能移动到相邻格子
+        return (rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1);
     }
 
     /**
@@ -870,10 +1157,42 @@ public class GameController {
             System.out.println("[日志] 无法加固该瓦片");
             return;
         }
-        // 调用CardController的useSandbagCard方法
-        boolean success = cardController.useSandbagCard(playerIndex, targetTile);
-        if (!success) {
-            System.out.println("[日志] 沙袋卡加固失败");
+
+        // 实际加固操作（不再每次都消耗沙袋卡）
+        targetTile.setState(TileState.NORMAL);
+        System.out.println("[调试] Tile " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol()
+                + "] 状态: FLOODED -> NORMAL");
+        System.out.println("[日志] 成功加固瓦片：" + targetTile.getName() + " [坐标: " + targetTile.getRow() + ","
+                + targetTile.getCol() + "]");
+
+        // 工程师加固两次逻辑
+        Player player = players.get(playerIndex);
+        if (isEngineerShoreUpMode && player.getRole() instanceof Model.Role.Engineer) {
+            engineerShoreUpCount++;
+            // 检查周围是否还有可加固的瓦片
+            Tile currentTile = player.getCurrentTile();
+            List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
+            shoreableTiles.add(currentTile);
+            int shoreableCount = 0;
+            for (Tile tile : shoreableTiles) {
+                if (tile.isShoreable()) {
+                    shoreableCount++;
+                }
+            }
+            if (engineerShoreUpCount < 2 && shoreableCount > 1) {
+                JOptionPane.showMessageDialog(null, "你还可以再加固一个板块！");
+                // 继续等待玩家选择下一个瓦片
+                return;
+            } else {
+                isEngineerShoreUpMode = false;
+                engineerShoreUpCount = 0;
+                engineerSandbagConsumed = false;
+                JOptionPane.showMessageDialog(null, "本回合工程师加固已完成！");
+                mapController.exitShoreUpMode();
+            }
+        } else {
+            // 不是工程师或不是工程师加固模式，直接退出
+            mapController.exitShoreUpMode();
         }
     }
 

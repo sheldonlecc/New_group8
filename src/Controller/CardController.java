@@ -64,7 +64,7 @@ public class CardController implements ActionListener {
 
     private void handleSandbagCard(SandbagCard card) {
         // 处理沙袋卡点击逻辑
-        // gameController.handleSandbagUse(card);
+        gameController.handleShoreUp(gameController.getCurrentPlayerIndex());
     }
 
     private void handleHelicopterCard(HelicopterCard card) {
@@ -179,10 +179,14 @@ public class CardController implements ActionListener {
         Player toPlayer = gc.getPlayers().get(toPlayerIndex);
 
         // 检查条件
-        if (!fromPlayer.getCurrentTile().equals(toPlayer.getCurrentTile())) {
-            System.out.println("[日志] 两个玩家不在同一位置，不能给牌。");
+        boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
+        boolean sameLocation = fromPlayer.getCurrentTile().equals(toPlayer.getCurrentTile());
+
+        if (!sameLocation && !isMessenger) {
+            System.out.println("[日志] 两个玩家不在同一位置，且不是信使，不能给牌。");
             return false;
         }
+
         if (!fromPlayer.getHandCard().getCards().contains(card)) {
             System.out.println("[日志] 给牌玩家没有这张卡。");
             return false;

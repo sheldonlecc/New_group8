@@ -62,11 +62,13 @@ public class FloodCard extends Card {
         TileState before = tile.getState();
         if (before == TileState.NORMAL) {
             tile.setState(TileState.FLOODED);
+            System.out.println(
+                    "[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: 正常 -> 被淹没");
         } else if (before == TileState.FLOODED) {
             tile.setState(TileState.SUNK);
+            System.out.println(
+                    "[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: 被淹没 -> 沉没");
         }
-        System.out.println("[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: "
-                + before + " -> " + tile.getState());
 
         // 使用后禁用卡牌
         setUsable(false);

@@ -13,7 +13,7 @@ public class Engineer extends Role {
 
     @Override
     public boolean canUseAbility() {
-        return true;  // 工程师的能力是永久的，不需要特殊条件
+        return true; // 工程师的能力是永久的，不需要特殊条件
     }
 
     @Override
@@ -25,14 +25,16 @@ public class Engineer extends Role {
     public List<Tile> getMovableTiles() {
         List<Tile> movableTiles = new ArrayList<>();
         Player player = getPlayer();
-        if (player == null) return movableTiles;
+        if (player == null)
+            return movableTiles;
 
         Tile currentTile = player.getCurrentTile();
-        if (currentTile == null) return movableTiles;
+        if (currentTile == null)
+            return movableTiles;
 
         // 获取所有相邻瓦片
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
-        
+
         // 工程师只能移动到未被淹没的相邻瓦片
         for (Tile tile : adjacentTiles) {
             if (tile.getState() == TileState.NORMAL) {
@@ -45,8 +47,7 @@ public class Engineer extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        if (tile == null) return false;
-        return tile.getState() == TileState.NORMAL;  // 只能移动到未被淹没的瓦片
+        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
     }
 
     @Override
