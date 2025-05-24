@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Pilot extends Role {
-    private boolean hasUsedAbility = false;  // 记录是否已经使用过能力
+    private boolean hasUsedAbility = false; // 记录是否已经使用过能力
 
     public Pilot() {
         super("飞行员", "每轮可以花费1个行动移动到任意板块");
@@ -15,26 +15,28 @@ public class Pilot extends Role {
 
     @Override
     public boolean canUseAbility() {
-        return !hasUsedAbility;  // 每回合只能使用一次能力
+        return !hasUsedAbility; // 每回合只能使用一次能力
     }
 
     @Override
     public void useSpecialAbility() {
-        hasUsedAbility = true;  // 标记已使用能力
+        hasUsedAbility = true; // 标记已使用能力
     }
 
     @Override
     public List<Tile> getMovableTiles() {
         List<Tile> movableTiles = new ArrayList<>();
         Player player = getPlayer();
-        if (player == null) return movableTiles;
+        if (player == null)
+            return movableTiles;
 
         Tile currentTile = player.getCurrentTile();
-        if (currentTile == null) return movableTiles;
+        if (currentTile == null)
+            return movableTiles;
 
         // 获取所有相邻瓦片
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
-        
+
         // 飞行员可以移动到任何未被淹没的相邻瓦片
         for (Tile tile : adjacentTiles) {
             if (tile.getState() == TileState.NORMAL) {
@@ -47,8 +49,7 @@ public class Pilot extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        if (tile == null) return false;
-        return tile.getState() == TileState.NORMAL;  // 只能移动到未被淹没的瓦片
+        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
     }
 
     @Override

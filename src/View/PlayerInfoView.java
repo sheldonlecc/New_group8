@@ -14,7 +14,6 @@ public class PlayerInfoView extends JPanel {
     private GameController gameController;
     private static final int MAX_CARDS = 7;
 
-
     public PlayerInfoView(GameController gameController) {
         this.gameController = gameController;
         initializeUI();
@@ -35,10 +34,10 @@ public class PlayerInfoView extends JPanel {
         // 隐藏roleLabel和playerNameLabel，只在标题中显示
         roleLabel = new JLabel("Role");
         roleLabel.setVisible(false);
-        
+
         playerNameLabel = new JLabel("Player");
         playerNameLabel.setVisible(false);
-        
+
         // 只显示行动点数
         actionPointsLabel = new JLabel("Actions: 3");
         actionPointsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -51,7 +50,7 @@ public class PlayerInfoView extends JPanel {
         actionButtonsPanel.setMaximumSize(new Dimension(200, 120));
 
         // 创建并添加动作按钮
-        String[] actionNames = {"Move", "Shore up", "Give Cards", "Special Skill", "Get Treasure", "Skip"};
+        String[] actionNames = { "Move", "Shore up", "Give Cards", "Special Skill", "Get Treasure", "Skip" };
         actionButtons = new JButton[actionNames.length];
         for (int i = 0; i < actionNames.length; i++) {
             actionButtons[i] = createActionButton(actionNames[i]);
@@ -70,7 +69,7 @@ public class PlayerInfoView extends JPanel {
         // 设置首选大小和最小大小
         setPreferredSize(new Dimension(700, 150));
         setMinimumSize(new Dimension(700, 150));
-        
+
         // 调整卡牌区域的大小，确保能显示足够多的卡牌
         cardsPanel.setPreferredSize(new Dimension(700, 120));
     }
@@ -126,9 +125,8 @@ public class PlayerInfoView extends JPanel {
         button.setForeground(Color.WHITE);
         button.setFont(new Font("Arial", Font.BOLD, 12));
         button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(46, 109, 164), 1),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+                BorderFactory.createLineBorder(new Color(46, 109, 164), 1),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         button.addActionListener(e -> performAction(actionName));
         return button;
     }
