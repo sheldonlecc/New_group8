@@ -388,6 +388,11 @@ public class GameController {
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         playerView.setActionPoints(currentActions - 1);
 
+        // 新增：如果行动点为0，自动切换回合
+        if (currentActions - 1 == 0) {
+            endTurn(playerIndex);
+        }
+
         System.out.println("========== 获取宝物处理完成 ==========\n");
     }
 

@@ -124,6 +124,11 @@ public class MapController implements ActionListener {
             return false;
         }
 
+        // Diver特殊处理
+        if (role.getClass().getSimpleName().equals("Diver")) {
+            return isDiverReachable(currentTile, targetTile);
+        }
+
         // 检查角色是否可以移动到该瓦片
         if (!role.canMoveTo(targetTile)) {
             System.out.println("当前角色无法移动到该板块");
@@ -151,6 +156,39 @@ public class MapController implements ActionListener {
 
         // 其他角色只能移动到相邻位置
         return distance == 1;
+    }
+
+    // Diver特殊移动能力：BFS遍历所有连通的FLOODED/SUNK区域，最终停在NORMAL或FLOODED
+    private boolean isDiverReachable(Tile start, Tile target) {
+        if (start == null || target == null)
+            return false;
+        if (target.getState() == TileState.SUNK)
+            return false;
+        java.util.Queue<Tile> queue = new java.util.LinkedList<>();
+        java.util.Set<Tile> visited = new java.util.HashSet<>();
+        queue.add(start);
+        visited.add(start);
+        while (!queue.isEmpty()) {
+            Tile curr = queue.poll();
+            if (curr == target && (curr.getState() == TileState.NORMAL || curr.getState() == TileState.FLOODED)) {
+                return true;
+            }
+            for (Tile adj : curr.getAdjacentTiles()) {
+                if (!visited.contains(adj)) {
+                    // 可以穿越FLOODED和SUNK，最终只能停在NORMAL或FLOODED
+                    if (adj.getState() == TileState.FLOODED || adj.getState() == TileState.SUNK) {
+                        queue.add(adj);
+                        visited.add(adj);
+                    } else if (adj.getState() == TileState.NORMAL) {
+                        // 也要把NORMAL加入visited，防止环路
+                        visited.add(adj);
+                        if (adj == target)
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public void enterMoveMode(int playerIndex) {
