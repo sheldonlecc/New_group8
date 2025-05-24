@@ -69,9 +69,6 @@ public class FloodCard extends Card {
             System.out.println(
                     "[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: 被淹没 -> 沉没");
         }
-
-        // 使用后禁用卡牌
-        setUsable(false);
     }
 
     /**

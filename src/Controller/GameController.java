@@ -62,8 +62,7 @@ public class GameController {
         this.waterLevelView = waterLevelView;
         this.tilePosition = null;
         this.mapController = null;
-        // floodDeck 不在这里初始化
-        // this.floodDeck = new FloodDeck(new ArrayList<>());
+        // floodDeck 不在这里初始化，也不new任何Tile
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家
