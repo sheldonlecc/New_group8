@@ -179,6 +179,7 @@ public class GameController {
             System.out.println("\n========== 游戏结束 ==========");
             System.out.println("水位已达到10，游戏失败！");
             JOptionPane.showMessageDialog(null, "水位已达到10，游戏失败！");
+            endGameWithLose("水位已达到10，游戏失败！");
             return;
         }
 
@@ -233,7 +234,102 @@ public class GameController {
                 System.out.println("[警告] 洪水牌堆已空！");
             }
         }
-        System.out.println("========== 洪水卡抽取完成 ==========\n");
+        System.out.println("========== 洪水卡抽取完成 ==========");
+
+        // 检查所有失败条件
+        checkGameOver();
+    }
+
+    // 游戏失败判定
+    private void checkGameOver() {
+        // 1. 愚人码头沉没
+        Tile foolsLanding = null;
+        for (Tile tile : mapController.getMapView().getAllTiles()) {
+            if (tile.getName().name().equals("FOOLS_LANDING")) {
+                foolsLanding = tile;
+                break;
+            }
+        }
+        if (foolsLanding == null || foolsLanding.getState() == TileState.SUNK) {
+            endGameWithLose("愚人码头沉没，游戏失败！");
+            return;
+        }
+
+        // 2. 宝物板块全部沉没且未收集对应宝物
+        // 神庙（地球宝藏）
+        if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.EARTH)) {
+            boolean temple1Sunk = isTileSunk("TEMPLE_OF_THE_MOON");
+            boolean temple2Sunk = isTileSunk("TEMPLE_OF_THE_SUN");
+            if (temple1Sunk && temple2Sunk) {
+                endGameWithLose("神庙全部沉没且未收集地球宝藏，游戏失败！");
+                return;
+            }
+        }
+        // 洞穴（火焰宝藏）
+        if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.FIRE)) {
+            boolean cave1Sunk = isTileSunk("CAVE_OF_SHADOWS");
+            boolean cave2Sunk = isTileSunk("CAVE_OF_EMBERS");
+            if (cave1Sunk && cave2Sunk) {
+                endGameWithLose("洞穴全部沉没且未收集火焰宝藏，游戏失败！");
+                return;
+            }
+        }
+        // 花园（风之宝藏）
+        if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.WIND)) {
+            boolean garden1Sunk = isTileSunk("WHISPERING_GARDEN");
+            boolean garden2Sunk = isTileSunk("HOWLING_GARDEN");
+            if (garden1Sunk && garden2Sunk) {
+                endGameWithLose("花园全部沉没且未收集风之宝藏，游戏失败！");
+                return;
+            }
+        }
+        // 宫殿（水之宝藏）
+        if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.WATER)) {
+            boolean palace1Sunk = isTileSunk("CORAL_PALACE");
+            boolean palace2Sunk = isTileSunk("TIDAL_PALACE");
+            if (palace1Sunk && palace2Sunk) {
+                endGameWithLose("宫殿全部沉没且未收集水之宝藏，游戏失败！");
+                return;
+            }
+        }
+
+        // 3. 玩家棋子所在板块沉没且无相邻板块可移至
+        for (Player player : players) {
+            Tile tile = player.getCurrentTile();
+            if (tile != null && tile.getState() == TileState.SUNK) {
+                boolean canEscape = false;
+                for (Tile adj : tile.getAdjacentTiles()) {
+                    if (adj.getState() != TileState.SUNK) {
+                        canEscape = true;
+                        break;
+                    }
+                }
+                if (!canEscape) {
+                    endGameWithLose("玩家棋子所在板块沉没且无相邻板块可移至，游戏失败！");
+                    return;
+                }
+            }
+        }
+    }
+
+    // 辅助方法：判断指定名称的板块是否沉没
+    private boolean isTileSunk(String tileName) {
+        for (Tile tile : mapController.getMapView().getAllTiles()) {
+            if (tile.getName().name().equals(tileName)) {
+                return tile.getState() == TileState.SUNK;
+            }
+        }
+        return false;
+    }
+
+    // 游戏失败处理
+    public void endGameWithLose(String reason) {
+        for (PlayerInfoView view : playerInfoViews) {
+            view.setButtonsEnabled(false);
+        }
+        JOptionPane.showMessageDialog(null, reason);
+        System.out.println("========== 游戏失败 ==========");
+        System.exit(0);
     }
 
     public Player getCurrentPlayer() {
