@@ -60,14 +60,31 @@ public class MapView extends JPanel {
         this.tilePlayers = new HashMap<>();
         this.playerFixedPositions = new HashMap<>();
         tilePosition = new TilePosition();
-        
+
         // 设置首选大小和最小大小
         int preferredWidth = MAP_SIZE * (BUTTON_SIZE + GAP_SIZE * 2);
         int preferredHeight = MAP_SIZE * (BUTTON_SIZE + GAP_SIZE * 2);
         setPreferredSize(new Dimension(preferredWidth, preferredHeight));
         setMinimumSize(new Dimension(preferredWidth, preferredHeight));
-        
+
         initializeUI();
+    }
+
+    private void updateTileImage(Tile tile) {
+        int row = tile.getRow();
+        int col = tile.getCol();
+        JButton button = mapButtons[row][col];
+        try {
+            ImageIcon icon = new ImageIcon(tile.getImagePath(tile.getState()));
+            Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 15,
+                    Image.SCALE_SMOOTH);
+            button.setIcon(new ImageIcon(image));
+            button.setText("");
+            button.setHorizontalTextPosition(SwingConstants.CENTER);
+            button.setVerticalTextPosition(SwingConstants.BOTTOM);
+        } catch (Exception e) {
+            System.err.println("无法加载图片: " + tile.getImagePath(tile.getState()));
+        }
     }
 
     private void initializeUI() {
@@ -104,19 +121,20 @@ public class MapView extends JPanel {
                 if (currentMapTiles.contains(currentPoint)) {
                     mapButtons[i][j].setEnabled(true);
                     tiles[i][j] = new Tile(availableTileNames.get(tileNameIndex), i, j);
+                    tiles[i][j].addOnStateChangeListener(this::updateTileImage);
                     tilePosition.addTilePosition(tiles[i][j].getName().name(), i, j);
                     mapButtons[i][j].setText(tiles[i][j].getName().getDisplayName());
 
                     try {
-                        ImageIcon icon = new ImageIcon(tiles[i][j].getImagePath());
-                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 8, BUTTON_SIZE + 20,
+                        ImageIcon icon = new ImageIcon(tiles[i][j].getImagePath(tiles[i][j].getState()));
+                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 15,
                                 Image.SCALE_SMOOTH);
                         mapButtons[i][j].setIcon(new ImageIcon(image));
                         mapButtons[i][j].setText("");
                         mapButtons[i][j].setHorizontalTextPosition(SwingConstants.CENTER);
                         mapButtons[i][j].setVerticalTextPosition(SwingConstants.BOTTOM);
                     } catch (Exception e) {
-                        System.err.println("无法加载图片: " + tiles[i][j].getImagePath());
+                        System.err.println("无法加载图片: " + tiles[i][j].getImagePath(tiles[i][j].getState()));
                     }
                     tileNameIndex++;
                 } else {
@@ -166,7 +184,7 @@ public class MapView extends JPanel {
 
     /**
      * 获取按钮总数
-     * 
+     *
      * @return 按钮总数
      */
     public int getButtonCount() {
@@ -175,7 +193,7 @@ public class MapView extends JPanel {
 
     /**
      * 根据索引获取按钮
-     * 
+     *
      * @param index 按钮索引
      * @return 对应的按钮
      */
@@ -190,13 +208,13 @@ public class MapView extends JPanel {
         System.out.println("切换前MapView大小: " + getSize());
         System.out.println("切换前MapView首选大小: " + getPreferredSize());
         System.out.println("切换前MapView最小大小: " + getMinimumSize());
-        
+
         // 打印每个板块的大小
         System.out.println("\n切换前板块大小:");
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
-                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n", 
-                    i, j, 
+                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n",
+                    i, j,
                     layeredPanes[i][j].getSize(),
                     layeredPanes[i][j].getPreferredSize());
             }
@@ -234,12 +252,12 @@ public class MapView extends JPanel {
         System.out.println("\n切换后MapView大小: " + getSize());
         System.out.println("切换后MapView首选大小: " + getPreferredSize());
         System.out.println("切换后MapView最小大小: " + getMinimumSize());
-        
+
         System.out.println("\n切换后板块大小:");
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
-                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n", 
-                    i, j, 
+                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n",
+                    i, j,
                     layeredPanes[i][j].getSize(),
                     layeredPanes[i][j].getPreferredSize());
             }
@@ -275,13 +293,13 @@ public class MapView extends JPanel {
         // 保持宽高比
         Dimension preferredSize = getPreferredSize();
         double aspectRatio = (double) preferredSize.width / preferredSize.height;
-        
+
         if (width / aspectRatio <= height) {
             height = (int) (width / aspectRatio);
         } else {
             width = (int) (height * aspectRatio);
         }
-        
+
         super.setBounds(x, y, width, height);
     }
 
@@ -359,7 +377,7 @@ public class MapView extends JPanel {
 
             // 获取玩家的固定位置
             Point position = getPlayerFixedPosition(playerIndex);
-            
+
             // 创建新的标签并设置位置
             JLabel playerLabel = new JLabel(scaledIcon);
             playerLabel.setBounds(
@@ -374,11 +392,11 @@ public class MapView extends JPanel {
             String tileKey = row + "," + col;
             List<Integer> players = tilePlayers.computeIfAbsent(tileKey, k -> new ArrayList<>());
             List<JLabel> labels = tilePlayerLabels.computeIfAbsent(tileKey, k -> new ArrayList<>());
-            
+
             // 添加新玩家
             players.add(playerIndex);
             labels.add(playerLabel);
-            
+
             // 将标签添加到层级面板
             layeredPanes[row][col].add(playerLabel, JLayeredPane.PALETTE_LAYER);
             layeredPanes[row][col].revalidate();
@@ -398,7 +416,7 @@ public class MapView extends JPanel {
         String tileKey = row + "," + col;
         List<Integer> players = tilePlayers.get(tileKey);
         List<JLabel> labels = tilePlayerLabels.get(tileKey);
-        
+
         if (players != null && labels != null) {
             // 找到玩家在列表中的索引
             int index = players.indexOf(playerIndex);
@@ -407,13 +425,13 @@ public class MapView extends JPanel {
                 JLabel label = labels.remove(index);
                 layeredPanes[row][col].remove(label);
                 players.remove(index);
-                
+
                 // 如果板块上没有玩家了，清理数据
                 if (players.isEmpty()) {
                     tilePlayers.remove(tileKey);
                     tilePlayerLabels.remove(tileKey);
                 }
-                
+
                 layeredPanes[row][col].revalidate();
                 layeredPanes[row][col].repaint();
             }

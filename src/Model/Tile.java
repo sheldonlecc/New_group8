@@ -26,7 +26,7 @@ public class Tile {
 
     /**
      * 构造函数
-     * 
+     *
      * @param name 瓦片名称
      * @param row  行坐标
      * @param col  列坐标
@@ -45,7 +45,7 @@ public class Tile {
 
     /**
      * 获取瓦片名称
-     * 
+     *
      * @return 瓦片名称
      */
     public TileName getName() {
@@ -54,7 +54,7 @@ public class Tile {
 
     /**
      * 获取瓦片名称（向后兼容方法）
-     * 
+     *
      * @return 瓦片名称
      * @deprecated 请使用getName()方法
      */
@@ -65,7 +65,7 @@ public class Tile {
 
     /**
      * 获取瓦片状态
-     * 
+     *
      * @return 瓦片状态
      */
     public TileState getState() {
@@ -74,7 +74,7 @@ public class Tile {
 
     /**
      * 设置瓦片状态
-     * 
+     *
      * @param newState 新状态
      */
     public void setState(TileState newState) {
@@ -88,7 +88,7 @@ public class Tile {
 
     /**
      * 获取行坐标
-     * 
+     *
      * @return 行坐标
      */
     public int getRow() {
@@ -97,7 +97,7 @@ public class Tile {
 
     /**
      * 获取列坐标
-     * 
+     *
      * @return 列坐标
      */
     public int getCol() {
@@ -106,12 +106,15 @@ public class Tile {
 
     /**
      * 获取瓦片图片路径
-     * 
+     *
      * @return 图片路径
      */
-    public String getImagePath() {
+    public String getImagePath(TileState state) {
         if (state == TileState.SUNK) {
             return "src/resources/Tiles/Sea.png";
+        }
+        if (state == TileState.FLOODED) {
+            return "src/resources/Tiles/" + name.getDisplayName() + "2.png";
         }
         return imagePath;
     }
@@ -120,7 +123,7 @@ public class Tile {
 
     /**
      * 添加相邻瓦片
-     * 
+     *
      * @param tile 相邻瓦片
      */
     public void addAdjacentTile(Tile tile) {
@@ -131,7 +134,7 @@ public class Tile {
 
     /**
      * 移除相邻瓦片
-     * 
+     *
      * @param tile 要移除的相邻瓦片
      */
     public void removeAdjacentTile(Tile tile) {
@@ -140,7 +143,7 @@ public class Tile {
 
     /**
      * 获取所有相邻瓦片
-     * 
+     *
      * @return 相邻瓦片列表
      */
     public List<Tile> getAdjacentTiles() {
@@ -149,7 +152,7 @@ public class Tile {
 
     /**
      * 检查是否与指定瓦片相邻
-     * 
+     *
      * @param tile 目标瓦片
      * @return 如果相邻则返回true
      */
@@ -161,7 +164,7 @@ public class Tile {
 
     /**
      * 检查瓦片是否可通行
-     * 
+     *
      * @return 如果瓦片状态允许通行则返回true
      */
     public boolean isPassable() {
@@ -170,7 +173,7 @@ public class Tile {
 
     /**
      * 检查瓦片是否可加固
-     * 
+     *
      * @return 如果瓦片状态允许加固则返回true
      */
     public boolean isShoreable() {
@@ -181,7 +184,7 @@ public class Tile {
 
     /**
      * 添加状态变化监听器
-     * 
+     *
      * @param listener 监听器
      */
     public void addOnStateChangeListener(Consumer<Tile> listener) {
@@ -196,7 +199,7 @@ public class Tile {
 
     /**
      * 验证瓦片状态是否有效
-     * 
+     *
      * @return 如果瓦片状态有效则返回true
      */
     public boolean isValid() {

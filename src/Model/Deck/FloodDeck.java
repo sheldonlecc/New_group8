@@ -3,6 +3,7 @@ package Model.Deck;
 
 import Model.Cards.FloodCard;
 import Model.Tile;
+import Model.Enumeration.TileState;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,12 +28,13 @@ public class FloodDeck extends Deck<FloodCard> {
 
     /**
      * 获取所有被淹没的瓦片
-     * @return 当前在弃牌堆中的洪水卡对应的瓦片列表
+     * @return 当前状态为FLOODED的瓦片列表
      */
     public List<Tile> getFloodedTiles() {
-        return discardPile.stream()
-                         .map(FloodCard::getTargetTile)
-                         .collect(Collectors.toList());
+        return Stream.concat(drawPile.stream(), discardPile.stream())
+                .map(FloodCard::getTargetTile)
+                .filter(tile -> tile.getState() == TileState.FLOODED)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -41,8 +43,8 @@ public class FloodDeck extends Deck<FloodCard> {
      */
     public List<Tile> getUnfloodedTiles() {
         return drawPile.stream()
-                      .map(FloodCard::getTargetTile)
-                      .collect(Collectors.toList());
+                .map(FloodCard::getTargetTile)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -52,7 +54,7 @@ public class FloodDeck extends Deck<FloodCard> {
      */
     public boolean isTileFlooded(Tile tile) {
         return discardPile.stream()
-                         .anyMatch(card -> card.getTargetTile().equals(tile));
+                .anyMatch(card -> card.getTargetTile().equals(tile));
     }
 
     /**
@@ -62,9 +64,9 @@ public class FloodDeck extends Deck<FloodCard> {
      */
     public FloodCard getFloodCardForTile(Tile tile) {
         return Stream.concat(drawPile.stream(), discardPile.stream())
-                    .filter(card -> card.getTargetTile().equals(tile))
-                    .findFirst()
-                    .orElse(null);
+                .filter(card -> card.getTargetTile().equals(tile))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -84,10 +86,43 @@ public class FloodDeck extends Deck<FloodCard> {
         reshuffleDiscardPile();
     }
 
+    /**
+     * 获取可抽取的洪水卡
+     * 只返回与未被沉没的地块对应的卡牌
+     * @return 可抽取的洪水卡列表
+     */
+    private List<FloodCard> getDrawableCards() {
+        return drawPile.stream()
+                .filter(card -> card.getTargetTile().getState() != TileState.SUNK)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 抽牌
+     * 重写父类方法，每次抽牌前都进行洗牌
+     * @return 抽到的卡牌，如果没有可抽取的卡牌则返回null
+     */
+    @Override
+    public FloodCard draw() {
+        // 每次抽牌前都进行洗牌
+        reshuffleDiscardPile();
+
+        List<FloodCard> drawableCards = getDrawableCards();
+        if (drawableCards.isEmpty()) {
+            return null;
+        }
+
+        // 从可抽取的卡牌中随机选择一张
+        int randomIndex = (int) (Math.random() * drawableCards.size());
+        FloodCard selectedCard = drawableCards.get(randomIndex);
+        drawPile.remove(selectedCard);
+        return selectedCard;
+    }
+
     @Override
     public boolean isValid() {
-        return super.isValid() && 
-               drawPile.stream().allMatch(card -> card != null && card.getTargetTile() != null) &&
-               discardPile.stream().allMatch(card -> card != null && card.getTargetTile() != null);
+        return super.isValid() &&
+                drawPile.stream().allMatch(card -> card != null && card.getTargetTile() != null) &&
+                discardPile.stream().allMatch(card -> card != null && card.getTargetTile() != null);
     }
 }
