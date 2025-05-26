@@ -42,12 +42,12 @@ public class BoardView extends JPanel {
     }
 
     private void initializeUI(String mapType) {
-        setLayout(null);
+        setLayout(new BorderLayout());
         
         // 创建一个新的面板来容纳其他组件，使用GridBagLayout
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         JPanel contentPanel = new JPanel(new GridBagLayout());
-        contentPanel.setBounds(10, 10, screenSize.width - 20, screenSize.height - 40);
+        //contentPanel.setBounds(10, 10, screenSize.width - 20, screenSize.height - 40); // 移除绝对定位
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 20, 5, 20);
         gbc.fill = GridBagConstraints.BOTH;
@@ -82,18 +82,23 @@ public class BoardView extends JPanel {
         // 左侧宝藏状态
         treasureView = new TreasureView();
         gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
         contentPanel.add(treasureView, gbc);
 
         // 中间地图
         gbc.gridx = 1;
-        gbc.weightx = 0.9;
-        contentPanel.add(mapView, gbc);
+        gbc.weightx = 0.6;
+        // 新建一个居中布局的JPanel用于包裹mapView
+        JPanel mapCenterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 50));
+        mapCenterPanel.add(mapView);
+        contentPanel.add(mapCenterPanel, gbc);
 
         // 右侧水位计
         waterLevelView.updateWaterLevel(WaterLevel.getInstance().getCurrentLevel()); // 初始化时设置当前水位
         WaterLevel.setWaterLevelView(waterLevelView);
         gbc.gridx = 2;
         gbc.weightx = 0.2;
+        gbc.anchor = GridBagConstraints.CENTER;
         contentPanel.add(waterLevelView, gbc);
 
         // 下方玩家区域（Player3和Player4）
@@ -118,7 +123,7 @@ public class BoardView extends JPanel {
         contentPanel.add(bottomPanel, gbc);
 
         // 添加contentPanel到主面板
-        add(contentPanel);
+        add(contentPanel, BorderLayout.CENTER);
 
         // 设置边距
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

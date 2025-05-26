@@ -19,7 +19,7 @@ public class MapView extends JPanel {
     private Tile[][] tiles;
     private static final int MAP_SIZE = 6;
     private static final int GAP_SIZE = 1;
-    private static final int BUTTON_SIZE = 100;
+    private static final int BUTTON_SIZE = 105;
     private TilePosition tilePosition;
     private JLayeredPane[][] layeredPanes;
     private Map<String, List<JLabel>> tilePlayerLabels;
@@ -109,7 +109,7 @@ public class MapView extends JPanel {
 
                     try {
                         ImageIcon icon = new ImageIcon(tiles[i][j].getImagePath());
-                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE, BUTTON_SIZE,
+                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 8, BUTTON_SIZE + 20,
                                 Image.SCALE_SMOOTH);
                         mapButtons[i][j].setIcon(new ImageIcon(image));
                         mapButtons[i][j].setText("");
@@ -124,7 +124,7 @@ public class MapView extends JPanel {
                     mapButtons[i][j].setText(TileType.SUNKEN.name());
                     try {
                         ImageIcon icon = new ImageIcon("src/resources/Tiles/Sea.png");
-                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE, BUTTON_SIZE,
+                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 10,
                                 Image.SCALE_SMOOTH);
                         mapButtons[i][j].setIcon(new ImageIcon(image));
                         mapButtons[i][j].setText("");
@@ -352,8 +352,8 @@ public class MapView extends JPanel {
         try {
             ImageIcon originalIcon = new ImageIcon(playerImagePath);
             Image scaledImage = originalIcon.getImage().getScaledInstance(
-                    BUTTON_SIZE / 2, // 缩小图像尺寸
-                    BUTTON_SIZE / 2,
+                    BUTTON_SIZE , // 缩小图像尺寸
+                    BUTTON_SIZE,
                     Image.SCALE_SMOOTH);
             ImageIcon scaledIcon = new ImageIcon(scaledImage);
 

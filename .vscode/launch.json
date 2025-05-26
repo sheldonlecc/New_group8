@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "MainView",
+            "request": "launch",
+            "mainClass": "View.MainView",
+            "projectName": "New_group8_2_afda9a5d"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
