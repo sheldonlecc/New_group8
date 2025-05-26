@@ -610,7 +610,16 @@ public class GameController {
         // 获取目标板块对象（唯一Tile）
         Tile targetTile = mapController.getMapView().getTile(row, col);
         if (targetTile != null) {
+            // 隐藏原位置的玩家图像
+            mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
+            
+            // 更新玩家位置
             player.setCurrentTile(targetTile);
+
+            // 显示新位置的玩家图像
+            String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
+            String playerImagePath = "src/resources/Player/" + roleName + "2.png";
+            mapController.getMapView().showPlayerImage(row, col, playerImagePath, playerIndex);
 
             // 减少行动点数
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
@@ -793,6 +802,11 @@ public class GameController {
             // 用MapView的Tile对象
             Tile tile = mapView.getTile(position[0], position[1]);
             players.get(i).setCurrentTile(tile);
+
+            // 显示玩家图像
+            String roleName = players.get(i).getRole().getClass().getSimpleName().toLowerCase();
+            String playerImagePath = "src/resources/Player/" + roleName + "2.png";
+            mapView.showPlayerImage(position[0], position[1], playerImagePath, i);
 
             System.out.printf("  玩家 %d 位置设置完成\n", i + 1);
         }

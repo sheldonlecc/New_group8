@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class MapView extends JPanel {
     private JButton[][] mapButtons;
@@ -19,6 +21,10 @@ public class MapView extends JPanel {
     private static final int GAP_SIZE = 1;
     private static final int BUTTON_SIZE = 100;
     private TilePosition tilePosition;
+    private JLayeredPane[][] layeredPanes;
+    private Map<String, List<JLabel>> tilePlayerLabels;
+    private Map<String, List<Integer>> tilePlayers;
+    private Map<Integer, Point> playerFixedPositions;
 
     private static final List<Point> CLASSIC_MAP = Arrays.asList(
             new Point(0, 2), new Point(0, 3),
@@ -47,14 +53,18 @@ public class MapView extends JPanel {
     private List<Point> currentMapTiles = CLASSIC_MAP;
 
     public MapView() {
+        this.mapButtons = new JButton[MAP_SIZE][MAP_SIZE];
+        this.tiles = new Tile[MAP_SIZE][MAP_SIZE];
+        this.layeredPanes = new JLayeredPane[MAP_SIZE][MAP_SIZE];
+        this.tilePlayerLabels = new HashMap<>();
+        this.tilePlayers = new HashMap<>();
+        this.playerFixedPositions = new HashMap<>();
         tilePosition = new TilePosition();
         initializeUI();
     }
 
     private void initializeUI() {
         setLayout(new GridBagLayout());
-        mapButtons = new JButton[MAP_SIZE][MAP_SIZE];
-        tiles = new Tile[MAP_SIZE][MAP_SIZE];
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(GAP_SIZE, GAP_SIZE, GAP_SIZE, GAP_SIZE);
 
@@ -65,29 +75,27 @@ public class MapView extends JPanel {
 
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
+                // 创建层级面板
+                layeredPanes[i][j] = new JLayeredPane();
+                layeredPanes[i][j].setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
+                layeredPanes[i][j].setLayout(null);
+
+                // 创建按钮
                 mapButtons[i][j] = new JButton();
                 mapButtons[i][j].setMargin(new Insets(0, 0, 0, 0));
+                mapButtons[i][j].setBounds(0, 0, BUTTON_SIZE, BUTTON_SIZE);
 
-                // 强制设置为正方形
-                Dimension squareSize = new Dimension(BUTTON_SIZE, BUTTON_SIZE);
-                mapButtons[i][j].setPreferredSize(squareSize);
-                mapButtons[i][j].setMinimumSize(squareSize);
-                mapButtons[i][j].setMaximumSize(squareSize);
+                // 将按钮添加到层级面板
+                layeredPanes[i][j].add(mapButtons[i][j], JLayeredPane.DEFAULT_LAYER);
 
                 // 设置初始状态
                 Point currentPoint = new Point(i, j);
                 if (currentMapTiles.contains(currentPoint)) {
                     mapButtons[i][j].setEnabled(true);
-                    // 创建Tile对象并分配随机名称
                     tiles[i][j] = new Tile(availableTileNames.get(tileNameIndex), i, j);
-
-                    // 将板块位置信息添加到TilePosition对象中
                     tilePosition.addTilePosition(tiles[i][j].getName().name(), i, j);
-
-                    // 设置按钮文本为地点名称
                     mapButtons[i][j].setText(tiles[i][j].getName().getDisplayName());
 
-                    // 尝试加载并设置图片
                     try {
                         ImageIcon icon = new ImageIcon(tiles[i][j].getImagePath());
                         Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 15,
@@ -103,7 +111,6 @@ public class MapView extends JPanel {
                 } else {
                     mapButtons[i][j].setEnabled(false);
                     mapButtons[i][j].setText(TileType.SUNKEN.name());
-                    // 加载Sea.png图片
                     try {
                         ImageIcon icon = new ImageIcon("src/resources/Tiles/Sea.png");
                         Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 15,
@@ -115,10 +122,10 @@ public class MapView extends JPanel {
                     }
                 }
 
-                // 使用GridBagConstraints添加按钮
+                // 使用GridBagConstraints添加层级面板
                 gbc.gridx = j;
                 gbc.gridy = i;
-                add(mapButtons[i][j], gbc);
+                add(layeredPanes[i][j], gbc);
             }
         }
 
@@ -220,5 +227,117 @@ public class MapView extends JPanel {
             }
         }
         return all;
+    }
+
+    /**
+     * 获取指定板块上的玩家数量
+     * @param row 行
+     * @param col 列
+     * @return 玩家数量
+     */
+    public int getPlayerCountOnTile(int row, int col) {
+        String tileKey = row + "," + col;
+        return tilePlayers.getOrDefault(tileKey, new ArrayList<>()).size();
+    }
+
+    /**
+     * 获取玩家的固定位置
+     * @param playerIndex 玩家索引
+     * @return 固定位置点
+     */
+    private Point getPlayerFixedPosition(int playerIndex) {
+        return playerFixedPositions.computeIfAbsent(playerIndex, k -> {
+            switch (k) {
+                case 0: // 第一个玩家，左下角
+                    return new Point(0, BUTTON_SIZE / 2);
+                case 1: // 第二个玩家，左上角
+                    return new Point(0, 0);
+                case 2: // 第三个玩家，右上角
+                    return new Point(BUTTON_SIZE / 2, 0);
+                case 3: // 第四个玩家，右下角
+                    return new Point(BUTTON_SIZE / 2, BUTTON_SIZE / 2);
+                default:
+                    return new Point(0, 0);
+            }
+        });
+    }
+
+    /**
+     * 显示玩家图像
+     * @param row 行
+     * @param col 列
+     * @param playerImagePath 玩家图像路径
+     * @param playerIndex 玩家索引
+     */
+    public void showPlayerImage(int row, int col, String playerImagePath, int playerIndex) {
+        try {
+            ImageIcon originalIcon = new ImageIcon(playerImagePath);
+            Image scaledImage = originalIcon.getImage().getScaledInstance(
+                    BUTTON_SIZE / 2, // 缩小图像尺寸
+                    BUTTON_SIZE / 2,
+                    Image.SCALE_SMOOTH);
+            ImageIcon scaledIcon = new ImageIcon(scaledImage);
+
+            // 获取玩家的固定位置
+            Point position = getPlayerFixedPosition(playerIndex);
+            
+            // 创建新的标签并设置位置
+            JLabel playerLabel = new JLabel(scaledIcon);
+            playerLabel.setBounds(
+                    position.x,
+                    position.y,
+                    BUTTON_SIZE / 2,
+                    BUTTON_SIZE / 2
+            );
+            playerLabel.setVisible(true);
+
+            // 记录玩家位置
+            String tileKey = row + "," + col;
+            List<Integer> players = tilePlayers.computeIfAbsent(tileKey, k -> new ArrayList<>());
+            List<JLabel> labels = tilePlayerLabels.computeIfAbsent(tileKey, k -> new ArrayList<>());
+            
+            // 添加新玩家
+            players.add(playerIndex);
+            labels.add(playerLabel);
+            
+            // 将标签添加到层级面板
+            layeredPanes[row][col].add(playerLabel, JLayeredPane.PALETTE_LAYER);
+            layeredPanes[row][col].revalidate();
+            layeredPanes[row][col].repaint();
+        } catch (Exception e) {
+            System.err.println("加载玩家图像失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 隐藏玩家图像
+     * @param row 行
+     * @param col 列
+     * @param playerIndex 玩家索引
+     */
+    public void hidePlayerImage(int row, int col, int playerIndex) {
+        String tileKey = row + "," + col;
+        List<Integer> players = tilePlayers.get(tileKey);
+        List<JLabel> labels = tilePlayerLabels.get(tileKey);
+        
+        if (players != null && labels != null) {
+            // 找到玩家在列表中的索引
+            int index = players.indexOf(playerIndex);
+            if (index != -1) {
+                // 移除对应的标签
+                JLabel label = labels.remove(index);
+                layeredPanes[row][col].remove(label);
+                players.remove(index);
+                
+                // 如果板块上没有玩家了，清理数据
+                if (players.isEmpty()) {
+                    tilePlayers.remove(tileKey);
+                    tilePlayerLabels.remove(tileKey);
+                }
+                
+                layeredPanes[row][col].revalidate();
+                layeredPanes[row][col].repaint();
+            }
+        }
     }
 }
