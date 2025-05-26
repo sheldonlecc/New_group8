@@ -60,6 +60,13 @@ public class MapView extends JPanel {
         this.tilePlayers = new HashMap<>();
         this.playerFixedPositions = new HashMap<>();
         tilePosition = new TilePosition();
+        
+        // 设置首选大小和最小大小
+        int preferredWidth = MAP_SIZE * (BUTTON_SIZE + GAP_SIZE * 2);
+        int preferredHeight = MAP_SIZE * (BUTTON_SIZE + GAP_SIZE * 2);
+        setPreferredSize(new Dimension(preferredWidth, preferredHeight));
+        setMinimumSize(new Dimension(preferredWidth, preferredHeight));
+        
         initializeUI();
     }
 
@@ -67,6 +74,7 @@ public class MapView extends JPanel {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(GAP_SIZE, GAP_SIZE, GAP_SIZE, GAP_SIZE);
+        gbc.fill = GridBagConstraints.NONE; // 防止组件被拉伸
 
         // 随机分配地点名称
         List<TileName> availableTileNames = new ArrayList<>(Arrays.asList(TileName.values()));
@@ -78,12 +86,15 @@ public class MapView extends JPanel {
                 // 创建层级面板
                 layeredPanes[i][j] = new JLayeredPane();
                 layeredPanes[i][j].setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
+                layeredPanes[i][j].setMinimumSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
                 layeredPanes[i][j].setLayout(null);
 
                 // 创建按钮
                 mapButtons[i][j] = new JButton();
                 mapButtons[i][j].setMargin(new Insets(0, 0, 0, 0));
                 mapButtons[i][j].setBounds(0, 0, BUTTON_SIZE, BUTTON_SIZE);
+                mapButtons[i][j].setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
+                mapButtons[i][j].setMinimumSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
 
                 // 将按钮添加到层级面板
                 layeredPanes[i][j].add(mapButtons[i][j], JLayeredPane.DEFAULT_LAYER);
@@ -98,7 +109,7 @@ public class MapView extends JPanel {
 
                     try {
                         ImageIcon icon = new ImageIcon(tiles[i][j].getImagePath());
-                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 15,
+                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE, BUTTON_SIZE,
                                 Image.SCALE_SMOOTH);
                         mapButtons[i][j].setIcon(new ImageIcon(image));
                         mapButtons[i][j].setText("");
@@ -113,7 +124,7 @@ public class MapView extends JPanel {
                     mapButtons[i][j].setText(TileType.SUNKEN.name());
                     try {
                         ImageIcon icon = new ImageIcon("src/resources/Tiles/Sea.png");
-                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE + 10, BUTTON_SIZE + 15,
+                        Image image = icon.getImage().getScaledInstance(BUTTON_SIZE, BUTTON_SIZE,
                                 Image.SCALE_SMOOTH);
                         mapButtons[i][j].setIcon(new ImageIcon(image));
                         mapButtons[i][j].setText("");
@@ -175,6 +186,22 @@ public class MapView extends JPanel {
     }
 
     public void setMapType(String mapType) {
+        System.out.println("\n========== 切换地图类型 ==========");
+        System.out.println("切换前MapView大小: " + getSize());
+        System.out.println("切换前MapView首选大小: " + getPreferredSize());
+        System.out.println("切换前MapView最小大小: " + getMinimumSize());
+        
+        // 打印每个板块的大小
+        System.out.println("\n切换前板块大小:");
+        for (int i = 0; i < MAP_SIZE; i++) {
+            for (int j = 0; j < MAP_SIZE; j++) {
+                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n", 
+                    i, j, 
+                    layeredPanes[i][j].getSize(),
+                    layeredPanes[i][j].getPreferredSize());
+            }
+        }
+
         switch (mapType) {
             case "CLASSIC":
                 currentMapTiles = CLASSIC_MAP;
@@ -202,8 +229,60 @@ public class MapView extends JPanel {
                 }
             }
         }
+
+        // 打印切换后的信息
+        System.out.println("\n切换后MapView大小: " + getSize());
+        System.out.println("切换后MapView首选大小: " + getPreferredSize());
+        System.out.println("切换后MapView最小大小: " + getMinimumSize());
+        
+        System.out.println("\n切换后板块大小:");
+        for (int i = 0; i < MAP_SIZE; i++) {
+            for (int j = 0; j < MAP_SIZE; j++) {
+                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n", 
+                    i, j, 
+                    layeredPanes[i][j].getSize(),
+                    layeredPanes[i][j].getPreferredSize());
+            }
+        }
+
+        // 获取父容器信息
+        Container parent = getParent();
+        if (parent != null) {
+            System.out.println("\n父容器信息:");
+            System.out.println("父容器类名: " + parent.getClass().getName());
+            System.out.println("父容器大小: " + parent.getSize());
+            System.out.println("父容器首选大小: " + parent.getPreferredSize());
+            System.out.println("父容器最小大小: " + parent.getMinimumSize());
+        }
+
         revalidate();
         repaint();
+        System.out.println("========== 地图类型切换完成 ==========\n");
+    }
+
+    @Override
+    public void doLayout() {
+        // 确保MapView保持其首选大小
+        Dimension preferredSize = getPreferredSize();
+        if (getSize().width != preferredSize.width || getSize().height != preferredSize.height) {
+            setSize(preferredSize);
+        }
+        super.doLayout();
+    }
+
+    @Override
+    public void setBounds(int x, int y, int width, int height) {
+        // 保持宽高比
+        Dimension preferredSize = getPreferredSize();
+        double aspectRatio = (double) preferredSize.width / preferredSize.height;
+        
+        if (width / aspectRatio <= height) {
+            height = (int) (width / aspectRatio);
+        } else {
+            width = (int) (height * aspectRatio);
+        }
+        
+        super.setBounds(x, y, width, height);
     }
 
     public TilePosition getTilePosition() {
