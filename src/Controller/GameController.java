@@ -932,14 +932,25 @@ public class GameController {
         List<Integer> candidateIndexes = new ArrayList<>();
         boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
 
+        // 构建玩家选项列表
+        String[] playerOptions = new String[players.size()];
+        int optionIndex = 0;
         for (int i = 0; i < players.size(); i++) {
             if (i != fromPlayerIndex) {
                 Player targetPlayer = players.get(i);
                 if (isMessenger || fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile())) {
                     candidateIndexes.add(i);
+                    String location = fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile()) ? "(同一位置)" : "(不同位置)";
+                    playerOptions[optionIndex] = String.format("玩家%d - %s %s", 
+                        i + 1, 
+                        targetPlayer.getRole().getClass().getSimpleName(),
+                        location);
+                    optionIndex++;
                 }
             }
         }
+        // 添加取消选项
+        playerOptions[optionIndex] = "取消";
 
         if (candidateIndexes.isEmpty()) {
             System.out.println("[日志] 没有可以给牌的玩家。");
@@ -947,29 +958,104 @@ public class GameController {
             return false;
         }
 
-        // 日志模拟选择目标玩家
-        int toPlayerIndex = candidateIndexes.get(0); // 默认选第一个
+        // 让玩家选择目标玩家
+        int selectedOption = JOptionPane.showOptionDialog(
+            null,
+            "选择要给牌的玩家：",
+            "给牌",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            playerOptions,
+            playerOptions[0]);
+
+        if (selectedOption == -1 || selectedOption == optionIndex) {
+            System.out.println("[日志] 玩家取消了选择目标玩家。");
+            return false;
+        }
+
+        int toPlayerIndex = candidateIndexes.get(selectedOption);
         System.out.println("[日志] 选择目标玩家: 玩家" + (toPlayerIndex + 1));
 
-        // 日志模拟选择卡牌
+        // 获取玩家手牌
         List<Card> handCards = fromPlayer.getHandCard().getCards();
         if (handCards.isEmpty()) {
             System.out.println("[日志] 没有可给出的卡牌。");
             JOptionPane.showMessageDialog(null, "没有可给出的卡牌！");
             return false;
         }
-        Card cardToGive = handCards.get(0); // 默认选第一张
-        System.out.println("[日志] 选择要给出的卡牌: " + cardToGive.getName());
 
-        // 调用CardController执行给牌
-        boolean success = cardController.giveCard(fromPlayerIndex, toPlayerIndex, cardToGive);
-        if (success) {
-            System.out.println("[日志] 成功将卡牌[" + cardToGive.getName() + "]从玩家" + (fromPlayerIndex + 1) + "给到玩家"
-                    + (toPlayerIndex + 1));
-        } else {
-            System.out.println("[日志] 给牌失败！");
+        // 构建卡牌选项列表
+        String[] cardOptions = new String[handCards.size()];
+        for (int i = 0; i < handCards.size(); i++) {
+            Card card = handCards.get(i);
+            cardOptions[i] = card.getName();
         }
-        return success;
+
+        // 让玩家选择要给出的卡牌（多选）
+        List<Integer> selectedCards = new ArrayList<>();
+        while (true) {
+            // 创建包含取消按钮的卡牌选项
+            String[] cardOptionsWithCancel = new String[cardOptions.length + 1];
+            System.arraycopy(cardOptions, 0, cardOptionsWithCancel, 0, cardOptions.length);
+            cardOptionsWithCancel[cardOptions.length] = "取消";
+
+            // 更新选项显示，添加已选择次数的信息
+            String[] currentOptions = new String[cardOptions.length];
+            for (int i = 0; i < cardOptions.length; i++) {
+                int selectedCount = 0;
+                for (int selected : selectedCards) {
+                    if (selected == i) selectedCount++;
+                }
+                currentOptions[i] = cardOptions[i] + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
+            }
+
+            int cardChoice = JOptionPane.showOptionDialog(
+                null,
+                String.format("选择要给出的卡牌（已选择%d张）：\n点击确定完成选择，点击取消退出", selectedCards.size()),
+                "选择卡牌",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                currentOptions,
+                currentOptions[0]);
+
+            if (cardChoice == -1) {
+                if (selectedCards.isEmpty()) {
+                    System.out.println("[日志] 玩家未选择任何卡牌。");
+                    return false;
+                }
+                break;
+            }
+
+            // 允许重复选择相同的卡牌
+            selectedCards.add(cardChoice);
+            System.out.println(String.format("[日志] 选择了卡牌: %s", cardOptions[cardChoice]));
+
+        }
+
+        // 执行给牌操作
+        boolean allSuccess = true;
+        for (int cardIndex : selectedCards) {
+            Card cardToGive = handCards.get(cardIndex);
+            boolean success = cardController.giveCard(fromPlayerIndex, toPlayerIndex, cardToGive);
+            if (success) {
+                System.out.println("[日志] 成功将卡牌[" + cardToGive.getName() + "]从玩家" + 
+                    (fromPlayerIndex + 1) + "给到玩家" + (toPlayerIndex + 1));
+            } else {
+                System.out.println("[日志] 给牌失败：" + cardToGive.getName());
+                allSuccess = false;
+            }
+        }
+
+        if (allSuccess) {
+            JOptionPane.showMessageDialog(null, 
+                String.format("成功给出%d张卡牌给玩家%d！", selectedCards.size(), toPlayerIndex + 1));
+        } else {
+            JOptionPane.showMessageDialog(null, "部分卡牌给出失败！");
+        }
+
+        return allSuccess;
     }
 
     /**
@@ -991,10 +1077,17 @@ public class GameController {
             }
         }
 
+        // 如果没有沙袋卡，检查是否有足够的行动点
         if (!hasSandbag) {
-            System.out.println("[日志] 玩家没有沙袋卡，无法使用加固功能");
-            JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用加固功能！");
-            return false;
+            PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+            String actionText = playerView.getActionPointsLabel().getText();
+            int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+            
+            if (currentActions <= 0) {
+                System.out.println("[日志] 玩家没有足够的行动点进行加固");
+                JOptionPane.showMessageDialog(null, "你没有足够的行动点进行加固！");
+                return false;
+            }
         }
 
         // 如果是工程师，可以加固两个板块
@@ -1265,18 +1358,13 @@ public class GameController {
 
         Player player = players.get(playerIndex);
         
-        // 消耗沙袋卡
+        // 检查是否有沙袋卡（可选）
         Card sandbagCard = null;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
                 sandbagCard = card;
                 break;
             }
-        }
-        
-        if (sandbagCard == null) {
-            System.out.println("[日志] 没有找到沙袋卡，无法加固");
-            return;
         }
 
         // 实际加固操作
@@ -1286,10 +1374,12 @@ public class GameController {
         System.out.println("[日志] 成功加固瓦片：" + targetTile.getName() + " [坐标: " + targetTile.getRow() + ","
                 + targetTile.getCol() + "]");
 
-        // 消耗沙袋卡
-        player.getHandCard().removeCard(sandbagCard);
-        playerInfoViews.get(playerIndex).removeCard(sandbagCard);
-        treasureDeck.discard(sandbagCard);
+        // 如果使用了沙袋卡，消耗它
+        if (sandbagCard != null) {
+            player.getHandCard().removeCard(sandbagCard);
+            playerInfoViews.get(playerIndex).removeCard(sandbagCard);
+            treasureDeck.discard(sandbagCard);
+        }
 
         // 减少行动点数
         PlayerInfoView playerView = playerInfoViews.get(playerIndex);
