@@ -1277,7 +1277,17 @@ public class GameController {
         if (targetTile != null) {
             // 检查移动是否合法
             if (isValidNavigatorMove(targetPlayer, targetTile)) {
+                // 隐藏原位置的玩家图像
+                mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), targetPlayerIndex);
+                
+                // 更新玩家位置
                 targetPlayer.setCurrentTile(targetTile);
+
+                // 显示新位置的玩家图像
+                String roleName = targetPlayer.getRole().getClass().getSimpleName().toLowerCase();
+                String playerImagePath = "src/resources/Player/" + roleName + "2.png";
+                mapController.getMapView().showPlayerImage(row, col, playerImagePath, targetPlayerIndex);
+
                 System.out.printf("领航员移动玩家 %d 到: %s [%d, %d]\n",
                         targetPlayerIndex + 1,
                         targetTile.getName(),
