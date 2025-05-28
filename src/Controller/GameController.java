@@ -22,14 +22,20 @@ import Model.Enumeration.TreasureType;
 import View.BoardView;
 import View.TreasureView;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Window;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import javax.swing.JOptionPane;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 public class GameController {
@@ -1020,11 +1026,6 @@ public class GameController {
         // 让玩家选择要给出的卡牌（多选）
         List<Integer> selectedCards = new ArrayList<>();
         while (true) {
-            // 创建包含取消按钮的卡牌选项
-            String[] cardOptionsWithCancel = new String[cardOptions.length + 1];
-            System.arraycopy(cardOptions, 0, cardOptionsWithCancel, 0, cardOptions.length);
-            cardOptionsWithCancel[cardOptions.length] = "取消";
-
             // 更新选项显示，添加已选择次数的信息
             String[] currentOptions = new String[cardOptions.length];
             for (int i = 0; i < cardOptions.length; i++) {
@@ -1035,28 +1036,85 @@ public class GameController {
                 currentOptions[i] = cardOptions[i] + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
             }
 
-            int cardChoice = JOptionPane.showOptionDialog(
-                null,
-                String.format("选择要给出的卡牌（已选择%d张）：\n点击确定完成选择，点击取消退出", selectedCards.size()),
-                "选择卡牌",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                currentOptions,
-                currentOptions[0]);
-
-            if (cardChoice == -1) {
-                if (selectedCards.isEmpty()) {
-                    System.out.println("[日志] 玩家未选择任何卡牌。");
-                    return false;
-                }
-                break;
+            // 创建卡牌选择面板
+            JPanel cardPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+            JButton[] cardButtons = new JButton[currentOptions.length];
+            for (int i = 0; i < currentOptions.length; i++) {
+                final int index = i;
+                cardButtons[i] = new JButton(currentOptions[i]);
+                cardButtons[i].addActionListener(e -> {
+                    selectedCards.add(index);
+                    System.out.println(String.format("[日志] 选择了卡牌: %s", cardOptions[index]));
+                    // 更新按钮文本
+                    int selectedCount = 0;
+                    for (int selected : selectedCards) {
+                        if (selected == index) selectedCount++;
+                    }
+                    cardButtons[index].setText(cardOptions[index] + String.format(" (已选择%d次)", selectedCount));
+                });
+                cardPanel.add(cardButtons[i]);
             }
 
-            // 允许重复选择相同的卡牌
-            selectedCards.add(cardChoice);
-            System.out.println(String.format("[日志] 选择了卡牌: %s", cardOptions[cardChoice]));
+            // 创建操作按钮面板
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            JButton confirmButton = new JButton("确定");
+            JButton cancelButton = new JButton("取消");
 
+            // 创建一个标志来跟踪对话框是否被确认
+            final boolean[] confirmed = {false};
+
+            confirmButton.addActionListener(e -> {
+                if (selectedCards.isEmpty()) {
+                    System.out.println("[日志] 玩家未选择任何卡牌。");
+                    JOptionPane.showMessageDialog(null, "请至少选择一张卡牌！");
+                } else {
+                    confirmed[0] = true;
+                    Window window = SwingUtilities.getWindowAncestor(buttonPanel);
+                    if (window != null) {
+                        window.dispose();
+                    }
+                }
+            });
+
+            cancelButton.addActionListener(e -> {
+                Window window = SwingUtilities.getWindowAncestor(buttonPanel);
+                if (window != null) {
+                    window.dispose();
+                }
+            });
+
+            buttonPanel.add(confirmButton);
+            buttonPanel.add(cancelButton);
+
+            // 创建主面板
+            JPanel mainPanel = new JPanel(new BorderLayout());
+            mainPanel.add(cardPanel, BorderLayout.CENTER);
+            mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+            // 显示对话框
+            JOptionPane.showOptionDialog(
+                null,
+                mainPanel,
+                String.format("选择要给出的卡牌（已选择%d张）：", selectedCards.size()),
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                new Object[]{},  // 不显示任何默认按钮
+                null
+            );
+
+            // 检查是否通过确认按钮完成选择
+            if (!confirmed[0]) {
+                System.out.println("[日志] 玩家取消了选择。");
+                return false;
+            }
+
+            // 检查是否选择了卡牌
+            if (selectedCards.isEmpty()) {
+                System.out.println("[日志] 玩家未选择任何卡牌。");
+                return false;
+            }
+            break;
         }
 
         // 执行给牌操作
