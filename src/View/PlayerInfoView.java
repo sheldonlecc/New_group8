@@ -14,6 +14,7 @@ public class PlayerInfoView extends JPanel {
     private GameController gameController;
     private static final int MAX_CARDS = 7;
     private JButton sandbagButton;
+    private JButton helicopterButton;
 
     public PlayerInfoView(GameController gameController) {
         this.gameController = gameController;
@@ -52,7 +53,29 @@ public class PlayerInfoView extends JPanel {
         sandbagButton.setFont(new Font("Arial", Font.BOLD, 12));
         sandbagButton.setFocusPainted(false);
         sandbagButton.setEnabled(true); // 默认可用，后续由控制器控制
-        leftPanel.add(sandbagButton);
+
+        // 添加"使用直升机卡"按钮
+        helicopterButton = new JButton("直升机");
+        helicopterButton.setPreferredSize(new Dimension(80, 30));
+        helicopterButton.setBackground(new Color(102, 204, 255));
+        helicopterButton.setFont(new Font("Arial", Font.BOLD, 12));
+        helicopterButton.setFocusPainted(false);
+        helicopterButton.setEnabled(true); // 默认可用，后续由控制器控制
+        helicopterButton.addActionListener(e -> {
+            System.out.println("\n========== 直升机按钮被点击 ==========");
+            System.out.println("当前玩家索引: " + gameController.getPlayerInfoViews().indexOf(this));
+            System.out.println("直升机按钮状态: " + (helicopterButton.isEnabled() ? "启用" : "禁用"));
+            System.out.println("正在检查直升机卡...");
+            gameController.handleHelicopterCard(gameController.getPlayerInfoViews().indexOf(this));
+            System.out.println("========== 直升机按钮点击事件结束 ==========\n");
+        });
+
+        // 创建一个水平布局的面板来放置这两个按钮
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        buttonPanel.add(sandbagButton);
+        buttonPanel.add(helicopterButton);
+        leftPanel.add(buttonPanel);
         leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // 添加动作按钮面板
@@ -164,5 +187,9 @@ public class PlayerInfoView extends JPanel {
 
     public JButton getSandbagButton() {
         return sandbagButton;
+    }
+
+    public JButton getHelicopterButton() {
+        return helicopterButton;
     }
 }

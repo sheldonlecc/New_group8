@@ -18,6 +18,7 @@ import Model.Deck.FloodDeck;
 import Model.Cards.FloodCard;
 import Model.Cards.SandbagCard;
 import Model.Cards.TreasureCard;
+import Model.Cards.HelicopterCard;
 import Model.Enumeration.TreasureType;
 import View.BoardView;
 import View.TreasureView;
@@ -191,8 +192,91 @@ public class GameController {
 
         // 更新所有玩家的按钮状态
         for (int i = 0; i < playerInfoViews.size(); i++) {
+            final int playerIndex = i;
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
+            // 设置直升机卡按钮的点击事件
+            playerInfoViews.get(i).getHelicopterButton().addActionListener(e -> handleHelicopterCard(playerIndex));
         }
+    }
+
+    public void handleHelicopterCard(int playerIndex) {
+        System.out.println("\n========== 处理直升机卡 ==========");
+        System.out.println("玩家索引: " + playerIndex);
+        
+        Player player = players.get(playerIndex);
+        // 检查玩家是否有直升机卡
+        boolean hasHelicopterCard = false;
+        HelicopterCard helicopterCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof HelicopterCard) {
+                hasHelicopterCard = true;
+                helicopterCard = (HelicopterCard) card;
+                break;
+            }
+        }
+
+        System.out.println("是否有直升机卡: " + hasHelicopterCard);
+        if (!hasHelicopterCard) {
+            System.out.println("玩家没有直升机卡！");
+            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
+            return;
+        }
+
+        System.out.println("进入直升机卡使用模式");
+        // 进入直升机卡使用模式，等待玩家点击目标位置
+        mapController.enterHelicopterMode(playerIndex);
+        System.out.println("========== 直升机卡处理完成 ==========\n");
+    }
+
+    /**
+     * 处理直升机卡移动
+     * @param playerIndex 使用直升机卡的玩家索引
+     * @param row 目标行
+     * @param col 目标列
+     */
+    public void handleHelicopterMove(int playerIndex, int row, int col) {
+        Player player = players.get(playerIndex);
+        Tile targetTile = mapController.getMapView().getTile(row, col);
+        
+        if (targetTile == null || targetTile.getState() == TileState.SUNK) {
+            JOptionPane.showMessageDialog(null, "无法移动到已沉没的板块！");
+            return;
+        }
+
+        // 查找玩家的直升机卡
+        HelicopterCard helicopterCard = null;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof HelicopterCard) {
+                helicopterCard = (HelicopterCard) card;
+                break;
+            }
+        }
+
+        if (helicopterCard == null) {
+            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
+            return;
+        }
+
+        // 使用直升机卡移动玩家
+        List<Player> playersToMove = new ArrayList<>();
+        playersToMove.add(player);
+        if (helicopterCard.useForMovement(playersToMove, targetTile)) {
+            // 从玩家手牌中移除直升机卡
+            player.getHandCard().removeCard(helicopterCard);
+            playerInfoViews.get(playerIndex).removeCard(helicopterCard);
+            treasureDeck.discard(helicopterCard);
+
+            // 更新玩家视图
+            updatePlayerView(playerIndex);
+
+            // 显示成功消息
+            JOptionPane.showMessageDialog(null, "成功使用直升机卡移动到 " + targetTile.getName());
+        } else {
+            JOptionPane.showMessageDialog(null, "直升机卡使用失败！");
+        }
+
+        // 退出直升机卡使用模式
+        mapController.exitHelicopterMode();
     }
 
     public void startNewTurn() {
@@ -1596,5 +1680,9 @@ public class GameController {
     // 添加设置BoardView的方法
     public void setBoardView(BoardView boardView) {
         this.boardView = boardView;
+    }
+
+    public MapController getMapController() {
+        return mapController;
     }
 }

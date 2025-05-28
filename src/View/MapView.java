@@ -4,6 +4,7 @@ import Model.Enumeration.TileType;
 import Model.Enumeration.TileName;
 import Model.Tile;
 import Model.TilePosition;
+import Model.Enumeration.TileState;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Point;
@@ -25,6 +26,7 @@ public class MapView extends JPanel {
     private Map<String, List<JLabel>> tilePlayerLabels;
     private Map<String, List<Integer>> tilePlayers;
     private Map<Integer, Point> playerFixedPositions;
+    private boolean isHelicopterMode = false;
 
     private static final List<Point> CLASSIC_MAP = Arrays.asList(
             new Point(0, 2), new Point(0, 3),
@@ -436,5 +438,73 @@ public class MapView extends JPanel {
                 layeredPanes[row][col].repaint();
             }
         }
+    }
+
+    public void setHelicopterMode(boolean enabled) {
+        System.out.println("\n========== MapView.setHelicopterMode 开始 ==========");
+        System.out.println("方法被调用，参数enabled: " + enabled);
+        System.out.println("当前isHelicopterMode: " + isHelicopterMode);
+        System.out.println("MapView实例: " + this);
+        System.out.println("getAllTiles()返回的板块数量: " + getAllTiles().size());
+        
+        isHelicopterMode = enabled;
+        if (enabled) {
+            System.out.println("开始高亮未被沉没的板块");
+            int highlightedCount = 0;
+            // 高亮显示所有未被沉没的板块
+            for (Tile tile : getAllTiles()) {
+                if (tile.getState() != TileState.SUNK) {
+                    System.out.println("高亮板块: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]");
+                    highlightTile(tile.getRow(), tile.getCol());
+                    highlightedCount++;
+                }
+            }
+            System.out.println("总共高亮了 " + highlightedCount + " 个板块");
+        } else {
+            System.out.println("清除所有高亮");
+            // 清除所有高亮
+            clearHighlights();
+        }
+        System.out.println("========== MapView.setHelicopterMode 结束 ==========\n");
+        repaint();
+    }
+
+    private void highlightTile(int row, int col) {
+        System.out.println("尝试高亮板块 [" + row + "," + col + "]");
+        JButton button = mapButtons[row][col];
+        if (button != null) {
+            System.out.println("按钮状态:");
+            System.out.println("- 是否可见: " + button.isVisible());
+            System.out.println("- 是否启用: " + button.isEnabled());
+            System.out.println("- 当前背景色: " + button.getBackground());
+            System.out.println("- 当前前景色: " + button.getForeground());
+            System.out.println("- 当前边框: " + button.getBorder());
+            System.out.println("- 当前图标: " + (button.getIcon() != null ? "有图标" : "无图标"));
+            
+            button.setBackground(new Color(200, 255, 200)); // 浅绿色高亮
+            button.setOpaque(true); // 确保背景色可见
+            button.setContentAreaFilled(true); // 确保内容区域填充
+            
+            System.out.println("设置后的按钮状态:");
+            System.out.println("- 背景色: " + button.getBackground());
+            System.out.println("- 是否不透明: " + button.isOpaque());
+            System.out.println("- 是否填充内容区域: " + button.isContentAreaFilled());
+            System.out.println("板块高亮成功");
+        } else {
+            System.out.println("板块高亮失败：按钮为空");
+        }
+    }
+
+    private void clearHighlights() {
+        System.out.println("开始清除所有高亮");
+        for (int i = 0; i < MAP_SIZE; i++) {
+            for (int j = 0; j < MAP_SIZE; j++) {
+                JButton button = mapButtons[i][j];
+                if (button != null) {
+                    button.setBackground(null);
+                }
+            }
+        }
+        System.out.println("高亮清除完成");
     }
 }

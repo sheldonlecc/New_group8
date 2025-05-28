@@ -14,11 +14,18 @@ import View.PlayerInfoView;
 import java.awt.Component;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Window;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class CardController implements ActionListener {
     private static final int MAX_CARDS = 7;
@@ -68,8 +75,127 @@ public class CardController implements ActionListener {
     }
 
     private void handleHelicopterCard(HelicopterCard card) {
-        // 处理直升机卡点击逻辑
-        // gameController.handleHelicopterUse(card);
+        // 获取当前玩家
+        int currentPlayerIndex = gameController.getCurrentPlayerIndex();
+        Player currentPlayer = gameController.getPlayers().get(currentPlayerIndex);
+
+        // 检查是否满足胜利条件
+        if (card.canUseForVictory(gameController.getPlayers())) {
+            if (useHelicopterCardForWin(currentPlayerIndex)) {
+                return;
+            }
+        }
+
+        // 如果不满足胜利条件，则使用移动功能
+        // 获取所有玩家
+        List<Player> players = gameController.getPlayers();
+        
+        // 创建玩家选择对话框
+        String[] playerOptions = new String[players.size()];
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            playerOptions[i] = "玩家 " + (i + 1) + " (" + p.getRole().getClass().getSimpleName() + ")";
+        }
+
+        // 显示玩家选择对话框（多选）
+        List<Integer> selectedPlayers = new ArrayList<>();
+        while (true) {
+            // 更新选项显示，添加已选择次数的信息
+            String[] currentOptions = new String[playerOptions.length];
+            for (int i = 0; i < playerOptions.length; i++) {
+                int selectedCount = 0;
+                for (int selected : selectedPlayers) {
+                    if (selected == i) selectedCount++;
+                }
+                currentOptions[i] = playerOptions[i] + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
+            }
+
+            // 创建玩家选择面板
+            JPanel playerPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+            JButton[] playerButtons = new JButton[currentOptions.length];
+            for (int i = 0; i < currentOptions.length; i++) {
+                final int index = i;
+                playerButtons[i] = new JButton(currentOptions[i]);
+                playerButtons[i].addActionListener(e -> {
+                    selectedPlayers.add(index);
+                    System.out.println(String.format("[日志] 选择了玩家: %s", playerOptions[index]));
+                    // 更新按钮文本
+                    int selectedCount = 0;
+                    for (int selected : selectedPlayers) {
+                        if (selected == index) selectedCount++;
+                    }
+                    playerButtons[index].setText(playerOptions[index] + String.format(" (已选择%d次)", selectedCount));
+                });
+                playerPanel.add(playerButtons[i]);
+            }
+
+            // 创建操作按钮面板
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            JButton confirmButton = new JButton("确定");
+            JButton cancelButton = new JButton("取消");
+
+            // 创建一个标志来跟踪对话框是否被确认
+            final boolean[] confirmed = {false};
+
+            confirmButton.addActionListener(e -> {
+                if (selectedPlayers.isEmpty()) {
+                    System.out.println("[日志] 玩家未选择任何玩家。");
+                    JOptionPane.showMessageDialog(null, "请至少选择一个玩家！");
+                } else {
+                    confirmed[0] = true;
+                    Window window = SwingUtilities.getWindowAncestor(buttonPanel);
+                    if (window != null) {
+                        window.dispose();
+                    }
+                }
+            });
+
+            cancelButton.addActionListener(e -> {
+                Window window = SwingUtilities.getWindowAncestor(buttonPanel);
+                if (window != null) {
+                    window.dispose();
+                }
+            });
+
+            buttonPanel.add(confirmButton);
+            buttonPanel.add(cancelButton);
+
+            // 创建主面板
+            JPanel mainPanel = new JPanel(new BorderLayout());
+            mainPanel.add(playerPanel, BorderLayout.CENTER);
+            mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+            // 显示对话框
+            JOptionPane.showOptionDialog(
+                    null,
+                    mainPanel,
+                    "选择要移动的玩家",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    new Object[]{},
+                    null);
+
+            if (!confirmed[0]) {
+                return; // 用户取消选择
+            }
+
+            // 获取选中的玩家
+            List<Player> selectedPlayersList = new ArrayList<>();
+            for (int index : selectedPlayers) {
+                selectedPlayersList.add(players.get(index));
+            }
+
+            // 检查所有选中的玩家是否在同一个板块
+            if (!card.canUseForMovement(selectedPlayersList)) {
+                JOptionPane.showMessageDialog(null, "所有选中的玩家必须在同一个板块上！");
+                return;
+            }
+
+            // 进入移动模式，等待玩家选择目标位置
+            gameController.getMapController().enterHelicopterMoveMode(currentPlayerIndex, selectedPlayersList, card);
+            break;
+        }
     }
 
     public void addCard(PlayerInfoView playerInfoView, Card card) {
