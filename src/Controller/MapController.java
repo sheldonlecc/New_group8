@@ -6,6 +6,8 @@ import Model.Player;
 import Model.Enumeration.TileState;
 import Model.Role.Role;
 import View.MapView;
+import Model.Cards.Card;
+import Model.Cards.SandbagCard;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JOptionPane;
@@ -21,6 +23,8 @@ public class MapController implements ActionListener {
     private boolean isNavigatorMoveMode = false;
     private int currentPlayerIndex = -1;
     private int targetPlayerIndex = -1; // 领航员移动模式下的目标玩家索引
+    private boolean isSandbagMode = false;
+    private int sandbagPlayerIndex = -1;
 
     public MapController(GameController gameController, MapView mapView) {
         this.gameController = gameController;
@@ -39,7 +43,7 @@ public class MapController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode) {
+        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode && !isSandbagMode) {
             return;
         }
 
@@ -47,6 +51,12 @@ public class MapController implements ActionListener {
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
                 if (e.getSource() == mapView.getButton(i, j)) {
+                    if (isSandbagMode) {
+                        // 沙袋卡加固逻辑
+                        gameController.sandbagShoreUpTile(sandbagPlayerIndex, i, j);
+                        exitSandbagMode();
+                        return;
+                    }
                     handleTileClick(i, j);
                     return;
                 }
@@ -85,14 +95,21 @@ public class MapController implements ActionListener {
         }
 
         // 检查移动是否合法
-        if (!isValidMove(currentPlayer, targetTile)) {
+        if (isMoveMode && !isValidMove(currentPlayer, targetTile)) {
             System.out.println("非法移动：目标板块不可到达");
             JOptionPane.showMessageDialog(mapView, "非法移动：目标板块不可到达", "移动错误", JOptionPane.ERROR_MESSAGE);
             exitMoveMode();
             return;
         }
 
-        // 执行合法移动
+        // 检查加固是否合法
+        if (isInShoreUpMode && !gameController.canShoreUpTile(currentPlayerIndex, targetTile)) {
+            System.out.println("非法加固：目标板块不可加固");
+            JOptionPane.showMessageDialog(mapView, "非法加固：目标板块不可加固", "加固错误", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 执行合法移动或加固
         if (isMoveMode) {
             gameController.movePlayer(currentPlayerIndex, row, col);
             exitMoveMode();
@@ -232,7 +249,7 @@ public class MapController implements ActionListener {
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
         List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
-        shoreableTiles.add(currentTile);
+        shoreableTiles.add(currentTile); // 添加当前瓦片
         boolean hasShoreable = false;
         for (Tile tile : shoreableTiles) {
             if (tile.isShoreable()) {
@@ -260,6 +277,15 @@ public class MapController implements ActionListener {
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
 
+        // 检查是否有沙袋卡
+        boolean hasSandbag = false;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof SandbagCard) {
+                hasSandbag = true;
+                break;
+            }
+        }
+
         // 重置所有按钮状态
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
@@ -269,15 +295,30 @@ public class MapController implements ActionListener {
             }
         }
 
-        // 高亮当前瓦片和相邻瓦片
-        List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
-        adjacentTiles.add(currentTile); // 添加当前瓦片
+        if (hasSandbag) {
+            // 如果有沙袋卡，高亮所有被淹没的板块
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    Tile tile = mapView.getTile(i, j);
+                    if (tile != null && tile.getState() == TileState.FLOODED) {
+                        JButton button = mapView.getButton(i, j);
+                        if (button != null) {
+                            button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+                        }
+                    }
+                }
+            }
+        } else {
+            // 如果没有沙袋卡，只高亮当前瓦片和相邻瓦片
+            List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
+            adjacentTiles.add(currentTile); // 添加当前瓦片
 
-        for (Tile tile : adjacentTiles) {
-            if (tile.isShoreable()) { // 只高亮可加固的瓦片
-                JButton button = mapView.getButton(tile.getRow(), tile.getCol());
-                if (button != null) {
-                    button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+            for (Tile tile : adjacentTiles) {
+                if (tile.isShoreable()) { // 只高亮可加固的瓦片
+                    JButton button = mapView.getButton(tile.getRow(), tile.getCol());
+                    if (button != null) {
+                        button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+                    }
                 }
             }
         }
@@ -389,5 +430,53 @@ public class MapController implements ActionListener {
             }
         }
         System.out.println("========== 领航员移动模式已退出 ==========\n");
+    }
+
+    public void enterSandbagMode(int playerIndex) {
+        isSandbagMode = true;
+        sandbagPlayerIndex = playerIndex;
+        isMoveMode = false;
+        isInShoreUpMode = false;
+        currentPlayerIndex = playerIndex;
+        System.out.println("[日志] 进入沙袋卡加固模式，玩家" + (playerIndex + 1) + "可以选择任意被淹没的板块");
+        // 高亮所有被淹没的板块
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null) {
+                button.setEnabled(true);
+                button.setBackground(null);
+            }
+        }
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                Tile tile = mapView.getTile(i, j);
+                if (tile != null && tile.getState() == TileState.FLOODED) {
+                    JButton button = mapView.getButton(i, j);
+                    if (button != null) {
+                        button.setBackground(new Color(255, 255, 200));
+                    }
+                }
+            }
+        }
+        // 禁用不可加固的板块
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null && button.getBackground() == null) {
+                button.setEnabled(false);
+            }
+        }
+    }
+
+    public void exitSandbagMode() {
+        isSandbagMode = false;
+        sandbagPlayerIndex = -1;
+        // 重置所有按钮状态
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null) {
+                button.setEnabled(true);
+                button.setBackground(null);
+            }
+        }
     }
 }

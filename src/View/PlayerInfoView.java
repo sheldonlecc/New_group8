@@ -13,6 +13,7 @@ public class PlayerInfoView extends JPanel {
     private JPanel cardsPanel;
     private GameController gameController;
     private static final int MAX_CARDS = 7;
+    private JButton sandbagButton;
 
     public PlayerInfoView(GameController gameController) {
         this.gameController = gameController;
@@ -44,6 +45,16 @@ public class PlayerInfoView extends JPanel {
         leftPanel.add(actionPointsLabel);
         leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
+        // 添加"使用沙袋卡"按钮
+        sandbagButton = new JButton("使用沙袋卡");
+        sandbagButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        sandbagButton.setBackground(new Color(255, 204, 102));
+        sandbagButton.setFont(new Font("Arial", Font.BOLD, 12));
+        sandbagButton.setFocusPainted(false);
+        sandbagButton.setEnabled(true); // 默认可用，后续由控制器控制
+        leftPanel.add(sandbagButton);
+        leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
         // 添加动作按钮面板
         JPanel actionButtonsPanel = new JPanel(new GridLayout(3, 2, 5, 5));
         actionButtonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -67,8 +78,8 @@ public class PlayerInfoView extends JPanel {
         add(cardsPanel, BorderLayout.CENTER);
 
         // 设置首选大小和最小大小
-        setPreferredSize(new Dimension(700, 150));
-        setMinimumSize(new Dimension(700, 150));
+        setPreferredSize(new Dimension(700, 200));
+        setMinimumSize(new Dimension(700, 200));
 
         // 调整卡牌区域的大小，确保能显示足够多的卡牌
         cardsPanel.setPreferredSize(new Dimension(700, 120));
@@ -149,5 +160,9 @@ public class PlayerInfoView extends JPanel {
                 }
             }
         }
+    }
+
+    public JButton getSandbagButton() {
+        return sandbagButton;
     }
 }

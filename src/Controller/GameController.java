@@ -97,6 +97,31 @@ public class GameController {
         initializeFirstTurn();
 
         System.out.println("========== 游戏控制器初始化完成 ==========\n");
+
+        // 为每个玩家的沙袋按钮添加监听器
+        for (int i = 0; i < playerInfoViews.size(); i++) {
+            final int playerIndex = i;
+            PlayerInfoView view = playerInfoViews.get(i);
+            view.getSandbagButton().addActionListener(e -> {
+                Player player = players.get(playerIndex);
+                boolean hasSandbag = false;
+                for (Model.Cards.Card card : player.getHandCard().getCards()) {
+                    if (card instanceof Model.Cards.SandbagCard) {
+                        hasSandbag = true;
+                        break;
+                    }
+                }
+                if (hasSandbag) {
+                    if (mapController != null) {
+                        mapController.enterSandbagMode(playerIndex);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "地图未初始化，无法使用沙袋卡！");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用！");
+                }
+            });
+        }
     }
 
     private void dealInitialCards() {
@@ -844,6 +869,20 @@ public class GameController {
         Role role = player.getRole();
         Tile currentTile = player.getCurrentTile();
 
+        // 检查是否有沙袋卡
+        boolean hasSandbag = false;
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof SandbagCard) {
+                hasSandbag = true;
+                break;
+            }
+        }
+
+        // 如果有沙袋卡，可以加固任意被淹没的板块
+        if (hasSandbag && targetTile.getState() == TileState.FLOODED) {
+            return true;
+        }
+
         // 检查是否是探险家
         boolean isExplorer = role instanceof Model.Role.Explorer;
 
@@ -1499,6 +1538,39 @@ public class GameController {
         if (currentActions - 1 == 0) {
             endTurn(playerIndex);
         }
+    }
+
+    /**
+     * 使用沙袋卡加固任意被淹没的板块
+     */
+    public void sandbagShoreUpTile(int playerIndex, int row, int col) {
+        if (playerIndex < 0 || playerIndex >= players.size()) {
+            return;
+        }
+        Player player = players.get(playerIndex);
+        Tile targetTile = mapController.getMapView().getTile(row, col);
+        if (targetTile == null || targetTile.getState() != Model.Enumeration.TileState.FLOODED) {
+            JOptionPane.showMessageDialog(null, "只能加固被淹没的板块！");
+            return;
+        }
+        // 查找一张沙袋卡
+        Model.Cards.Card sandbagCard = null;
+        for (Model.Cards.Card card : player.getHandCard().getCards()) {
+            if (card instanceof Model.Cards.SandbagCard) {
+                sandbagCard = card;
+                break;
+            }
+        }
+        if (sandbagCard == null) {
+            JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用！");
+            return;
+        }
+        // 执行加固
+        targetTile.setState(Model.Enumeration.TileState.NORMAL);
+        player.getHandCard().removeCard(sandbagCard);
+        playerInfoViews.get(playerIndex).removeCard(sandbagCard);
+        treasureDeck.discard(sandbagCard);
+        JOptionPane.showMessageDialog(null, "成功使用沙袋卡修复板块！");
     }
 
     public List<Player> getPlayers() {
