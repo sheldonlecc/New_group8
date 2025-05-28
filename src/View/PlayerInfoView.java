@@ -67,8 +67,8 @@ public class PlayerInfoView extends JPanel {
         add(cardsPanel, BorderLayout.CENTER);
 
         // 设置首选大小和最小大小
-        setPreferredSize(new Dimension(700, 150));
-        setMinimumSize(new Dimension(700, 150));
+        setPreferredSize(new Dimension(700, 200));
+        setMinimumSize(new Dimension(700, 200));
 
         // 调整卡牌区域的大小，确保能显示足够多的卡牌
         cardsPanel.setPreferredSize(new Dimension(700, 120));
