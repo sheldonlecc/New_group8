@@ -932,17 +932,42 @@ public class GameController {
         List<Integer> candidateIndexes = new ArrayList<>();
         boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
 
-        // 构建玩家选项列表
-        String[] playerOptions = new String[players.size()];
-        int optionIndex = 0;
+        // 获取当前玩家所在的板块
+        Tile currentTile = fromPlayer.getCurrentTile();
+        if (currentTile == null) {
+            System.out.println("[日志] 当前玩家不在任何板块上。");
+            JOptionPane.showMessageDialog(null, "当前玩家不在任何板块上！");
+            return false;
+        }
+
+        // 检查当前板块上的所有玩家
+        List<Integer> playersOnTile = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
-            if (i != fromPlayerIndex) {
-                Player targetPlayer = players.get(i);
+            Player player = players.get(i);
+            if (player.getCurrentTile() != null && player.getCurrentTile().equals(currentTile)) {
+                playersOnTile.add(i);
+            }
+        }
+
+        // 如果没有其他玩家在同一板块上，且不是信使，则无法给牌
+        if (playersOnTile.size() <= 1 && !isMessenger) {
+            System.out.println("[日志] 当前板块上没有其他玩家。");
+            JOptionPane.showMessageDialog(null, "当前板块上没有其他玩家！");
+            return false;
+        }
+
+        // 构建玩家选项列表
+        String[] playerOptions = new String[playersOnTile.size()];
+        int optionIndex = 0;
+        for (int i = 0; i < playersOnTile.size(); i++) {
+            int playerIndex = playersOnTile.get(i);
+            if (playerIndex != fromPlayerIndex) {
+                Player targetPlayer = players.get(playerIndex);
                 if (isMessenger || fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile())) {
-                    candidateIndexes.add(i);
+                    candidateIndexes.add(playerIndex);
                     String location = fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile()) ? "(同一位置)" : "(不同位置)";
                     playerOptions[optionIndex] = String.format("玩家%d - %s %s", 
-                        i + 1, 
+                        playerIndex + 1, 
                         targetPlayer.getRole().getClass().getSimpleName(),
                         location);
                     optionIndex++;
