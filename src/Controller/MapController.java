@@ -37,6 +37,9 @@ public class MapController implements ActionListener {
     private HelicopterCard helicopterCard = null;
     private boolean isHelicopterMode = false;
     private int helicopterPlayerIndex = -1;
+    private boolean isInEmergencyMoveMode = false;
+    private int emergencyMovePlayerIndex = -1;
+    private List<Tile> emergencyMoveAvailableTiles = null;
 
     public MapController(GameController gameController, MapView mapView) {
         this.gameController = gameController;
@@ -55,7 +58,7 @@ public class MapController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode && !isSandbagMode && !isHelicopterMode) {
+        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode && !isSandbagMode && !isHelicopterMode && !isInEmergencyMoveMode) {
             return;
         }
 
@@ -74,6 +77,19 @@ public class MapController implements ActionListener {
                         System.out.println("点击位置: [" + i + "," + j + "]");
                         handleHelicopterMove(i, j);
                         return;
+                    } else if (isInEmergencyMoveMode) {
+                        // 紧急移动逻辑
+                        System.out.println("\n========== 紧急移动模式板块点击 ==========");
+                        System.out.println("点击位置: [" + i + "," + j + "]");
+                        Tile clickedTile = mapView.getTile(i, j);
+                        if (clickedTile != null && emergencyMoveAvailableTiles.contains(clickedTile)) {
+                            if (gameController.performEmergencyMove(emergencyMovePlayerIndex, clickedTile)) {
+                                exitEmergencyMoveMode();
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(null, "请选择一个可用的板块！");
+                        }
+                        return;
                     }
                     handleTileClick(i, j);
                     return;
@@ -82,7 +98,19 @@ public class MapController implements ActionListener {
         }
     }
 
-    private void handleTileClick(int row, int col) {
+    public void handleTileClick(int row, int col) {
+        if (isInEmergencyMoveMode) {
+            Tile clickedTile = mapView.getTile(row, col);
+            if (clickedTile != null && emergencyMoveAvailableTiles.contains(clickedTile)) {
+                if (gameController.performEmergencyMove(emergencyMovePlayerIndex, clickedTile)) {
+                    exitEmergencyMoveMode();
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "请选择一个可用的板块！");
+            }
+            return;
+        }
+
         System.out.println("\n========== 处理板块点击 ==========");
         System.out.printf("点击位置: [%d, %d]\n", row, col);
 
@@ -762,5 +790,33 @@ public class MapController implements ActionListener {
         isHelicopterMode = false;
         helicopterPlayerIndex = -1;
         mapView.setHelicopterMode(false);
+    }
+
+    /**
+     * 进入紧急移动模式
+     * @param playerIndex 需要移动的玩家索引
+     * @param availableTiles 可用的目标板块列表
+     */
+    public void enterEmergencyMoveMode(int playerIndex, List<Tile> availableTiles) {
+        isInEmergencyMoveMode = true;
+        emergencyMovePlayerIndex = playerIndex;
+        emergencyMoveAvailableTiles = availableTiles;
+        
+        // 高亮显示可用的目标板块
+        for (Tile tile : availableTiles) {
+            mapView.highlightTile(tile.getRow(), tile.getCol());
+        }
+    }
+
+    /**
+     * 退出紧急移动模式
+     */
+    public void exitEmergencyMoveMode() {
+        isInEmergencyMoveMode = false;
+        emergencyMovePlayerIndex = -1;
+        emergencyMoveAvailableTiles = null;
+        
+        // 清除所有高亮
+        mapView.clearHighlights();
     }
 }

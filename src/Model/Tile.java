@@ -20,6 +20,7 @@ public class Tile {
     private final int col; // 列坐标
     private final List<Tile> adjacentTiles; // 相邻瓦片列表
     private final String imagePath; // 瓦片图片路径
+    private boolean highlighted = false;
 
     // 事件监听器
     private final List<Consumer<Tile>> onStateChangeListeners; // 状态变化监听器
@@ -222,5 +223,21 @@ public class Tile {
     @Override
     public int hashCode() {
         return 31 * row + col;
+    }
+
+    /**
+     * 设置板块是否高亮
+     * @param highlighted 是否高亮
+     */
+    public void setHighlighted(boolean highlighted) {
+        this.highlighted = highlighted;
+    }
+
+    /**
+     * 获取板块是否高亮
+     * @return 是否高亮
+     */
+    public boolean isHighlighted() {
+        return highlighted;
     }
 }

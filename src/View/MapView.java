@@ -469,42 +469,29 @@ public class MapView extends JPanel {
         repaint();
     }
 
-    private void highlightTile(int row, int col) {
-        System.out.println("尝试高亮板块 [" + row + "," + col + "]");
-        JButton button = mapButtons[row][col];
-        if (button != null) {
-            System.out.println("按钮状态:");
-            System.out.println("- 是否可见: " + button.isVisible());
-            System.out.println("- 是否启用: " + button.isEnabled());
-            System.out.println("- 当前背景色: " + button.getBackground());
-            System.out.println("- 当前前景色: " + button.getForeground());
-            System.out.println("- 当前边框: " + button.getBorder());
-            System.out.println("- 当前图标: " + (button.getIcon() != null ? "有图标" : "无图标"));
-            
-            button.setBackground(new Color(200, 255, 200)); // 浅绿色高亮
-            button.setOpaque(true); // 确保背景色可见
-            button.setContentAreaFilled(true); // 确保内容区域填充
-            
-            System.out.println("设置后的按钮状态:");
-            System.out.println("- 背景色: " + button.getBackground());
-            System.out.println("- 是否不透明: " + button.isOpaque());
-            System.out.println("- 是否填充内容区域: " + button.isContentAreaFilled());
-            System.out.println("板块高亮成功");
-        } else {
-            System.out.println("板块高亮失败：按钮为空");
+    /**
+     * 高亮显示指定位置的板块
+     * @param row 行
+     * @param col 列
+     */
+    public void highlightTile(int row, int col) {
+        if (row >= 0 && row < tiles.length && col >= 0 && col < tiles[0].length) {
+            tiles[row][col].setHighlighted(true);
+            repaint();
         }
     }
 
-    private void clearHighlights() {
-        System.out.println("开始清除所有高亮");
-        for (int i = 0; i < MAP_SIZE; i++) {
-            for (int j = 0; j < MAP_SIZE; j++) {
-                JButton button = mapButtons[i][j];
-                if (button != null) {
-                    button.setBackground(null);
+    /**
+     * 清除所有板块的高亮
+     */
+    public void clearHighlights() {
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[0].length; j++) {
+                if (tiles[i][j] != null) {
+                    tiles[i][j].setHighlighted(false);
                 }
             }
         }
-        System.out.println("高亮清除完成");
+        repaint();
     }
 }

@@ -279,6 +279,148 @@ public class GameController {
         mapController.exitHelicopterMode();
     }
 
+    /**
+     * 处理玩家紧急移动
+     * 当玩家所在板块沉没时，必须立即移动到最近的可用板块
+     * @param playerIndex 需要紧急移动的玩家索引
+     * @return 如果移动成功返回true，如果无法移动返回false
+     */
+    private boolean handleEmergencyMove(int playerIndex) {
+        System.out.println("\n========== 处理紧急移动 ==========");
+        System.out.println("玩家索引: " + playerIndex);
+        
+        Player player = players.get(playerIndex);
+        Tile currentTile = player.getCurrentTile();
+        
+        if (currentTile == null || currentTile.getState() != TileState.SUNK) {
+            System.out.println("玩家不在沉没的板块上，无需紧急移动");
+            return true;
+        }
+
+        // 获取所有可用的相邻板块
+        List<Tile> availableTiles = new ArrayList<>();
+        boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
+        
+        // 遍历所有板块
+        for (Tile tile : mapController.getMapView().getAllTiles()) {
+            if (tile.getState() == TileState.SUNK) continue;
+            
+            // 检查是否可达
+            boolean isReachable;
+            if (isExplorer) {
+                // 探险家可以斜向移动
+                int rowDistance = Math.abs(currentTile.getRow() - tile.getRow());
+                int colDistance = Math.abs(currentTile.getCol() - tile.getCol());
+                isReachable = rowDistance <= 1 && colDistance <= 1;
+            } else {
+                // 其他玩家只能移动到相邻格子
+                isReachable = currentTile.isAdjacentTo(tile);
+            }
+            
+            if (isReachable) {
+                availableTiles.add(tile);
+            }
+        }
+
+        if (availableTiles.isEmpty()) {
+            System.out.println("没有可用的移动目标，游戏失败");
+            endGameWithLose("玩家" + (playerIndex + 1) + "所在板块沉没且无法移动到其他板块，游戏失败！");
+            return false;
+        }
+
+        // 显示紧急移动提示
+        JOptionPane.showMessageDialog(null,
+            "玩家" + (playerIndex + 1) + "所在板块已沉没！\n请点击一个相邻的可用板块进行移动。",
+            "紧急移动",
+            JOptionPane.WARNING_MESSAGE);
+
+        // 进入紧急移动模式
+        mapController.enterEmergencyMoveMode(playerIndex, availableTiles);
+        
+        System.out.println("========== 紧急移动处理结束 ==========\n");
+        return true;
+    }
+
+    /**
+     * 执行紧急移动
+     * @param playerIndex 需要移动的玩家索引
+     * @param targetTile 目标板块
+     * @return 如果移动成功返回true，否则返回false
+     */
+    public boolean performEmergencyMove(int playerIndex, Tile targetTile) {
+        Player player = players.get(playerIndex);
+        Tile currentTile = player.getCurrentTile();
+        
+        if (currentTile == null || currentTile.getState() != TileState.SUNK) {
+            return true;
+        }
+
+        // 检查目标板块是否可用
+        boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
+        boolean isValidTarget = false;
+        
+        if (isExplorer) {
+            // 探险家可以斜向移动
+            int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
+            int colDistance = Math.abs(currentTile.getCol() - targetTile.getCol());
+            isValidTarget = rowDistance <= 1 && colDistance <= 1;
+        } else {
+            // 其他玩家只能移动到相邻格子
+            isValidTarget = currentTile.isAdjacentTo(targetTile);
+        }
+
+        if (!isValidTarget || targetTile.getState() == TileState.SUNK) {
+            JOptionPane.showMessageDialog(null, "无法移动到该板块！");
+            return false;
+        }
+
+        // 执行移动
+        System.out.println("选择移动到: " + targetTile.getName());
+        
+        // 隐藏原位置的玩家图像
+        mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
+        
+        // 更新玩家位置
+        player.setCurrentTile(targetTile);
+        
+        // 显示新位置的玩家图像
+        String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
+        String playerImagePath = "src/resources/Player/" + roleName + "2.png";
+        mapController.getMapView().showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath, playerIndex);
+
+        System.out.println("紧急移动完成");
+        return true;
+    }
+
+    /**
+     * 检查并处理所有需要紧急移动的玩家
+     * @return 如果所有玩家都成功移动返回true，否则返回false
+     */
+    private boolean checkAndHandleEmergencyMoves() {
+        System.out.println("\n========== 检查紧急移动 ==========");
+        boolean allSuccess = true;
+        
+        // 收集所有需要紧急移动的玩家
+        List<Integer> playersToMove = new ArrayList<>();
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            if (player.getCurrentTile() != null && player.getCurrentTile().getState() == TileState.SUNK) {
+                playersToMove.add(i);
+            }
+        }
+        
+        // 逐个处理需要移动的玩家
+        for (int playerIndex : playersToMove) {
+            if (!handleEmergencyMove(playerIndex)) {
+                allSuccess = false;
+                break;
+            }
+        }
+        
+        System.out.println("========== 紧急移动检查完成 ==========\n");
+        return allSuccess;
+    }
+
     public void startNewTurn() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         PlayerInfoView currentPlayerView = playerInfoViews.get(currentPlayerIndex);
@@ -346,6 +488,22 @@ public class GameController {
                         " [坐标: " + targetTile.getRow() + "," + targetTile.getCol() + "]" +
                         "，状态变化：" + stateChange +
                         "，当前状态：" + stateMsg);
+
+                // 如果板块沉没，立即检查是否有玩家需要紧急移动
+                if (targetTile.getState() == TileState.SUNK) {
+                    System.out.println("[日志] 板块" + targetTile.getName() + "沉没，检查玩家是否需要紧急移动");
+                    for (int j = 0; j < players.size(); j++) {
+                        Player player = players.get(j);
+                        if (player.getCurrentTile().equals(targetTile)) {
+                            System.out.println("[日志] 玩家" + (j + 1) + "在沉没的板块上，需要紧急移动");
+                            if (!handleEmergencyMove(j)) {
+                                System.out.println("[日志] 玩家" + (j + 1) + "无法移动，游戏失败");
+                                endGameWithLose("玩家" + (j + 1) + "所在板块沉没且无法移动到其他板块，游戏失败！");
+                                return;
+                            }
+                        }
+                    }
+                }
             } else {
                 System.out.println("[警告] 洪水牌堆已空！");
             }
