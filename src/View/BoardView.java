@@ -33,6 +33,9 @@ public class BoardView extends JPanel {
         // 将MapView设置到GameController
         this.gameController.setMapView(mapView);
         
+        // 将BoardView设置到GameController
+        this.gameController.setBoardView(this);
+        
         // 从GameController获取PlayerInfoView实例
         this.playerInfoViews = new PlayerInfoView[playerCount];
         for (int i = 0; i < playerCount; i++) {

@@ -52,6 +52,7 @@ public class GameController {
     private MapController mapController; // 添加MapController成员变量
     private FloodDeck floodDeck;
     private boolean floodDeckInitialized = false;
+    private BoardView boardView; // 添加 BoardView 引用
 
     // ========== 工程师加固两次机制 ==========
     private int engineerShoreUpCount = 0;
@@ -567,30 +568,14 @@ public class GameController {
      * @param found         是否已找到宝物
      */
     private void updateTreasureViewStatus(int treasureIndex, boolean found) {
-        // 由于MapView和TreasureView没有直接关联，我们需要通过BoardView获取TreasureView
-        // 假设我们有一个方法可以获取BoardView，在这里直接使用
-        if (mapController != null && mapController.getMapView() != null) {
-            try {
-                // 在这里尝试获取TreasureView
-                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(mapController.getMapView());
-                if (frame != null) {
-                    for (Component comp : frame.getContentPane().getComponents()) {
-                        if (comp instanceof BoardView) {
-                            BoardView boardView = (BoardView) comp;
-                            TreasureView treasureView = boardView.getTreasureView();
-                            if (treasureView != null) {
-                                treasureView.updateTreasureStatus(treasureIndex, found);
-                                return;
-                            }
-                        }
-                    }
-                }
-                System.out.println("无法找到TreasureView，宝物状态更新失败");
-            } catch (Exception e) {
-                System.err.println("更新宝物视图状态时出错: " + e.getMessage());
-                e.printStackTrace();
+        if (boardView != null) {
+            TreasureView treasureView = boardView.getTreasureView();
+            if (treasureView != null) {
+                treasureView.updateTreasureStatus(treasureIndex, found);
+                return;
             }
         }
+        System.out.println("无法找到TreasureView，宝物状态更新失败");
     }
 
     /**
@@ -1534,5 +1519,10 @@ public class GameController {
         }
         JOptionPane.showMessageDialog(null, "恭喜！你们集齐宝物并成功逃脱，获得胜利！");
         System.out.println("========== 游戏胜利 ==========");
+    }
+
+    // 添加设置BoardView的方法
+    public void setBoardView(BoardView boardView) {
+        this.boardView = boardView;
     }
 }
