@@ -37,20 +37,18 @@ public class MapView extends JPanel {
             new Point(5, 2), new Point(5, 3));
 
     private static final List<Point> ADVANCED_MAP = Arrays.asList(
-            new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(0, 4),
-            new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(1, 4),
-            new Point(2, 1), new Point(2, 2), new Point(2, 3), new Point(2, 4),
-            new Point(3, 1), new Point(3, 2), new Point(3, 3), new Point(3, 4),
-            new Point(4, 0), new Point(4, 1), new Point(4, 2), new Point(4, 3), new Point(4, 4),
-            new Point(5, 1), new Point(5, 2), new Point(5, 3), new Point(5, 4));
+            new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(1, 4), new Point(1, 5),
+            new Point(2, 0), new Point(2, 1), new Point(2, 2), new Point(2, 3), new Point(2, 4), new Point(2, 5),
+            new Point(3, 0), new Point(3, 1), new Point(3, 2), new Point(3, 3), new Point(3, 4), new Point(3, 5),
+            new Point(4, 0), new Point(4, 1), new Point(4, 2), new Point(4, 3), new Point(4, 4), new Point(4, 5));
 
     private static final List<Point> EXPERT_MAP = Arrays.asList(
-            new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(0, 4),
-            new Point(1, 0), new Point(1, 1), new Point(1, 4), new Point(1, 5),
-            new Point(2, 0), new Point(2, 1), new Point(2, 4), new Point(2, 5),
-            new Point(3, 0), new Point(3, 1), new Point(3, 4), new Point(3, 5),
-            new Point(4, 0), new Point(4, 1), new Point(4, 4), new Point(4, 5),
-            new Point(5, 1), new Point(5, 2), new Point(5, 3), new Point(5, 4));
+            new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(0, 4), new Point(0, 5),
+            new Point(1, 0), new Point(1, 2), new Point(1, 3), new Point(1, 5),
+            new Point(2, 0), new Point(2, 1), new Point(2, 2), new Point(2, 3), new Point(2, 4), new Point(2, 5),
+            new Point(3, 1), new Point(3, 2), new Point(3, 3), new Point(3, 4),
+            new Point(4, 1), new Point(4, 2), new Point(4, 3), new Point(4, 4));
+
 
     private List<Point> currentMapTiles = CLASSIC_MAP;
 
@@ -140,7 +138,6 @@ public class MapView extends JPanel {
                     }
                     tileNameIndex++;
                 } else {
-                    mapButtons[i][j].setEnabled(false);
                     mapButtons[i][j].setText(TileType.SUNKEN.name());
                     try {
                         ImageIcon icon = new ImageIcon("src/resources/Tiles/Sea.png");
@@ -206,22 +203,7 @@ public class MapView extends JPanel {
     }
 
     public void setMapType(String mapType) {
-        System.out.println("\n========== 切换地图类型 ==========");
-        System.out.println("切换前MapView大小: " + getSize());
-        System.out.println("切换前MapView首选大小: " + getPreferredSize());
-        System.out.println("切换前MapView最小大小: " + getMinimumSize());
-
-        // 打印每个板块的大小
-        System.out.println("\n切换前板块大小:");
-        for (int i = 0; i < MAP_SIZE; i++) {
-            for (int j = 0; j < MAP_SIZE; j++) {
-                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n",
-                    i, j,
-                    layeredPanes[i][j].getSize(),
-                    layeredPanes[i][j].getPreferredSize());
-            }
-        }
-
+        // 设置地图类型
         switch (mapType) {
             case "CLASSIC":
                 currentMapTiles = CLASSIC_MAP;
@@ -235,49 +217,16 @@ public class MapView extends JPanel {
             default:
                 currentMapTiles = CLASSIC_MAP;
         }
-
-        // 只更新按钮状态，不重新创建布局
-        for (int i = 0; i < MAP_SIZE; i++) {
-            for (int j = 0; j < MAP_SIZE; j++) {
-                Point currentPoint = new Point(i, j);
-                if (currentMapTiles.contains(currentPoint)) {
-                    mapButtons[i][j].setEnabled(true);
-                    mapButtons[i][j].setText(TileType.DRY.name());
-                } else {
-                    mapButtons[i][j].setEnabled(true);
-                    mapButtons[i][j].setText(TileType.SUNKEN.name());
-                }
-            }
-        }
-
-        // 打印切换后的信息
-        System.out.println("\n切换后MapView大小: " + getSize());
-        System.out.println("切换后MapView首选大小: " + getPreferredSize());
-        System.out.println("切换后MapView最小大小: " + getMinimumSize());
-
-        System.out.println("\n切换后板块大小:");
-        for (int i = 0; i < MAP_SIZE; i++) {
-            for (int j = 0; j < MAP_SIZE; j++) {
-                System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n",
-                    i, j,
-                    layeredPanes[i][j].getSize(),
-                    layeredPanes[i][j].getPreferredSize());
-            }
-        }
-
-        // 获取父容器信息
-        Container parent = getParent();
-        if (parent != null) {
-            System.out.println("\n父容器信息:");
-            System.out.println("父容器类名: " + parent.getClass().getName());
-            System.out.println("父容器大小: " + parent.getSize());
-            System.out.println("父容器首选大小: " + parent.getPreferredSize());
-            System.out.println("父容器最小大小: " + parent.getMinimumSize());
-        }
-
+        
+        // 移除所有现有组件
+        removeAll();
+        
+        // 重新初始化UI
+        initializeUI();
+        
+        // 刷新布局
         revalidate();
         repaint();
-        System.out.println("========== 地图类型切换完成 ==========\n");
     }
 
     @Override

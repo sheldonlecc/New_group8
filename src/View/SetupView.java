@@ -1,5 +1,8 @@
 package View;
 
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
 
@@ -8,12 +11,26 @@ public class SetupView extends JPanel {
     private JComboBox<String> playerCountSelector;
     private JComboBox<String> mapSelector;
     private JCheckBox randomGenerationCheckbox;
-
     private MainView mainView;
+    private Image backgroundImage;  // 添加背景图片变量
 
     public SetupView(MainView mainView) {
         this.mainView = mainView;
+        // 加载背景图片
+        try {
+            backgroundImage = ImageIO.read(new File("src/resources/Background.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         initializeUI();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
     }
 
     private void initializeUI() {
@@ -81,6 +98,21 @@ public class SetupView extends JPanel {
         buttonPanel.add(confirmButton);
         buttonPanel.add(cancelButton);
         add(buttonPanel, gbc);
+
+        // 设置所有标签为白色文字，以便在深色背景上更容易看见
+        titleLabel.setForeground(Color.WHITE);
+        for (Component comp : getComponents()) {
+            if (comp instanceof JLabel) {
+                ((JLabel) comp).setForeground(Color.WHITE);
+            }
+        }
+
+        // 设置复选框文字为白色
+        randomGenerationCheckbox.setForeground(Color.WHITE);
+        randomGenerationCheckbox.setOpaque(false);
+
+        // 设置按钮面板为透明
+        buttonPanel.setOpaque(false);
     }
 
     public boolean isConfirmed() {

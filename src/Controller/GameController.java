@@ -54,6 +54,7 @@ public class GameController {
     private FloodDeck floodDeck;
     private boolean floodDeckInitialized = false;
     private BoardView boardView; // 添加 BoardView 引用
+    private final int playerCount; // 添加玩家数量字段
 
     // ========== 工程师加固两次机制 ==========
     private int engineerShoreUpCount = 0;
@@ -62,6 +63,7 @@ public class GameController {
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
+        this.playerCount = playerCount; // 初始化玩家数量
         this.players = new ArrayList<>();
         this.playerInfoViews = new ArrayList<>();
         this.cardController = new CardController(this);
@@ -1830,5 +1832,34 @@ public class GameController {
 
     public MapController getMapController() {
         return mapController;
+    }
+
+    public int getPlayerCount() {
+        return playerCount;
+    }
+    
+    /**
+     * 检查游戏胜利条件
+     * 当所有宝物都被收集且所有玩家都在直升机场时，游戏胜利
+     */
+    public void checkGameWin() {
+        // 检查是否收集齐所有宝物
+        if (!treasureDeck.allTreasuresCollected()) {
+            return;
+        }
+        
+        // 检查所有玩家是否都在直升机场
+        boolean allPlayersAtHelicopter = true;
+        for (Player player : players) {
+            Tile currentTile = player.getCurrentTile();
+            if (currentTile == null || !currentTile.getName().equals(TileName.FOOLS_LANDING)) {
+                allPlayersAtHelicopter = false;
+                break;
+            }
+        }
+        
+        if (allPlayersAtHelicopter) {
+            endGameWithWin();
+        }
     }
 }

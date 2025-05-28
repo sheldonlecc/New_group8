@@ -9,14 +9,15 @@ import java.awt.*;
 
 public class CardView extends JButton {
     private Card card;
-    private static final int CARD_WIDTH = 75;
+    private static final int CARD_WIDTH = 70;
     private int cardHeight;
     private static final Font CARD_FONT = new Font("Microsoft YaHei", Font.BOLD, 12);
     private static final String CARD_PATH = "/resources/Card/";
 
     public CardView(Card card, int playerCount) {
         this.card = card;
-        this.cardHeight = (playerCount == 2) ? 120 : 100;
+        // 增加卡牌高度，让卡牌显示更长
+        this.cardHeight = (playerCount == 2) ? 130 : 110; // 原来是120和100
         initializeUI();
     }
 

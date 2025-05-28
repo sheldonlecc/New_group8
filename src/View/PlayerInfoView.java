@@ -15,23 +15,39 @@ public class PlayerInfoView extends JPanel {
     private static final int MAX_CARDS = 7;
     private JButton sandbagButton;
     private JButton helicopterButton;
+    private JLabel roleIconLabel;
+    private int playerCount; // 新增玩家数量字段
+    private JButton[] actionButtons; // 添加这行声明
 
     public PlayerInfoView(GameController gameController) {
         this.gameController = gameController;
+        this.playerCount = gameController.getPlayerCount(); // 获取玩家数量
         initializeUI();
         setPlayerName("Player");
     }
 
-    private JButton[] actionButtons;
-
     private void initializeUI() {
-        setLayout(new BorderLayout(5, 5));
+        setLayout(new BorderLayout(3, 3));
         setBorder(BorderFactory.createTitledBorder(""));
+    
+        // 根据玩家数量动态设置面板尺寸
+        int panelWidth, panelHeight;
+        if (playerCount <= 2) {
+            panelWidth = 750;
+            panelHeight = 180;
+        } else {
+            // 3-4人游戏时减小宽度
+            panelWidth = 750; // 从750减少到600
+            panelHeight = 175; // 稍微减小高度
+        }
+        
+        setMaximumSize(new Dimension(panelWidth, panelHeight));
+        setPreferredSize(new Dimension(panelWidth - 20, panelHeight - 20));
 
         // 左侧区域：玩家信息
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        leftPanel.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 
         // 隐藏roleLabel和playerNameLabel，只在标题中显示
         roleLabel = new JLabel("Role");
@@ -47,20 +63,21 @@ public class PlayerInfoView extends JPanel {
         leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // 添加"使用沙袋卡"按钮
-        sandbagButton = new JButton("使用沙袋卡");
+        sandbagButton = new JButton("Sandbag");
         sandbagButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        sandbagButton.setPreferredSize(new Dimension(90, 30)); // 统一尺寸
         sandbagButton.setBackground(new Color(255, 204, 102));
-        sandbagButton.setFont(new Font("Arial", Font.BOLD, 12));
+        sandbagButton.setFont(new Font("Arial", Font.BOLD, 12)); // 减小字体
         sandbagButton.setFocusPainted(false);
-        sandbagButton.setEnabled(true); // 默认可用，后续由控制器控制
+        sandbagButton.setEnabled(true);
 
         // 添加"使用直升机卡"按钮
-        helicopterButton = new JButton("直升机");
-        helicopterButton.setPreferredSize(new Dimension(80, 30));
+        helicopterButton = new JButton("Helicopter");
+        helicopterButton.setPreferredSize(new Dimension(90, 30)); // 保持统一尺寸
         helicopterButton.setBackground(new Color(102, 204, 255));
-        helicopterButton.setFont(new Font("Arial", Font.BOLD, 12));
+        helicopterButton.setFont(new Font("Arial", Font.BOLD, 11)); // 减小字体
         helicopterButton.setFocusPainted(false);
-        helicopterButton.setEnabled(true); // 默认可用，后续由控制器控制
+        helicopterButton.setEnabled(true);
         helicopterButton.addActionListener(e -> {
             System.out.println("\n========== 直升机按钮被点击 ==========");
             System.out.println("当前玩家索引: " + gameController.getPlayerInfoViews().indexOf(this));
@@ -79,12 +96,12 @@ public class PlayerInfoView extends JPanel {
         leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // 添加动作按钮面板
-        JPanel actionButtonsPanel = new JPanel(new GridLayout(3, 2, 5, 5));
+        JPanel actionButtonsPanel = new JPanel(new GridLayout(3, 2, 2, 2)); // 减小间距
         actionButtonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        actionButtonsPanel.setMaximumSize(new Dimension(200, 120));
+        actionButtonsPanel.setMaximumSize(new Dimension(200, 100)); // 增加宽度
 
         // 创建并添加动作按钮
-        String[] actionNames = { "Move", "Shore up", "Give Cards", "Special Skill", "Get Treasure", "Skip" };
+        String[] actionNames = { "Move", "Shore up", "Give Cards", "Special", "Treasure", "Skip" }; // 缩短文本
         actionButtons = new JButton[actionNames.length];
         for (int i = 0; i < actionNames.length; i++) {
             actionButtons[i] = createActionButton(actionNames[i]);
@@ -94,28 +111,70 @@ public class PlayerInfoView extends JPanel {
         leftPanel.add(actionButtonsPanel);
         add(leftPanel, BorderLayout.WEST);
 
-        // 右侧区域：卡牌
-        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 2));
+        // 中间区域：卡牌 - 根据玩家数量调整卡牌区域大小
+        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 1, 1));
         cardsPanel.setBorder(BorderFactory.createTitledBorder("Cards"));
         cardsPanel.setBackground(new Color(240, 240, 240));
+        
+        int cardsPanelWidth = (playerCount <= 2) ? 120 : 100; // 3-4人时减小卡牌区域
+        cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 100));
         add(cardsPanel, BorderLayout.CENTER);
+        
+        // 右侧区域：角色图标 - 根据玩家数量调整图标区域大小
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Role"));
+        
+        int iconPanelWidth = (playerCount <= 2) ? 80 : 60; // 3-4人时减小图标区域
+        rightPanel.setPreferredSize(new Dimension(iconPanelWidth, 100));
+        
+        roleIconLabel = new JLabel();
+        roleIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        roleIconLabel.setVerticalAlignment(SwingConstants.CENTER);
+        
+        int iconSize = (playerCount <= 2) ? 60 : 50; // 3-4人时减小图标尺寸
+        roleIconLabel.setPreferredSize(new Dimension(iconSize, 80));
+        
+        rightPanel.add(roleIconLabel, BorderLayout.CENTER);
+        add(rightPanel, BorderLayout.EAST);
 
-        // 设置首选大小和最小大小
-        setPreferredSize(new Dimension(700, 200));
-        setMinimumSize(new Dimension(700, 200));
+        // 设置最终尺寸
+        setPreferredSize(new Dimension(panelWidth, panelHeight));
+        setMinimumSize(new Dimension(panelWidth, panelHeight));
 
-        // 调整卡牌区域的大小，确保能显示足够多的卡牌
-        cardsPanel.setPreferredSize(new Dimension(700, 120));
+        // 调整卡牌区域的大小
+        cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 120));
     }
-
+    
     public void setPlayerName(String name) {
         playerNameLabel.setText(name);
         updateTitle();
     }
-
+    
     public void setRole(String role) {
         roleLabel.setText(role);
         updateTitle();
+        updateRoleIcon(role); // 更新角色图标
+    }
+    
+    // 新增方法：更新角色图标
+    private void updateRoleIcon(String role) {
+        if (role != null && !role.equals("Role") && !role.equals("Not Assigned")) {
+            try {
+                String iconPath = "src/resources/Player/" + role + "_Icon.png";
+                ImageIcon icon = new ImageIcon(iconPath);
+                // 缩放图标到合适大小
+                Image scaledImage = icon.getImage().getScaledInstance(60, 80, Image.SCALE_SMOOTH);
+                roleIconLabel.setIcon(new ImageIcon(scaledImage));
+                roleIconLabel.setText("");
+            } catch (Exception e) {
+                System.err.println("无法加载角色图标: " + role);
+                roleIconLabel.setIcon(null);
+                roleIconLabel.setText(role);
+            }
+        } else {
+            roleIconLabel.setIcon(null);
+            roleIconLabel.setText("No Role");
+        }
     }
 
     public void setActionPoints(int points) {
@@ -154,13 +213,14 @@ public class PlayerInfoView extends JPanel {
 
     private JButton createActionButton(String actionName) {
         JButton button = new JButton(actionName);
+        button.setPreferredSize(new Dimension(90, 30)); // 统一尺寸
         button.setFocusPainted(false);
         button.setBackground(new Color(51, 122, 183));
         button.setForeground(Color.WHITE);
-        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setFont(new Font("Arial", Font.BOLD, 12)); // 减小字体以适应按钮
         button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(46, 109, 164), 1),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+                BorderFactory.createEmptyBorder(2, 4, 2, 4))); // 减小内边距
         button.addActionListener(e -> performAction(actionName));
         return button;
     }
