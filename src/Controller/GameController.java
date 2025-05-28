@@ -202,7 +202,7 @@ public class GameController {
     public void handleHelicopterCard(int playerIndex) {
         System.out.println("\n========== 处理直升机卡 ==========");
         System.out.println("玩家索引: " + playerIndex);
-        
+
         Player player = players.get(playerIndex);
         // 检查玩家是否有直升机卡
         boolean hasHelicopterCard = false;
@@ -230,14 +230,15 @@ public class GameController {
 
     /**
      * 处理直升机卡移动
+     * 
      * @param playerIndex 使用直升机卡的玩家索引
-     * @param row 目标行
-     * @param col 目标列
+     * @param row         目标行
+     * @param col         目标列
      */
     public void handleHelicopterMove(int playerIndex, int row, int col) {
         Player player = players.get(playerIndex);
         Tile targetTile = mapController.getMapView().getTile(row, col);
-        
+
         if (targetTile == null || targetTile.getState() == TileState.SUNK) {
             JOptionPane.showMessageDialog(null, "无法移动到已沉没的板块！");
             return;
@@ -282,16 +283,17 @@ public class GameController {
     /**
      * 处理玩家紧急移动
      * 当玩家所在板块沉没时，必须立即移动到最近的可用板块
+     * 
      * @param playerIndex 需要紧急移动的玩家索引
      * @return 如果移动成功返回true，如果无法移动返回false
      */
     private boolean handleEmergencyMove(int playerIndex) {
         System.out.println("\n========== 处理紧急移动 ==========");
         System.out.println("玩家索引: " + playerIndex);
-        
+
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        
+
         if (currentTile == null || currentTile.getState() != TileState.SUNK) {
             System.out.println("玩家不在沉没的板块上，无需紧急移动");
             return true;
@@ -300,11 +302,12 @@ public class GameController {
         // 获取所有可用的相邻板块
         List<Tile> availableTiles = new ArrayList<>();
         boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
-        
+
         // 遍历所有板块
         for (Tile tile : mapController.getMapView().getAllTiles()) {
-            if (tile.getState() == TileState.SUNK) continue;
-            
+            if (tile.getState() == TileState.SUNK)
+                continue;
+
             // 检查是否可达
             boolean isReachable;
             if (isExplorer) {
@@ -316,7 +319,7 @@ public class GameController {
                 // 其他玩家只能移动到相邻格子
                 isReachable = currentTile.isAdjacentTo(tile);
             }
-            
+
             if (isReachable) {
                 availableTiles.add(tile);
             }
@@ -330,27 +333,28 @@ public class GameController {
 
         // 显示紧急移动提示
         JOptionPane.showMessageDialog(null,
-            "玩家" + (playerIndex + 1) + "所在板块已沉没！\n请点击一个相邻的可用板块进行移动。",
-            "紧急移动",
-            JOptionPane.WARNING_MESSAGE);
+                "玩家" + (playerIndex + 1) + "所在板块已沉没！\n请点击一个相邻的可用板块进行移动。",
+                "紧急移动",
+                JOptionPane.WARNING_MESSAGE);
 
         // 进入紧急移动模式
         mapController.enterEmergencyMoveMode(playerIndex, availableTiles);
-        
+
         System.out.println("========== 紧急移动处理结束 ==========\n");
         return true;
     }
 
     /**
      * 执行紧急移动
+     * 
      * @param playerIndex 需要移动的玩家索引
-     * @param targetTile 目标板块
+     * @param targetTile  目标板块
      * @return 如果移动成功返回true，否则返回false
      */
     public boolean performEmergencyMove(int playerIndex, Tile targetTile) {
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        
+
         if (currentTile == null || currentTile.getState() != TileState.SUNK) {
             return true;
         }
@@ -358,7 +362,7 @@ public class GameController {
         // 检查目标板块是否可用
         boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
         boolean isValidTarget = false;
-        
+
         if (isExplorer) {
             // 探险家可以斜向移动
             int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
@@ -376,17 +380,18 @@ public class GameController {
 
         // 执行移动
         System.out.println("选择移动到: " + targetTile.getName());
-        
+
         // 隐藏原位置的玩家图像
         mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
-        
+
         // 更新玩家位置
         player.setCurrentTile(targetTile);
-        
+
         // 显示新位置的玩家图像
         String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
         String playerImagePath = "src/resources/Player/" + roleName + "2.png";
-        mapController.getMapView().showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath, playerIndex);
+        mapController.getMapView().showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath,
+                playerIndex);
 
         System.out.println("紧急移动完成");
         return true;
@@ -394,12 +399,13 @@ public class GameController {
 
     /**
      * 检查并处理所有需要紧急移动的玩家
+     * 
      * @return 如果所有玩家都成功移动返回true，否则返回false
      */
     private boolean checkAndHandleEmergencyMoves() {
         System.out.println("\n========== 检查紧急移动 ==========");
         boolean allSuccess = true;
-        
+
         // 收集所有需要紧急移动的玩家
         List<Integer> playersToMove = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
@@ -408,7 +414,7 @@ public class GameController {
                 playersToMove.add(i);
             }
         }
-        
+
         // 逐个处理需要移动的玩家
         for (int playerIndex : playersToMove) {
             if (!handleEmergencyMove(playerIndex)) {
@@ -416,7 +422,7 @@ public class GameController {
                 break;
             }
         }
-        
+
         System.out.println("========== 紧急移动检查完成 ==========\n");
         return allSuccess;
     }
@@ -870,7 +876,7 @@ public class GameController {
         if (targetTile != null) {
             // 隐藏原位置的玩家图像
             mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
-            
+
             // 更新玩家位置
             player.setCurrentTile(targetTile);
 
@@ -1200,6 +1206,14 @@ public class GameController {
      */
     public boolean requestGiveCard(int fromPlayerIndex) {
         Player fromPlayer = players.get(fromPlayerIndex);
+        HandCard handCard = fromPlayer.getHandCard();
+        List<Card> hand = handCard.getCards();
+
+        if (hand.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "你没有卡牌可以给予");
+            return false;
+        }
+
         // 找到可以给牌的玩家（考虑信使的特殊能力）
         List<Integer> candidateIndexes = new ArrayList<>();
         boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
@@ -1207,7 +1221,6 @@ public class GameController {
         // 获取当前玩家所在的板块
         Tile currentTile = fromPlayer.getCurrentTile();
         if (currentTile == null) {
-            System.out.println("[日志] 当前玩家不在任何板块上。");
             JOptionPane.showMessageDialog(null, "当前玩家不在任何板块上！");
             return false;
         }
@@ -1215,185 +1228,127 @@ public class GameController {
         // 构建玩家选项列表
         String[] playerOptions = new String[players.size()];
         int optionIndex = 0;
-        
+
         // 遍历所有玩家
         for (int i = 0; i < players.size(); i++) {
-            if (i != fromPlayerIndex) {  // 排除自己
+            if (i != fromPlayerIndex) { // 排除自己
                 Player targetPlayer = players.get(i);
                 boolean sameLocation = fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile());
-                
+
                 // 如果是信使或者在同一位置，则可以给牌
                 if (isMessenger || sameLocation) {
                     candidateIndexes.add(i);
                     String location = sameLocation ? "(同一位置)" : "(不同位置)";
-                    playerOptions[optionIndex] = String.format("玩家%d - %s %s", 
-                        i + 1, 
-                        targetPlayer.getRole().getClass().getSimpleName(),
-                        location);
+                    playerOptions[optionIndex] = String.format("玩家%d - %s %s",
+                            i + 1,
+                            targetPlayer.getRole().getClass().getSimpleName(),
+                            location);
                     optionIndex++;
                 }
             }
         }
-        
+
         // 添加取消选项
         playerOptions[optionIndex] = "取消";
 
         if (candidateIndexes.isEmpty()) {
-            System.out.println("[日志] 没有可以给牌的玩家。");
             JOptionPane.showMessageDialog(null, "没有可以给牌的玩家！");
             return false;
         }
 
         // 让玩家选择目标玩家
         int selectedOption = JOptionPane.showOptionDialog(
-            null,
-            "选择要给牌的玩家：",
-            "给牌",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            playerOptions,
-            playerOptions[0]);
+                null,
+                "选择要给牌的玩家：",
+                "给牌",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                playerOptions,
+                playerOptions[0]);
 
         if (selectedOption == -1 || selectedOption == optionIndex) {
-            System.out.println("[日志] 玩家取消了选择目标玩家。");
             return false;
         }
 
         int toPlayerIndex = candidateIndexes.get(selectedOption);
-        System.out.println("[日志] 选择目标玩家: 玩家" + (toPlayerIndex + 1));
+        Player toPlayer = players.get(toPlayerIndex);
 
-        // 获取玩家手牌
-        List<Card> handCards = fromPlayer.getHandCard().getCards();
-        if (handCards.isEmpty()) {
-            System.out.println("[日志] 没有可给出的卡牌。");
-            JOptionPane.showMessageDialog(null, "没有可给出的卡牌！");
-            return false;
+        // 创建卡牌选项数组
+        String[] cardOptions = new String[hand.size()];
+        for (int i = 0; i < hand.size(); i++) {
+            Card card = hand.get(i);
+            String cardName = card.getName();
+            // 确保卡牌名称不为空
+            cardOptions[i] = (cardName != null) ? cardName : "未知卡牌";
         }
 
-        // 构建卡牌选项列表
-        String[] cardOptions = new String[handCards.size()];
-        for (int i = 0; i < handCards.size(); i++) {
-            Card card = handCards.get(i);
-            cardOptions[i] = card.getName();
-        }
-
-        // 让玩家选择要给出的卡牌（多选）
-        List<Integer> selectedCards = new ArrayList<>();
-        while (true) {
-            // 更新选项显示，添加已选择次数的信息
-            String[] currentOptions = new String[cardOptions.length];
-            for (int i = 0; i < cardOptions.length; i++) {
-                int selectedCount = 0;
-                for (int selected : selectedCards) {
-                    if (selected == i) selectedCount++;
-                }
-                currentOptions[i] = cardOptions[i] + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
-            }
-
-            // 创建卡牌选择面板
-            JPanel cardPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-            JButton[] cardButtons = new JButton[currentOptions.length];
-            for (int i = 0; i < currentOptions.length; i++) {
-                final int index = i;
-                cardButtons[i] = new JButton(currentOptions[i]);
-                cardButtons[i].addActionListener(e -> {
-                    selectedCards.add(index);
-                    System.out.println(String.format("[日志] 选择了卡牌: %s", cardOptions[index]));
-                    // 更新按钮文本
-                    int selectedCount = 0;
-                    for (int selected : selectedCards) {
-                        if (selected == index) selectedCount++;
-                    }
-                    cardButtons[index].setText(cardOptions[index] + String.format(" (已选择%d次)", selectedCount));
-                });
-                cardPanel.add(cardButtons[i]);
-            }
-
-            // 创建操作按钮面板
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            JButton confirmButton = new JButton("确定");
-            JButton cancelButton = new JButton("取消");
-
-            // 创建一个标志来跟踪对话框是否被确认
-            final boolean[] confirmed = {false};
-
-            confirmButton.addActionListener(e -> {
-                if (selectedCards.isEmpty()) {
-                    System.out.println("[日志] 玩家未选择任何卡牌。");
-                    JOptionPane.showMessageDialog(null, "请至少选择一张卡牌！");
-                } else {
-                    confirmed[0] = true;
-                    Window window = SwingUtilities.getWindowAncestor(buttonPanel);
-                    if (window != null) {
-                        window.dispose();
-                    }
-                }
-            });
-
-            cancelButton.addActionListener(e -> {
-                Window window = SwingUtilities.getWindowAncestor(buttonPanel);
-                if (window != null) {
-                    window.dispose();
-                }
-            });
-
-            buttonPanel.add(confirmButton);
-            buttonPanel.add(cancelButton);
-
-            // 创建主面板
-            JPanel mainPanel = new JPanel(new BorderLayout());
-            mainPanel.add(cardPanel, BorderLayout.CENTER);
-            mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-            // 显示对话框
-            JOptionPane.showOptionDialog(
+        // 显示选择对话框
+        int cardChoice = JOptionPane.showOptionDialog(
                 null,
-                mainPanel,
-                String.format("选择要给出的卡牌（已选择%d张）：", selectedCards.size()),
+                "选择要给予的卡牌",
+                "给予卡牌",
                 JOptionPane.DEFAULT_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
+                JOptionPane.QUESTION_MESSAGE,
                 null,
-                new Object[]{},  // 不显示任何默认按钮
-                null
-            );
+                cardOptions,
+                cardOptions[0]);
 
-            // 检查是否通过确认按钮完成选择
-            if (!confirmed[0]) {
-                System.out.println("[日志] 玩家取消了选择。");
+        if (cardChoice >= 0 && cardChoice < cardOptions.length) {
+            Card selectedCard = hand.get(cardChoice);
+
+            // 如果目标玩家手牌已满，先让他选择要丢弃的牌
+            if (toPlayer.getHandCard().isFull()) {
+                List<Card> targetHand = toPlayer.getHandCard().getCards();
+                String[] targetCardOptions = new String[targetHand.size()];
+                for (int i = 0; i < targetHand.size(); i++) {
+                    Card card = targetHand.get(i);
+                    targetCardOptions[i] = card.getName();
+                }
+
+                int discardChoice = JOptionPane.showOptionDialog(
+                        null,
+                        "你的手牌已满，请选择一张要丢弃的牌：",
+                        "丢弃卡牌",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        targetCardOptions,
+                        targetCardOptions[0]);
+
+                if (discardChoice >= 0 && discardChoice < targetCardOptions.length) {
+                    // 丢弃选中的牌
+                    Card cardToDiscard = targetHand.get(discardChoice);
+                    toPlayer.getHandCard().removeCard(cardToDiscard);
+                    playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
+                    treasureDeck.discard(cardToDiscard);
+                } else {
+                    return false; // 玩家取消了丢弃操作
+                }
+            }
+
+            // 执行给牌操作
+            try {
+                // 从给予者手中移除卡牌
+                fromPlayer.getHandCard().removeCard(selectedCard);
+                playerInfoViews.get(fromPlayerIndex).removeCard(selectedCard);
+
+                // 添加到接收者手中
+                toPlayer.getHandCard().addCard(selectedCard);
+                playerInfoViews.get(toPlayerIndex).addCard(selectedCard);
+
+                JOptionPane.showMessageDialog(null,
+                        String.format("成功将卡牌[%s]给予玩家%d！",
+                                selectedCard.getName(),
+                                toPlayerIndex + 1));
+
+                return true;
+            } catch (HandCard.HandCardFullException e) {
+                JOptionPane.showMessageDialog(null, "给牌操作失败！");
                 return false;
             }
-
-            // 检查是否选择了卡牌
-            if (selectedCards.isEmpty()) {
-                System.out.println("[日志] 玩家未选择任何卡牌。");
-                return false;
-            }
-            break;
         }
-
-        // 执行给牌操作
-        boolean allSuccess = true;
-        for (int cardIndex : selectedCards) {
-            Card cardToGive = handCards.get(cardIndex);
-            boolean success = cardController.giveCard(fromPlayerIndex, toPlayerIndex, cardToGive);
-            if (success) {
-                System.out.println("[日志] 成功将卡牌[" + cardToGive.getName() + "]从玩家" + 
-                    (fromPlayerIndex + 1) + "给到玩家" + (toPlayerIndex + 1));
-            } else {
-                System.out.println("[日志] 给牌失败：" + cardToGive.getName());
-                allSuccess = false;
-            }
-        }
-
-        if (allSuccess) {
-            JOptionPane.showMessageDialog(null, 
-                String.format("成功给出%d张卡牌给玩家%d！", selectedCards.size(), toPlayerIndex + 1));
-        } else {
-            JOptionPane.showMessageDialog(null, "部分卡牌给出失败！");
-        }
-
-        return allSuccess;
+        return false;
     }
 
     /**
@@ -1420,7 +1375,7 @@ public class GameController {
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             String actionText = playerView.getActionPointsLabel().getText();
             int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
-            
+
             if (currentActions <= 0) {
                 System.out.println("[日志] 玩家没有足够的行动点进行加固");
                 JOptionPane.showMessageDialog(null, "你没有足够的行动点进行加固！");
@@ -1591,8 +1546,9 @@ public class GameController {
             // 检查移动是否合法
             if (isValidNavigatorMove(targetPlayer, targetTile)) {
                 // 隐藏原位置的玩家图像
-                mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), targetPlayerIndex);
-                
+                mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(),
+                        targetPlayerIndex);
+
                 // 更新玩家位置
                 targetPlayer.setCurrentTile(targetTile);
 
@@ -1714,7 +1670,7 @@ public class GameController {
             if (player.getRole() instanceof Model.Role.Engineer) {
                 System.out.println("玩家是工程师，检查是否可以继续加固");
                 System.out.println("当前加固次数: " + engineerShoreUpCount);
-                
+
                 // 检查周围是否还有其他可加固的板块
                 boolean hasMoreShoreableTiles = false;
                 Tile currentTile = player.getCurrentTile();
@@ -1724,7 +1680,7 @@ public class GameController {
                         break;
                     }
                 }
-                
+
                 if (engineerShoreUpCount < 1 && hasMoreShoreableTiles) {
                     System.out.println("工程师还可以继续加固");
                     engineerShoreUpCount++;
@@ -1746,27 +1702,27 @@ public class GameController {
         System.out.println("当前加固次数: " + engineerShoreUpCount);
         System.out.println("当前玩家角色: " + players.get(currentPlayerIndex).getRole().getClass().getSimpleName());
         System.out.println("是否是工程师: " + (players.get(currentPlayerIndex).getRole() instanceof Model.Role.Engineer));
-        
+
         // 更新玩家信息视图
         PlayerInfoView playerView = playerInfoViews.get(currentPlayerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         playerView.setActionPoints(currentActions - 1);
         System.out.println("已更新玩家行动点数: " + (currentActions - 1));
-        
+
         // 重置工程师加固次数
         engineerShoreUpCount = 0;
         System.out.println("加固次数已重置为: " + engineerShoreUpCount);
-        
+
         mapController.exitShoreUpMode();
         System.out.println("已退出加固模式");
-        
+
         // 如果行动点用完，结束回合
         if (currentActions - 1 == 0) {
             System.out.println("行动点已用完，结束回合");
             endTurn(currentPlayerIndex);
         }
-        
+
         System.out.println("========== 加固动作结束完成 ==========\n");
     }
 
