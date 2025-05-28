@@ -1540,88 +1540,87 @@ public class GameController {
 
     /**
      * 加固指定瓦片
-     * 
+     *
      * @param playerIndex 玩家索引
      * @param row         目标行
      * @param col         目标列
      */
     public void shoreUpTile(int playerIndex, int row, int col) {
-        if (playerIndex < 0 || playerIndex >= players.size()) {
-            return;
-        }
-
-        Tile targetTile = mapController.getMapView().getTile(row, col);
-        // 检查是否可以加固
-        if (!canShoreUpTile(playerIndex, targetTile)) {
-            System.out.println("[日志] 无法加固该瓦片");
-            return;
-        }
+        System.out.println("\n========== 开始加固板块 ==========");
+        System.out.println("玩家索引: " + playerIndex);
+        System.out.println("目标位置: [" + row + "," + col + "]");
 
         Player player = players.get(playerIndex);
-        
-        // 检查是否有沙袋卡（可选）
-        Card sandbagCard = null;
-        for (Card card : player.getHandCard().getCards()) {
-            if (card instanceof SandbagCard) {
-                sandbagCard = card;
-                break;
+        System.out.println("玩家角色: " + player.getRole().getClass().getSimpleName());
+        System.out.println("是否是工程师: " + (player.getRole() instanceof Model.Role.Engineer));
+
+        Tile targetTile = mapController.getMapView().getTile(row, col);
+        System.out.println("目标板块: " + targetTile.getName());
+        System.out.println("目标板块状态: " + targetTile.getState());
+
+        if (canShoreUpTile(playerIndex, targetTile)) {
+            System.out.println("可以加固该板块");
+            targetTile.setState(TileState.NORMAL);
+            System.out.println("板块已加固，新状态: " + targetTile.getState());
+
+            // 检查是否是工程师的第二次加固
+            if (player.getRole() instanceof Model.Role.Engineer) {
+                System.out.println("玩家是工程师，检查是否可以继续加固");
+                System.out.println("当前加固次数: " + engineerShoreUpCount);
+                
+                // 检查周围是否还有其他可加固的板块
+                boolean hasMoreShoreableTiles = false;
+                Tile currentTile = player.getCurrentTile();
+                for (Tile adjacentTile : currentTile.getAdjacentTiles()) {
+                    if (adjacentTile != targetTile && canShoreUpTile(playerIndex, adjacentTile)) {
+                        hasMoreShoreableTiles = true;
+                        break;
+                    }
+                }
+                
+                if (engineerShoreUpCount < 1 && hasMoreShoreableTiles) {
+                    System.out.println("工程师还可以继续加固");
+                    engineerShoreUpCount++;
+                    System.out.println("加固次数更新为: " + engineerShoreUpCount);
+                    return;
+                }
             }
+
+            System.out.println("加固动作结束");
+            endShoreUpAction();
+        } else {
+            System.out.println("无法加固该板块");
         }
+        System.out.println("========== 加固板块结束 ==========\n");
+    }
 
-        // 实际加固操作
-        targetTile.setState(TileState.NORMAL);
-        System.out.println("[调试] Tile " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol()
-                + "] 状态: FLOODED -> NORMAL");
-        System.out.println("[日志] 成功加固瓦片：" + targetTile.getName() + " [坐标: " + targetTile.getRow() + ","
-                + targetTile.getCol() + "]");
-
-        // 如果使用了沙袋卡，消耗它
-        if (sandbagCard != null) {
-            player.getHandCard().removeCard(sandbagCard);
-            playerInfoViews.get(playerIndex).removeCard(sandbagCard);
-            treasureDeck.discard(sandbagCard);
-        }
-
-        // 减少行动点数
-        PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+    private void endShoreUpAction() {
+        System.out.println("\n========== 结束加固动作 ==========");
+        System.out.println("当前加固次数: " + engineerShoreUpCount);
+        System.out.println("当前玩家角色: " + players.get(currentPlayerIndex).getRole().getClass().getSimpleName());
+        System.out.println("是否是工程师: " + (players.get(currentPlayerIndex).getRole() instanceof Model.Role.Engineer));
+        
+        // 更新玩家信息视图
+        PlayerInfoView playerView = playerInfoViews.get(currentPlayerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         playerView.setActionPoints(currentActions - 1);
-
-        // 工程师加固两次逻辑
-        if (isEngineerShoreUpMode && player.getRole() instanceof Model.Role.Engineer) {
-            engineerShoreUpCount++;
-            
-            // 检查周围是否还有可加固的瓦片
-            Tile currentTile = player.getCurrentTile();
-            List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
-            shoreableTiles.add(currentTile);
-            int shoreableCount = 0;
-            for (Tile tile : shoreableTiles) {
-                if (tile.isShoreable()) {
-                    shoreableCount++;
-                }
-            }
-            if (engineerShoreUpCount < 2 && shoreableCount > 1) {
-                JOptionPane.showMessageDialog(null, "你还可以再加固一个板块！");
-                // 继续等待玩家选择下一个瓦片
-                return;
-            } else {
-                isEngineerShoreUpMode = false;
-                engineerShoreUpCount = 0;
-                engineerSandbagConsumed = false;
-                JOptionPane.showMessageDialog(null, "本回合工程师加固已完成！");
-                mapController.exitShoreUpMode();
-            }
-        } else {
-            // 不是工程师或不是工程师加固模式，直接退出
-            mapController.exitShoreUpMode();
-        }
-
+        System.out.println("已更新玩家行动点数: " + (currentActions - 1));
+        
+        // 重置工程师加固次数
+        engineerShoreUpCount = 0;
+        System.out.println("加固次数已重置为: " + engineerShoreUpCount);
+        
+        mapController.exitShoreUpMode();
+        System.out.println("已退出加固模式");
+        
         // 如果行动点用完，结束回合
         if (currentActions - 1 == 0) {
-            endTurn(playerIndex);
+            System.out.println("行动点已用完，结束回合");
+            endTurn(currentPlayerIndex);
         }
+        
+        System.out.println("========== 加固动作结束完成 ==========\n");
     }
 
     /**

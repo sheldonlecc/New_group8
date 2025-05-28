@@ -112,26 +112,26 @@ public class MapController implements ActionListener {
             return;
         }
 
-        // 检查移动是否合法
-        if (isMoveMode && !isValidMove(currentPlayer, targetTile)) {
-            System.out.println("非法移动：目标板块不可到达");
-            JOptionPane.showMessageDialog(mapView, "非法移动：目标板块不可到达", "移动错误", JOptionPane.ERROR_MESSAGE);
-            exitMoveMode();
-            return;
-        }
-
-        // 检查加固是否合法
-        if (isInShoreUpMode && !gameController.canShoreUpTile(currentPlayerIndex, targetTile)) {
-            System.out.println("非法加固：目标板块不可加固");
-            JOptionPane.showMessageDialog(mapView, "非法加固：目标板块不可加固", "加固错误", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // 执行合法移动或加固
+        // 根据当前模式执行相应的操作
         if (isMoveMode) {
+            // 检查移动是否合法
+            if (!isValidMove(currentPlayer, targetTile)) {
+                System.out.println("非法移动：目标板块不可到达");
+                JOptionPane.showMessageDialog(mapView, "非法移动：目标板块不可到达", "移动错误", JOptionPane.ERROR_MESSAGE);
+                exitMoveMode();
+                return;
+            }
+            // 执行移动
             gameController.movePlayer(currentPlayerIndex, row, col);
             exitMoveMode();
         } else if (isInShoreUpMode) {
+            // 检查加固是否合法
+            if (!gameController.canShoreUpTile(currentPlayerIndex, targetTile)) {
+                System.out.println("非法加固：目标板块不可加固");
+                JOptionPane.showMessageDialog(mapView, "非法加固：目标板块不可加固", "加固错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            // 执行加固
             gameController.shoreUpTile(currentPlayerIndex, row, col);
         }
 
