@@ -34,6 +34,7 @@ public class CardController implements ActionListener {
     private int cardsToDiscard = 0;
     private int cardsDiscarded = 0;
     private PlayerInfoView currentDiscardingPlayer = null;
+    public Integer pendingGiveCardPlayerIndex = null; // 记录给牌发起者
 
     public CardController(GameController gameController) {
         this.gameController = gameController;
@@ -89,7 +90,7 @@ public class CardController implements ActionListener {
         // 如果不满足胜利条件，则使用移动功能
         // 获取所有玩家
         List<Player> players = gameController.getPlayers();
-        
+
         // 创建玩家选择对话框
         String[] playerOptions = new String[players.size()];
         for (int i = 0; i < players.size(); i++) {
@@ -105,9 +106,11 @@ public class CardController implements ActionListener {
             for (int i = 0; i < playerOptions.length; i++) {
                 int selectedCount = 0;
                 for (int selected : selectedPlayers) {
-                    if (selected == i) selectedCount++;
+                    if (selected == i)
+                        selectedCount++;
                 }
-                currentOptions[i] = playerOptions[i] + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
+                currentOptions[i] = playerOptions[i]
+                        + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
             }
 
             // 创建玩家选择面板
@@ -122,7 +125,8 @@ public class CardController implements ActionListener {
                     // 更新按钮文本
                     int selectedCount = 0;
                     for (int selected : selectedPlayers) {
-                        if (selected == index) selectedCount++;
+                        if (selected == index)
+                            selectedCount++;
                     }
                     playerButtons[index].setText(playerOptions[index] + String.format(" (已选择%d次)", selectedCount));
                 });
@@ -135,7 +139,7 @@ public class CardController implements ActionListener {
             JButton cancelButton = new JButton("取消");
 
             // 创建一个标志来跟踪对话框是否被确认
-            final boolean[] confirmed = {false};
+            final boolean[] confirmed = { false };
 
             confirmButton.addActionListener(e -> {
                 if (selectedPlayers.isEmpty()) {
@@ -173,7 +177,7 @@ public class CardController implements ActionListener {
                     JOptionPane.DEFAULT_OPTION,
                     JOptionPane.PLAIN_MESSAGE,
                     null,
-                    new Object[]{},
+                    new Object[] {},
                     null);
 
             if (!confirmed[0]) {
@@ -278,15 +282,14 @@ public class CardController implements ActionListener {
                 // 创建选择窗口
                 String cardType = card instanceof SandbagCard ? "沙袋卡" : "直升机卡";
                 int choice = JOptionPane.showOptionDialog(
-                    null,
-                    "您选择弃掉一张" + cardType + "，是否要使用它的功能？",
-                    "特殊卡选择",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    new String[]{"使用功能", "直接弃掉"},
-                    "使用功能"
-                );
+                        null,
+                        "您选择弃掉一张" + cardType + "，是否要使用它的功能？",
+                        "特殊卡选择",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        new String[] { "使用功能", "直接弃掉" },
+                        "使用功能");
 
                 if (choice == 0) { // 选择使用功能
                     // 记录这张卡被弃掉
@@ -322,8 +325,24 @@ public class CardController implements ActionListener {
                 // 恢复当前弃牌玩家的按钮
                 currentDiscardingPlayer.setButtonsEnabled(true);
                 currentDiscardingPlayer = null;
-                // 弃牌完成后，开始新回合
-                gameController.startNewTurn();
+                // 判断是否是给牌导致的弃牌
+                if (pendingGiveCardPlayerIndex != null) {
+                    int aIndex = pendingGiveCardPlayerIndex;
+                    PlayerInfoView aView = gameController.getPlayerInfoView(aIndex);
+                    String actionText = aView.getActionPointsLabel().getText();
+                    int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+                    aView.setActionPoints(currentActions - 1);
+                    currentActions--;
+                    if (currentActions <= 0) {
+                        gameController.startNewTurn();
+                    } else {
+                        gameController.resumeGiveCardTurn(aIndex);
+                    }
+                    pendingGiveCardPlayerIndex = null;
+                } else {
+                    // 正常弃牌，才切换新回合
+                    gameController.startNewTurn();
+                }
             } else {
                 JOptionPane.showMessageDialog(null,
                         "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
@@ -369,7 +388,24 @@ public class CardController implements ActionListener {
             System.out.println("[日志] 收牌玩家手牌超限，需弃掉 " + cardsToDiscard + " 张卡牌");
             PlayerInfoView playerView = gc.getPlayerInfoView(toPlayerIndex);
             playerView.setButtonsEnabled(false);
+            this.pendingGiveCardPlayerIndex = fromPlayerIndex; // 记录A
             this.enableDiscardMode(playerView, cardsToDiscard);
+        } else {
+            // 不超限时也要消耗A的行动点
+            if (pendingGiveCardPlayerIndex != null) {
+                int aIndex = pendingGiveCardPlayerIndex;
+                PlayerInfoView aView = gameController.getPlayerInfoView(aIndex);
+                String actionText = aView.getActionPointsLabel().getText();
+                int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+                aView.setActionPoints(currentActions - 1);
+                currentActions--;
+                if (currentActions <= 0) {
+                    gameController.startNewTurn();
+                } else {
+                    gameController.resumeGiveCardTurn(aIndex);
+                }
+                pendingGiveCardPlayerIndex = null;
+            }
         }
         return true;
     }
@@ -457,6 +493,7 @@ public class CardController implements ActionListener {
 
     /**
      * 检查是否在弃牌模式中
+     * 
      * @return 如果在弃牌模式中则返回true
      */
     public boolean isInDiscardMode() {

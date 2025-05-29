@@ -211,7 +211,7 @@ public class GameController {
     public void handleHelicopterCard(int playerIndex) {
         System.out.println("\n========== 处理直升机卡 ==========");
         System.out.println("玩家索引: " + playerIndex);
-        
+
         Player player = players.get(playerIndex);
         // 检查玩家是否有直升机卡
         boolean hasHelicopterCard = false;
@@ -239,14 +239,15 @@ public class GameController {
 
     /**
      * 处理直升机卡移动
+     * 
      * @param playerIndex 使用直升机卡的玩家索引
-     * @param row 目标行
-     * @param col 目标列
+     * @param row         目标行
+     * @param col         目标列
      */
     public void handleHelicopterMove(int playerIndex, int row, int col) {
         Player player = players.get(playerIndex);
         Tile targetTile = mapController.getMapView().getTile(row, col);
-        
+
         if (targetTile == null || targetTile.getState() == TileState.SUNK) {
             JOptionPane.showMessageDialog(null, "无法移动到已沉没的板块！");
             return;
@@ -291,16 +292,17 @@ public class GameController {
     /**
      * 处理玩家紧急移动
      * 当玩家所在板块沉没时，必须立即移动到最近的可用板块
+     * 
      * @param playerIndex 需要紧急移动的玩家索引
      * @return 如果移动成功返回true，如果无法移动返回false
      */
     private boolean handleEmergencyMove(int playerIndex) {
         System.out.println("\n========== 处理紧急移动 ==========");
         System.out.println("玩家索引: " + playerIndex);
-        
+
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        
+
         if (currentTile == null || currentTile.getState() != TileState.SUNK) {
             System.out.println("玩家不在沉没的板块上，无需紧急移动");
             return true;
@@ -309,11 +311,12 @@ public class GameController {
         // 获取所有可用的相邻板块
         List<Tile> availableTiles = new ArrayList<>();
         boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
-        
+
         // 遍历所有板块
         for (Tile tile : mapController.getMapView().getAllTiles()) {
-            if (tile.getState() == TileState.SUNK) continue;
-            
+            if (tile.getState() == TileState.SUNK)
+                continue;
+
             // 检查是否可达
             boolean isReachable;
             if (isExplorer) {
@@ -325,7 +328,7 @@ public class GameController {
                 // 其他玩家只能移动到相邻格子
                 isReachable = currentTile.isAdjacentTo(tile);
             }
-            
+
             if (isReachable) {
                 availableTiles.add(tile);
             }
@@ -339,27 +342,28 @@ public class GameController {
 
         // 显示紧急移动提示
         JOptionPane.showMessageDialog(null,
-            "玩家" + (playerIndex + 1) + "所在板块已沉没！\n请点击一个相邻的可用板块进行移动。",
-            "紧急移动",
-            JOptionPane.WARNING_MESSAGE);
+                "玩家" + (playerIndex + 1) + "所在板块已沉没！\n请点击一个相邻的可用板块进行移动。",
+                "紧急移动",
+                JOptionPane.WARNING_MESSAGE);
 
         // 进入紧急移动模式
         mapController.enterEmergencyMoveMode(playerIndex, availableTiles);
-        
+
         System.out.println("========== 紧急移动处理结束 ==========\n");
         return true;
     }
 
     /**
      * 执行紧急移动
+     * 
      * @param playerIndex 需要移动的玩家索引
-     * @param targetTile 目标板块
+     * @param targetTile  目标板块
      * @return 如果移动成功返回true，否则返回false
      */
     public boolean performEmergencyMove(int playerIndex, Tile targetTile) {
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        
+
         if (currentTile == null || currentTile.getState() != TileState.SUNK) {
             return true;
         }
@@ -367,7 +371,7 @@ public class GameController {
         // 检查目标板块是否可用
         boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
         boolean isValidTarget = false;
-        
+
         if (isExplorer) {
             // 探险家可以斜向移动
             int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
@@ -385,17 +389,18 @@ public class GameController {
 
         // 执行移动
         System.out.println("选择移动到: " + targetTile.getName());
-        
+
         // 隐藏原位置的玩家图像
         mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
-        
+
         // 更新玩家位置
         player.setCurrentTile(targetTile);
-        
+
         // 显示新位置的玩家图像
         String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
         String playerImagePath = "src/resources/Player/" + roleName + "2.png";
-        mapController.getMapView().showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath, playerIndex);
+        mapController.getMapView().showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath,
+                playerIndex);
 
         System.out.println("紧急移动完成");
         return true;
@@ -403,12 +408,13 @@ public class GameController {
 
     /**
      * 检查并处理所有需要紧急移动的玩家
+     * 
      * @return 如果所有玩家都成功移动返回true，否则返回false
      */
     private boolean checkAndHandleEmergencyMoves() {
         System.out.println("\n========== 检查紧急移动 ==========");
         boolean allSuccess = true;
-        
+
         // 收集所有需要紧急移动的玩家
         List<Integer> playersToMove = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
@@ -417,7 +423,7 @@ public class GameController {
                 playersToMove.add(i);
             }
         }
-        
+
         // 逐个处理需要移动的玩家
         for (int playerIndex : playersToMove) {
             if (!handleEmergencyMove(playerIndex)) {
@@ -425,7 +431,7 @@ public class GameController {
                 break;
             }
         }
-        
+
         System.out.println("========== 紧急移动检查完成 ==========\n");
         return allSuccess;
     }
@@ -650,12 +656,9 @@ public class GameController {
                     handleShoreUp(playerIndex);
                     break;
                 case "Give Cards":
-                    // 先尝试给牌，如果成功才消耗行动点
+                    // 先尝试给牌，如果成功，后续流程在CardController里处理行动点
                     actionSuccess = requestGiveCard(playerIndex);
-                    if (actionSuccess) {
-                        playerView.setActionPoints(currentActions - 1);
-                        currentActions--;
-                    }
+                    // 不在这里消耗行动点
                     break;
                 case "Special":
                     // 特殊技能不在这里消耗行动点，而是在技能完成后消耗
@@ -879,7 +882,7 @@ public class GameController {
         if (targetTile != null) {
             // 隐藏原位置的玩家图像
             mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
-            
+
             // 更新玩家位置
             player.setCurrentTile(targetTile);
 
@@ -1138,13 +1141,13 @@ public class GameController {
         boolean isExplorer = role instanceof Model.Role.Explorer;
 
         // 计算曼哈顿距离
-        int distance = Math.abs(currentTile.getRow() - targetTile.getRow()) + 
-                      Math.abs(currentTile.getCol() - targetTile.getCol());
+        int distance = Math.abs(currentTile.getRow() - targetTile.getRow()) +
+                Math.abs(currentTile.getCol() - targetTile.getCol());
 
         // 如果是探险家，允许斜向加固（距离为2）
-        boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 && 
-                                         Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1) :
-                           (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
+        boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 &&
+                Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1)
+                : (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
 
         boolean isShoreable = targetTile.isShoreable();
         return isAdjacent && isShoreable;
@@ -1218,7 +1221,7 @@ public class GameController {
 
         // 构建玩家选项列表
         List<String> playerOptionsList = new ArrayList<>();
-        
+
         // 遍历所有玩家
         for (int i = 0; i < players.size(); i++) {
             if (i != fromPlayerIndex) {
@@ -1229,14 +1232,14 @@ public class GameController {
                 if (fromPlayer.getRole() instanceof Model.Role.Messenger || sameLocation) {
                     candidateIndexes.add(i);
                     String location = sameLocation ? "(同一位置)" : "(不同位置)";
-                    playerOptionsList.add(String.format("玩家%d - %s %s", 
-                        i + 1, 
-                        targetPlayer.getRole().getClass().getSimpleName(),
-                        location));
+                    playerOptionsList.add(String.format("玩家%d - %s %s",
+                            i + 1,
+                            targetPlayer.getRole().getClass().getSimpleName(),
+                            location));
                 }
             }
         }
-        
+
         // 添加取消选项
         playerOptionsList.add("取消");
 
@@ -1250,14 +1253,14 @@ public class GameController {
 
         // 让玩家选择目标玩家
         int selectedOption = JOptionPane.showOptionDialog(
-            null,
-            "请选择要给牌的玩家：",
-            "选择目标玩家",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            playerOptions,
-            playerOptions[0]);
+                null,
+                "请选择要给牌的玩家：",
+                "选择目标玩家",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                playerOptions,
+                playerOptions[0]);
 
         if (selectedOption == -1 || selectedOption == playerOptions.length - 1) {
             System.out.println("[日志] 玩家取消了选择目标玩家。");
@@ -1290,14 +1293,14 @@ public class GameController {
 
         // 让玩家选择要给的卡牌
         int selectedCard = JOptionPane.showOptionDialog(
-            null,
-            "请选择要给的卡牌：",
-            "选择卡牌",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            cardOptions,
-            cardOptions[0]);
+                null,
+                "请选择要给的卡牌：",
+                "选择卡牌",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                cardOptions,
+                cardOptions[0]);
 
         if (selectedCard == -1 || selectedCard == cardOptions.length - 1) {
             System.out.println("[日志] 玩家取消了选择卡牌。");
@@ -1306,6 +1309,7 @@ public class GameController {
 
         // 执行给牌操作
         Card selectedCardObj = handCards.get(selectedCard);
+        cardController.pendingGiveCardPlayerIndex = fromPlayerIndex;
         return cardController.giveCard(fromPlayerIndex, toPlayerIndex, selectedCardObj);
     }
 
@@ -1333,7 +1337,7 @@ public class GameController {
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             String actionText = playerView.getActionPointsLabel().getText();
             int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
-            
+
             if (currentActions <= 0) {
                 System.out.println("[日志] 玩家没有足够的行动点进行加固");
                 JOptionPane.showMessageDialog(null, "你没有足够的行动点进行加固！");
@@ -1504,8 +1508,9 @@ public class GameController {
             // 检查移动是否合法
             if (isValidNavigatorMove(targetPlayer, targetTile)) {
                 // 隐藏原位置的玩家图像
-                mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), targetPlayerIndex);
-                
+                mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(),
+                        targetPlayerIndex);
+
                 // 更新玩家位置
                 targetPlayer.setCurrentTile(targetTile);
 
@@ -1627,7 +1632,7 @@ public class GameController {
             if (player.getRole() instanceof Model.Role.Engineer) {
                 System.out.println("玩家是工程师，检查是否可以继续加固");
                 System.out.println("当前加固次数: " + engineerShoreUpCount);
-                
+
                 // 检查周围是否还有其他可加固的板块
                 boolean hasMoreShoreableTiles = false;
                 Tile currentTile = player.getCurrentTile();
@@ -1637,7 +1642,7 @@ public class GameController {
                         break;
                     }
                 }
-                
+
                 if (engineerShoreUpCount < 1 && hasMoreShoreableTiles) {
                     System.out.println("工程师还可以继续加固");
                     engineerShoreUpCount++;
@@ -1659,27 +1664,27 @@ public class GameController {
         System.out.println("当前加固次数: " + engineerShoreUpCount);
         System.out.println("当前玩家角色: " + players.get(currentPlayerIndex).getRole().getClass().getSimpleName());
         System.out.println("是否是工程师: " + (players.get(currentPlayerIndex).getRole() instanceof Model.Role.Engineer));
-        
+
         // 更新玩家信息视图
         PlayerInfoView playerView = playerInfoViews.get(currentPlayerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         playerView.setActionPoints(currentActions - 1);
         System.out.println("已更新玩家行动点数: " + (currentActions - 1));
-        
+
         // 重置工程师加固次数
         engineerShoreUpCount = 0;
         System.out.println("加固次数已重置为: " + engineerShoreUpCount);
-        
+
         mapController.exitShoreUpMode();
         System.out.println("已退出加固模式");
-        
+
         // 如果行动点用完，结束回合
         if (currentActions - 1 == 0) {
             System.out.println("行动点已用完，结束回合");
             endTurn(currentPlayerIndex);
         }
-        
+
         System.out.println("========== 加固动作结束完成 ==========\n");
     }
 
@@ -1748,7 +1753,7 @@ public class GameController {
     public int getPlayerCount() {
         return playerCount;
     }
-    
+
     /**
      * 检查游戏胜利条件
      * 当所有宝物都被收集且所有玩家都在直升机场时，游戏胜利
@@ -1758,7 +1763,7 @@ public class GameController {
         if (!treasureDeck.allTreasuresCollected()) {
             return;
         }
-        
+
         // 检查所有玩家是否都在直升机场
         boolean allPlayersAtHelicopter = true;
         for (Player player : players) {
@@ -1768,9 +1773,26 @@ public class GameController {
                 break;
             }
         }
-        
+
         if (allPlayersAtHelicopter) {
             endGameWithWin();
         }
+    }
+
+    public void resumeGiveCardTurn(int playerIndex) {
+        // 检查A是否还有行动点
+        PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+        String actionText = playerView.getActionPointsLabel().getText();
+        int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+        if (currentActions <= 0) {
+            // 没有行动点，直接切换到下一个玩家
+            startNewTurn();
+            return;
+        }
+        // 恢复A的按钮和行动点显示，不切换回合
+        for (int i = 0; i < playerInfoViews.size(); i++) {
+            playerInfoViews.get(i).setButtonsEnabled(i == playerIndex);
+        }
+        updatePlayerView(playerIndex);
     }
 }
