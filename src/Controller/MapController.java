@@ -628,9 +628,21 @@ public class MapController implements ActionListener {
             return;
         }
 
-        // 其他玩家只能移动到相邻格子
+        // 检查目标玩家是否是探险家
+        boolean isExplorer = targetPlayer.getRole() instanceof Model.Role.Explorer;
         int rowDistance = Math.abs(currentTile.getRow() - row);
         int colDistance = Math.abs(currentTile.getCol() - col);
+        if (isExplorer) {
+            if (rowDistance <= 1 && colDistance <= 1) {
+                gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
+            } else {
+                System.out.println("[日志] 非法移动：探险家只能移动到八方向相邻格子");
+                JOptionPane.showMessageDialog(null, "非法移动：探险家只能移动到八方向相邻格子", "移动错误", JOptionPane.ERROR_MESSAGE);
+            }
+            return;
+        }
+
+        // 其他玩家只能移动到相邻格子
         if ((rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1)) {
             gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
         } else {
