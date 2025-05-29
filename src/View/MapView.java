@@ -20,7 +20,7 @@ public class MapView extends JPanel {
     private Tile[][] tiles;
     private static final int MAP_SIZE = 6;
     private static final int GAP_SIZE = 1;
-    private static final int BUTTON_SIZE = 105;
+    private static final int BUTTON_SIZE = 100;
     private TilePosition tilePosition;
     private JLayeredPane[][] layeredPanes;
     private Map<String, List<JLabel>> tilePlayerLabels;

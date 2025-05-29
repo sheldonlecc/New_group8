@@ -34,11 +34,11 @@ public class PlayerInfoView extends JPanel {
         int panelWidth, panelHeight;
         if (playerCount <= 2) {
             panelWidth = 750;
-            panelHeight = 180;
+            panelHeight = 170;
         } else {
             // 3-4人游戏时减小宽度
-            panelWidth = 750; // 从750减少到600
-            panelHeight = 175; // 稍微减小高度
+            panelWidth = 750;
+            panelHeight = 165; // 稍微减小高度
         }
         
         setMaximumSize(new Dimension(panelWidth, panelHeight));
@@ -65,15 +65,15 @@ public class PlayerInfoView extends JPanel {
         // 添加"使用沙袋卡"按钮
         sandbagButton = new JButton("Sandbag");
         sandbagButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sandbagButton.setPreferredSize(new Dimension(90, 30)); // 统一尺寸
+        sandbagButton.setPreferredSize(new Dimension(90, 25)); // 统一尺寸
         sandbagButton.setBackground(new Color(255, 204, 102));
-        sandbagButton.setFont(new Font("Arial", Font.BOLD, 12)); // 减小字体
+        sandbagButton.setFont(new Font("Arial", Font.BOLD, 11)); // 减小字体
         sandbagButton.setFocusPainted(false);
         sandbagButton.setEnabled(true);
 
         // 添加"使用直升机卡"按钮
         helicopterButton = new JButton("Helicopter");
-        helicopterButton.setPreferredSize(new Dimension(90, 30)); // 保持统一尺寸
+        helicopterButton.setPreferredSize(new Dimension(90, 25)); // 保持统一尺寸
         helicopterButton.setBackground(new Color(102, 204, 255));
         helicopterButton.setFont(new Font("Arial", Font.BOLD, 11)); // 减小字体
         helicopterButton.setFocusPainted(false);
@@ -124,7 +124,7 @@ public class PlayerInfoView extends JPanel {
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBorder(BorderFactory.createTitledBorder("Role"));
         
-        int iconPanelWidth = (playerCount <= 2) ? 80 : 60; // 3-4人时减小图标区域
+        int iconPanelWidth = (playerCount <= 2) ? 90 : 80; // 3-4人时减小图标区域
         rightPanel.setPreferredSize(new Dimension(iconPanelWidth, 100));
         
         roleIconLabel = new JLabel();
