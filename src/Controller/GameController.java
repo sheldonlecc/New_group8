@@ -1202,200 +1202,95 @@ public class GameController {
      */
     public boolean requestGiveCard(int fromPlayerIndex) {
         Player fromPlayer = players.get(fromPlayerIndex);
-        // 找到可以给牌的玩家（考虑信使的特殊能力）
         List<Integer> candidateIndexes = new ArrayList<>();
-        boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
-
-        // 获取当前玩家所在的板块
-        Tile currentTile = fromPlayer.getCurrentTile();
-        if (currentTile == null) {
-            System.out.println("[日志] 当前玩家不在任何板块上。");
-            JOptionPane.showMessageDialog(null, "当前玩家不在任何板块上！");
-            return false;
-        }
+        boolean sameLocation = false;
 
         // 构建玩家选项列表
-        String[] playerOptions = new String[players.size()];
-        int optionIndex = 0;
+        List<String> playerOptionsList = new ArrayList<>();
         
         // 遍历所有玩家
         for (int i = 0; i < players.size(); i++) {
-            if (i != fromPlayerIndex) {  // 排除自己
+            if (i != fromPlayerIndex) {
                 Player targetPlayer = players.get(i);
-                boolean sameLocation = fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile());
-                
+                // 检查是否在同一位置
+                sameLocation = fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile());
                 // 如果是信使或者在同一位置，则可以给牌
-                if (isMessenger || sameLocation) {
+                if (fromPlayer.getRole() instanceof Model.Role.Messenger || sameLocation) {
                     candidateIndexes.add(i);
                     String location = sameLocation ? "(同一位置)" : "(不同位置)";
-                    playerOptions[optionIndex] = String.format("玩家%d - %s %s", 
+                    playerOptionsList.add(String.format("玩家%d - %s %s", 
                         i + 1, 
                         targetPlayer.getRole().getClass().getSimpleName(),
-                        location);
-                    optionIndex++;
+                        location));
                 }
             }
         }
         
         // 添加取消选项
-        playerOptions[optionIndex] = "取消";
+        playerOptionsList.add("取消");
 
         if (candidateIndexes.isEmpty()) {
-            System.out.println("[日志] 没有可以给牌的玩家。");
             JOptionPane.showMessageDialog(null, "没有可以给牌的玩家！");
             return false;
         }
 
+        // 将List转换为数组
+        String[] playerOptions = playerOptionsList.toArray(new String[0]);
+
         // 让玩家选择目标玩家
         int selectedOption = JOptionPane.showOptionDialog(
             null,
-            "选择要给牌的玩家：",
-            "给牌",
+            "请选择要给牌的玩家：",
+            "选择目标玩家",
             JOptionPane.DEFAULT_OPTION,
             JOptionPane.QUESTION_MESSAGE,
             null,
             playerOptions,
             playerOptions[0]);
 
-        if (selectedOption == -1 || selectedOption == optionIndex) {
+        if (selectedOption == -1 || selectedOption == playerOptions.length - 1) {
             System.out.println("[日志] 玩家取消了选择目标玩家。");
             return false;
         }
 
+        // 获取选中的目标玩家索引
         int toPlayerIndex = candidateIndexes.get(selectedOption);
-        System.out.println("[日志] 选择目标玩家: 玩家" + (toPlayerIndex + 1));
+        System.out.println("[日志] 玩家选择了目标玩家: " + (toPlayerIndex + 1));
 
-        // 获取玩家手牌
+        // 获取当前玩家的手牌
         List<Card> handCards = fromPlayer.getHandCard().getCards();
         if (handCards.isEmpty()) {
-            System.out.println("[日志] 没有可给出的卡牌。");
-            JOptionPane.showMessageDialog(null, "没有可给出的卡牌！");
+            JOptionPane.showMessageDialog(null, "您没有可以给牌的卡牌！");
             return false;
         }
 
-        // 构建卡牌选项列表
-        String[] cardOptions = new String[handCards.size()];
+        // 构建卡牌选项
+        String[] cardOptions = new String[handCards.size() + 1];
         for (int i = 0; i < handCards.size(); i++) {
             Card card = handCards.get(i);
-            cardOptions[i] = card.getName();
+            cardOptions[i] = card.getClass().getSimpleName();
         }
+        cardOptions[handCards.size()] = "取消";
 
-        // 让玩家选择要给出的卡牌（多选）
-        List<Integer> selectedCards = new ArrayList<>();
-        while (true) {
-            // 更新选项显示，添加已选择次数的信息
-            String[] currentOptions = new String[cardOptions.length];
-            for (int i = 0; i < cardOptions.length; i++) {
-                int selectedCount = 0;
-                for (int selected : selectedCards) {
-                    if (selected == i) selectedCount++;
-                }
-                currentOptions[i] = cardOptions[i] + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
-            }
+        // 让玩家选择要给的卡牌
+        int selectedCard = JOptionPane.showOptionDialog(
+            null,
+            "请选择要给的卡牌：",
+            "选择卡牌",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            cardOptions,
+            cardOptions[0]);
 
-            // 创建卡牌选择面板
-            JPanel cardPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-            JButton[] cardButtons = new JButton[currentOptions.length];
-            for (int i = 0; i < currentOptions.length; i++) {
-                final int index = i;
-                cardButtons[i] = new JButton(currentOptions[i]);
-                cardButtons[i].addActionListener(e -> {
-                    selectedCards.add(index);
-                    System.out.println(String.format("[日志] 选择了卡牌: %s", cardOptions[index]));
-                    // 更新按钮文本
-                    int selectedCount = 0;
-                    for (int selected : selectedCards) {
-                        if (selected == index) selectedCount++;
-                    }
-                    cardButtons[index].setText(cardOptions[index] + String.format(" (已选择%d次)", selectedCount));
-                });
-                cardPanel.add(cardButtons[i]);
-            }
-
-            // 创建操作按钮面板
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            JButton confirmButton = new JButton("确定");
-            JButton cancelButton = new JButton("取消");
-
-            // 创建一个标志来跟踪对话框是否被确认
-            final boolean[] confirmed = {false};
-
-            confirmButton.addActionListener(e -> {
-                if (selectedCards.isEmpty()) {
-                    System.out.println("[日志] 玩家未选择任何卡牌。");
-                    JOptionPane.showMessageDialog(null, "请至少选择一张卡牌！");
-                } else {
-                    confirmed[0] = true;
-                    Window window = SwingUtilities.getWindowAncestor(buttonPanel);
-                    if (window != null) {
-                        window.dispose();
-                    }
-                }
-            });
-
-            cancelButton.addActionListener(e -> {
-                Window window = SwingUtilities.getWindowAncestor(buttonPanel);
-                if (window != null) {
-                    window.dispose();
-                }
-            });
-
-            buttonPanel.add(confirmButton);
-            buttonPanel.add(cancelButton);
-
-            // 创建主面板
-            JPanel mainPanel = new JPanel(new BorderLayout());
-            mainPanel.add(cardPanel, BorderLayout.CENTER);
-            mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-            // 显示对话框
-            JOptionPane.showOptionDialog(
-                null,
-                mainPanel,
-                String.format("选择要给出的卡牌（已选择%d张）：", selectedCards.size()),
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                new Object[]{},  // 不显示任何默认按钮
-                null
-            );
-
-            // 检查是否通过确认按钮完成选择
-            if (!confirmed[0]) {
-                System.out.println("[日志] 玩家取消了选择。");
-                return false;
-            }
-
-            // 检查是否选择了卡牌
-            if (selectedCards.isEmpty()) {
-                System.out.println("[日志] 玩家未选择任何卡牌。");
-                return false;
-            }
-            break;
+        if (selectedCard == -1 || selectedCard == cardOptions.length - 1) {
+            System.out.println("[日志] 玩家取消了选择卡牌。");
+            return false;
         }
 
         // 执行给牌操作
-        boolean allSuccess = true;
-        for (int cardIndex : selectedCards) {
-            Card cardToGive = handCards.get(cardIndex);
-            boolean success = cardController.giveCard(fromPlayerIndex, toPlayerIndex, cardToGive);
-            if (success) {
-                System.out.println("[日志] 成功将卡牌[" + cardToGive.getName() + "]从玩家" + 
-                    (fromPlayerIndex + 1) + "给到玩家" + (toPlayerIndex + 1));
-            } else {
-                System.out.println("[日志] 给牌失败：" + cardToGive.getName());
-                allSuccess = false;
-            }
-        }
-
-        if (allSuccess) {
-            JOptionPane.showMessageDialog(null, 
-                String.format("成功给出%d张卡牌给玩家%d！", selectedCards.size(), toPlayerIndex + 1));
-        } else {
-            JOptionPane.showMessageDialog(null, "部分卡牌给出失败！");
-        }
-
-        return allSuccess;
+        Card selectedCardObj = handCards.get(selectedCard);
+        return cardController.giveCard(fromPlayerIndex, toPlayerIndex, selectedCardObj);
     }
 
     /**
