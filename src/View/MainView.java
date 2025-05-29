@@ -103,7 +103,8 @@ public class MainView extends JFrame {
         // 移除条件判断，每次都创建新的BoardView实例
         int playerCount = setupView.getPlayerCount();
         String mapType = setupView.getSelectedMap();
-        boardView = new BoardView(playerCount, mapType);
+        int initialWaterLevel = setupView.getInitialWaterLevel(); // 获取初始水位
+        boardView = new BoardView(playerCount, mapType, initialWaterLevel); // 传递初始水位
         setContentPane(boardView);
         revalidate();
         repaint();

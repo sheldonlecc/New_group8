@@ -28,7 +28,7 @@ public class WaterLevelView extends JPanel {
         waterLevelLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(waterLevelLabel);
         
-        updateWaterLevelImage(0);
+        updateWaterLevelImage(1);
         add(waterLevelImage);
     }
 

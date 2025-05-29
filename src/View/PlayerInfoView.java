@@ -142,6 +142,56 @@ public class PlayerInfoView extends JPanel {
         setMinimumSize(new Dimension(panelWidth, panelHeight));
 
         // 调整卡牌区域的大小
+        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 3)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, new Color(248, 250, 252),
+                    0, getHeight(), new Color(226, 232, 240)
+                );
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+                
+                super.paintComponent(g);
+            }
+        };
+        
+        cardsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(148, 163, 184), 1),
+            BorderFactory.createEmptyBorder(8, 8, 8, 8)
+        ));
+        
+        // 增加卡牌面板宽度以适应更大的卡牌
+        cardsPanelWidth = (playerCount <= 2) ? 160 : 140;  // 从140/120增加到160/140
+        cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 135));  // 高度也稍微增加
+        add(cardsPanel, BorderLayout.CENTER);
+        
+        // 右侧区域：角色图标 - 根据玩家数量调整图标区域大小
+        rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Role"));
+        
+        iconPanelWidth = (playerCount <= 2) ? 90 : 80; // 3-4人时减小图标区域
+        rightPanel.setPreferredSize(new Dimension(iconPanelWidth, 100));
+        
+        roleIconLabel = new JLabel();
+        roleIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        roleIconLabel.setVerticalAlignment(SwingConstants.CENTER);
+        
+        iconSize = (playerCount <= 2) ? 60 : 50; // 3-4人时减小图标尺寸
+        roleIconLabel.setPreferredSize(new Dimension(iconSize, 80));
+        
+        rightPanel.add(roleIconLabel, BorderLayout.CENTER);
+        add(rightPanel, BorderLayout.EAST);
+
+        // 设置最终尺寸
+        setPreferredSize(new Dimension(panelWidth, panelHeight));
+        setMinimumSize(new Dimension(panelWidth, panelHeight));
+
+        // 调整卡牌区域的大小
         cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 120));
     }
     

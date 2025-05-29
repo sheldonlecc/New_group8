@@ -10,7 +10,7 @@ public class SetupView extends JPanel {
     private boolean confirmed = false;
     private JComboBox<String> playerCountSelector;
     private JComboBox<String> mapSelector;
-    private JCheckBox randomGenerationCheckbox;
+    private JComboBox<String> difficultySelector; // 新增难度选择器
     private MainView mainView;
     private Image backgroundImage;  // 添加背景图片变量
 
@@ -70,12 +70,20 @@ public class SetupView extends JPanel {
         mapSelector = new JComboBox<>(mapOptions);
         add(mapSelector, gbc);
 
-        // Random generation option
+        // Difficulty selection (修改难度选项)
         gbc.gridx = 0;
         gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        randomGenerationCheckbox = new JCheckBox("Generate Random Map");
-        add(randomGenerationCheckbox, gbc);
+        add(new JLabel("Select Difficulty:"), gbc);
+
+        gbc.gridx = 1;
+        String[] difficultyOptions = {
+            "NOVICE", 
+            "NORMAL", 
+            "ELITE", 
+            "LEGENDAIRE"
+        };
+        difficultySelector = new JComboBox<>(difficultyOptions);
+        add(difficultySelector, gbc);
 
         // Button panel
         gbc.gridx = 0;
@@ -107,10 +115,6 @@ public class SetupView extends JPanel {
             }
         }
 
-        // 设置复选框文字为白色
-        randomGenerationCheckbox.setForeground(Color.WHITE);
-        randomGenerationCheckbox.setOpaque(false);
-
         // 设置按钮面板为透明
         buttonPanel.setOpaque(false);
     }
@@ -128,7 +132,11 @@ public class SetupView extends JPanel {
         return (String) mapSelector.getSelectedItem();
     }
 
-    public boolean isRandomGeneration() {
-        return randomGenerationCheckbox.isSelected();
+    // 获取难度对应的初始水位方法
+    public int getInitialWaterLevel() {
+        int selectedIndex = difficultySelector.getSelectedIndex();
+        return selectedIndex + 1; // NOVICE=1, NORMAL=2, ELITE=3, LEGENDAIRE=4
     }
+
+    // 删除原来的isRandomGeneration方法，因为不再需要
 }

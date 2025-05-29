@@ -22,6 +22,7 @@ import Model.Cards.HelicopterCard;
 import Model.Enumeration.TreasureType;
 import View.BoardView;
 import View.TreasureView;
+import Model.WaterLevel;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -48,7 +49,7 @@ public class GameController {
     private static final int MAX_ACTIONS_PER_TURN = 3;
     private final Tile helicopterTile; // 直升机场位置
     private WaterLevelView waterLevelView; // 添加水位视图
-    private int currentWaterLevel = 1; // 初始水位设置为1
+    private int currentWaterLevel; // 初始水位通过构造函数设置
     private TilePosition tilePosition; // 添加TilePosition对象
     private MapController mapController; // 添加MapController成员变量
     private FloodDeck floodDeck;
@@ -61,7 +62,7 @@ public class GameController {
     private boolean isEngineerShoreUpMode = false;
     private boolean engineerSandbagConsumed = false;
 
-    public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView) {
+    public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView, int initialWaterLevel) {
         System.out.println("\n========== 开始初始化游戏控制器 ==========");
         this.playerCount = playerCount; // 初始化玩家数量
         this.players = new ArrayList<>();
@@ -70,9 +71,15 @@ public class GameController {
         this.treasureDeck = new TreasureDeck(helicopterTile);
         this.helicopterTile = helicopterTile;
         this.waterLevelView = waterLevelView;
+        this.currentWaterLevel = initialWaterLevel; // 使用传入的初始水位
         this.tilePosition = null;
         this.mapController = null;
         // floodDeck 不在这里初始化，也不new任何Tile
+
+        // 设置WaterLevel单例的初始水位
+        WaterLevel waterLevelInstance = WaterLevel.getInstance();
+        // 需要添加一个方法来设置初始水位
+        waterLevelInstance.setCurrentLevel(initialWaterLevel);
 
         System.out.println("正在初始化 " + playerCount + " 个玩家...");
         // 初始化玩家

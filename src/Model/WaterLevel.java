@@ -16,7 +16,7 @@ public class WaterLevel {
     // 水位等级常量
     public static final int MIN_LEVEL = 1;     // 最低水位等级
     public static final int MAX_LEVEL = 10;    // 最高水位等级
-    public static final int START_LEVEL = 1;   // 初始水位等级
+    public static final int START_LEVEL = 1;   // 初始水位等级（保持不变，通过难度设置覆盖）
 
     // 单例实例
     private static WaterLevel instance;
@@ -178,5 +178,20 @@ public class WaterLevel {
     public String toString() {
         return String.format("水位等级: %d, 状态: %s, 抽牌数量: %d", 
             currentLevel, state, getDrawCount());
+    }
+
+    /**
+     * 设置当前水位等级（用于初始化）
+     * @param level 水位等级
+     */
+    public void setCurrentLevel(int level) {
+        if (level >= MIN_LEVEL && level <= MAX_LEVEL) {
+            this.currentLevel = level;
+            updateState();
+            notifyLevelChangeListeners();
+            if (waterLevelView != null) {
+                waterLevelView.updateWaterLevel(currentLevel);
+            }
+        }
     }
 }
