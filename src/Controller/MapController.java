@@ -40,6 +40,7 @@ public class MapController implements ActionListener {
     private boolean isInEmergencyMoveMode = false;
     private int emergencyMovePlayerIndex = -1;
     private List<Tile> emergencyMoveAvailableTiles = null;
+    private Runnable sandbagUseCallback = null; // 添加沙袋卡使用完成的回调
 
     public MapController(GameController gameController, MapView mapView) {
         this.gameController = gameController;
@@ -58,7 +59,8 @@ public class MapController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode && !isSandbagMode && !isHelicopterMode && !isInEmergencyMoveMode) {
+        if (!isMoveMode && !isInShoreUpMode && !isNavigatorMoveMode && !isSandbagMode && !isHelicopterMode
+                && !isInEmergencyMoveMode) {
             return;
         }
 
@@ -478,60 +480,36 @@ public class MapController implements ActionListener {
         System.out.println("========== 领航员移动模式已退出 ==========\n");
     }
 
-    public void enterSandbagMode(int playerIndex) {
+    public void enterSandbagMode(int playerIndex, Runnable callback) {
         isSandbagMode = true;
         sandbagPlayerIndex = playerIndex;
-        isMoveMode = false;
-        isInShoreUpMode = false;
-        currentPlayerIndex = playerIndex;
-        System.out.println("[日志] 进入沙袋卡加固模式，玩家" + (playerIndex + 1) + "可以选择任意被淹没的板块");
-        // 高亮所有被淹没的板块
-        for (int i = 0; i < mapView.getButtonCount(); i++) {
-            JButton button = mapView.getButton(i);
-            if (button != null) {
-                button.setEnabled(true);
-                button.setBackground(null);
-            }
+        if (callback != null) {
+            sandbagUseCallback = callback;
         }
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                Tile tile = mapView.getTile(i, j);
-                if (tile != null && tile.getState() == TileState.FLOODED) {
-                    JButton button = mapView.getButton(i, j);
-                    if (button != null) {
-                        button.setBackground(new Color(255, 255, 200));
-                    }
-                }
-            }
-        }
-        // 禁用不可加固的板块
-        for (int i = 0; i < mapView.getButtonCount(); i++) {
-            JButton button = mapView.getButton(i);
-            if (button != null && button.getBackground() == null) {
-                button.setEnabled(false);
-            }
-        }
+        System.out.println("进入沙袋卡使用模式");
     }
 
     public void exitSandbagMode() {
         isSandbagMode = false;
         sandbagPlayerIndex = -1;
-        // 重置所有按钮状态
-        for (int i = 0; i < mapView.getButtonCount(); i++) {
-            JButton button = mapView.getButton(i);
-            if (button != null) {
-                button.setEnabled(true);
-                button.setBackground(null);
-            }
+        mapView.setSandbagMode(false);
+        // 如果存在回调，执行它
+        if (sandbagUseCallback != null) {
+            sandbagUseCallback.run();
+            sandbagUseCallback = null;
         }
+    }
+
+    public void setSandbagUseCallback(Runnable callback) {
+        this.sandbagUseCallback = callback;
     }
 
     /**
      * 进入直升机移动模式
      * 
      * @param currentPlayerIndex 当前玩家索引
-     * @param selectedPlayers 选中的玩家列表
-     * @param card 直升机卡
+     * @param selectedPlayers    选中的玩家列表
+     * @param card               直升机卡
      */
     public void enterHelicopterMoveMode(int currentPlayerIndex, List<Player> selectedPlayers, HelicopterCard card) {
         System.out.println("\n========== 进入直升机移动模式 ==========");
@@ -609,7 +587,7 @@ public class MapController implements ActionListener {
         System.out.println("\n========== 处理直升机移动 ==========");
         System.out.println("目标位置: [" + row + "," + col + "]");
         System.out.println("成功接收到板块点击事件");
-        
+
         Tile targetTile = mapView.getTile(row, col);
         if (targetTile == null || targetTile.getState() == TileState.SUNK) {
             System.out.println("目标板块无效或已沉没");
@@ -624,21 +602,6 @@ public class MapController implements ActionListener {
             return;
         }
 
-        // 查找玩家的直升机卡
-        HelicopterCard helicopterCard = null;
-        for (Card card : currentPlayer.getHandCard().getCards()) {
-            if (card instanceof HelicopterCard) {
-                helicopterCard = (HelicopterCard) card;
-                break;
-            }
-        }
-
-        if (helicopterCard == null) {
-            System.out.println("玩家没有直升机卡");
-            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
-            return;
-        }
-
         // 检查当前板块上是否有其他玩家
         List<Player> playersOnCurrentTile = new ArrayList<>();
         Tile currentTile = currentPlayer.getCurrentTile();
@@ -650,49 +613,46 @@ public class MapController implements ActionListener {
 
         // 如果当前板块上有其他玩家，让玩家选择要带哪些人一起移动
         if (!playersOnCurrentTile.isEmpty()) {
-            // 创建选项数组
-            String[] options = new String[playersOnCurrentTile.size()];
+            // 创建玩家选择列表
+            String[] playerOptions = new String[playersOnCurrentTile.size()];
             for (int i = 0; i < playersOnCurrentTile.size(); i++) {
-                Player player = playersOnCurrentTile.get(i);
-                options[i] = player.getRole().getClass().getSimpleName();
+                Player p = playersOnCurrentTile.get(i);
+                playerOptions[i] = "玩家 " + (gameController.getPlayers().indexOf(p) + 1) + " (" +
+                        p.getRole().getClass().getSimpleName() + ")";
             }
-            
+
             // 创建多选列表
-            JList<String> list = new JList<>(options);
+            JList<String> list = new JList<>(playerOptions);
             list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-            
-            // 创建滚动面板
             JScrollPane scrollPane = new JScrollPane(list);
             scrollPane.setPreferredSize(new Dimension(200, 100));
-            
-            // 显示对话框
-            int result = JOptionPane.showConfirmDialog(null,
-                scrollPane,
-                "选择要一起移动的玩家",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-            
+
+            // 显示选择对话框
+            int result = JOptionPane.showConfirmDialog(null, scrollPane,
+                    "选择要一起移动的玩家",
+                    JOptionPane.OK_CANCEL_OPTION);
+
             if (result == JOptionPane.OK_OPTION) {
                 // 获取选中的玩家
                 List<Player> selectedPlayers = new ArrayList<>();
                 for (int index : list.getSelectedIndices()) {
                     selectedPlayers.add(playersOnCurrentTile.get(index));
                 }
-                
+
                 // 将选中的玩家移动到目标位置
                 for (Player player : selectedPlayers) {
                     // 从原位置移除玩家图像
-                    mapView.hidePlayerImage(currentTile.getRow(), currentTile.getCol(), 
-                        gameController.getPlayers().indexOf(player));
-                    
+                    mapView.hidePlayerImage(currentTile.getRow(), currentTile.getCol(),
+                            gameController.getPlayers().indexOf(player));
+
                     // 更新玩家位置
                     player.setCurrentTile(targetTile);
-                    
+
                     // 在新位置显示玩家
                     String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
                     String playerImagePath = "src/resources/Player/" + roleName + "2.png";
-                    mapView.showPlayerImage(targetTile.getRow(), targetTile.getCol(), 
-                        playerImagePath, gameController.getPlayers().indexOf(player));
+                    mapView.showPlayerImage(targetTile.getRow(), targetTile.getCol(),
+                            playerImagePath, gameController.getPlayers().indexOf(player));
                 }
             }
         }
@@ -700,28 +660,23 @@ public class MapController implements ActionListener {
         System.out.println("开始移动玩家...");
         // 获取玩家当前位置
         if (currentTile != null) {
-            System.out.println("玩家当前位置: " + currentTile.getName() + " [" + currentTile.getRow() + "," + currentTile.getCol() + "]");
+            System.out.println("玩家当前位置: " + currentTile.getName() + " [" + currentTile.getRow() + ","
+                    + currentTile.getCol() + "]");
             // 从当前位置移除玩家
             mapView.hidePlayerImage(currentTile.getRow(), currentTile.getCol(), helicopterPlayerIndex);
             System.out.println("已移除玩家在原位置的图像");
         }
-        
+
         // 更新玩家位置
         currentPlayer.setCurrentTile(targetTile);
-        System.out.println("玩家新位置: " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol() + "]");
-        
+        System.out.println(
+                "玩家新位置: " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol() + "]");
+
         // 在新位置显示玩家
         String roleName = currentPlayer.getRole().getClass().getSimpleName().toLowerCase();
         String playerImagePath = "src/resources/Player/" + roleName + "2.png";
         mapView.showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath, helicopterPlayerIndex);
         System.out.println("已在新位置显示玩家图像");
-
-        // 使用直升机卡
-        System.out.println("开始消耗直升机卡...");
-        currentPlayer.getHandCard().removeCard(helicopterCard);
-        gameController.getPlayerInfoView(helicopterPlayerIndex).removeCard(helicopterCard);
-        gameController.getTreasureDeck().discard(helicopterCard);
-        System.out.println("直升机卡已消耗");
 
         // 退出直升机模式
         exitHelicopterMode();
@@ -736,54 +691,30 @@ public class MapController implements ActionListener {
         }
 
         // 显示移动成功的提示
-        JOptionPane.showMessageDialog(null, 
-            "直升机移动成功！", 
-            "移动完成", 
-            JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null,
+                "直升机移动成功！",
+                "移动完成",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        // 执行回调函数，在移动完成后弃置直升机卡
+        if (sandbagUseCallback != null) {
+            sandbagUseCallback.run();
+            sandbagUseCallback = null;
+        }
 
         System.out.println("直升机移动完成");
         System.out.println("========== 直升机移动处理结束 ==========\n");
     }
 
-    public void enterHelicopterMode(int playerIndex) {
-        System.out.println("\n========== 进入直升机模式 ==========");
-        System.out.println("玩家索引: " + playerIndex);
-        System.out.println("MapView状态: " + (mapView != null ? "已初始化" : "未初始化"));
-        
-        // 检查玩家是否有直升机卡
-        Player player = gameController.getPlayers().get(playerIndex);
-        boolean hasHelicopterCard = false;
-        HelicopterCard helicopterCard = null;
-        for (Card card : player.getHandCard().getCards()) {
-            if (card instanceof HelicopterCard) {
-                hasHelicopterCard = true;
-                helicopterCard = (HelicopterCard) card;
-                break;
-            }
+    public void enterHelicopterMode(int playerIndex, Card card, Runnable callback) {
+        isHelicopterMode = true;
+        helicopterPlayerIndex = playerIndex;
+        helicopterCard = (HelicopterCard) card;
+        selectedPlayers = new ArrayList<>();
+        if (callback != null) {
+            sandbagUseCallback = callback;
         }
-        
-        if (hasHelicopterCard) {
-            System.out.println("玩家拥有直升机卡，成功进入直升机模式");
-            isHelicopterMode = true;
-            helicopterPlayerIndex = playerIndex;
-            mapView.setHelicopterMode(true);
-            
-            // 显示进入直升机模式的提示
-            JOptionPane.showMessageDialog(null, 
-                "已进入直升机模式，请选择目标板块。\n如果目标板块上有其他玩家，您可以选择是否带他们一起移动。", 
-                "直升机模式", 
-                JOptionPane.INFORMATION_MESSAGE);
-            
-            System.out.println("等待玩家选择目标板块...");
-        } else {
-            System.out.println("玩家没有直升机卡，无法进入直升机模式");
-            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
-            return;
-        }
-        
-        System.out.println("直升机模式状态: " + isHelicopterMode);
-        System.out.println("直升机玩家索引: " + helicopterPlayerIndex);
-        System.out.println("========== 直升机模式进入完成 ==========\n");
+        System.out.println("进入直升机移动模式");
     }
 
     public void exitHelicopterMode() {
@@ -794,14 +725,15 @@ public class MapController implements ActionListener {
 
     /**
      * 进入紧急移动模式
-     * @param playerIndex 需要移动的玩家索引
+     * 
+     * @param playerIndex    需要移动的玩家索引
      * @param availableTiles 可用的目标板块列表
      */
     public void enterEmergencyMoveMode(int playerIndex, List<Tile> availableTiles) {
         isInEmergencyMoveMode = true;
         emergencyMovePlayerIndex = playerIndex;
         emergencyMoveAvailableTiles = availableTiles;
-        
+
         // 高亮显示可用的目标板块
         for (Tile tile : availableTiles) {
             mapView.highlightTile(tile.getRow(), tile.getCol());
@@ -815,7 +747,7 @@ public class MapController implements ActionListener {
         isInEmergencyMoveMode = false;
         emergencyMovePlayerIndex = -1;
         emergencyMoveAvailableTiles = null;
-        
+
         // 清除所有高亮
         mapView.clearHighlights();
     }

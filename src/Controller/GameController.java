@@ -114,7 +114,10 @@ public class GameController {
                 }
                 if (hasSandbag) {
                     if (mapController != null) {
-                        mapController.enterSandbagMode(playerIndex);
+                        mapController.enterSandbagMode(playerIndex, () -> {
+                            // 沙袋卡使用完成后的回调
+                            System.out.println("沙袋卡使用完成");
+                        });
                     } else {
                         JOptionPane.showMessageDialog(null, "地图未初始化，无法使用沙袋卡！");
                     }
@@ -206,26 +209,48 @@ public class GameController {
         Player player = players.get(playerIndex);
         // 检查玩家是否有直升机卡
         boolean hasHelicopterCard = false;
-        HelicopterCard helicopterCard = null;
-        for (Card card : player.getHandCard().getCards()) {
-            if (card instanceof HelicopterCard) {
-                hasHelicopterCard = true;
-                helicopterCard = (HelicopterCard) card;
-                break;
-            }
-        }
+        final HelicopterCard helicopterCard = findHelicopterCard(player);
 
-        System.out.println("是否有直升机卡: " + hasHelicopterCard);
-        if (!hasHelicopterCard) {
+        System.out.println("是否有直升机卡: " + (helicopterCard != null));
+        if (helicopterCard == null) {
             System.out.println("玩家没有直升机卡！");
             JOptionPane.showMessageDialog(null, "您没有直升机卡！");
             return;
         }
 
+        // 检查是否满足胜利条件
+        if (helicopterCard.canUseForVictory(players)) {
+            if (cardController.useHelicopterCardForWin(playerIndex)) {
+                return;
+            }
+        }
+
         System.out.println("进入直升机卡使用模式");
         // 进入直升机卡使用模式，等待玩家点击目标位置
-        mapController.enterHelicopterMode(playerIndex);
+        mapController.enterHelicopterMode(playerIndex, helicopterCard, () -> {
+            // 直升机卡使用完成后的回调
+            System.out.println("直升机卡使用完成");
+            // 从玩家手牌中移除直升机卡
+            player.getHandCard().removeCard(helicopterCard);
+            playerInfoViews.get(playerIndex).removeCard(helicopterCard);
+            treasureDeck.discard(helicopterCard);
+        });
         System.out.println("========== 直升机卡处理完成 ==========\n");
+    }
+
+    /**
+     * 在玩家手牌中查找直升机卡
+     * 
+     * @param player 玩家
+     * @return 找到的直升机卡，如果没有则返回null
+     */
+    private HelicopterCard findHelicopterCard(Player player) {
+        for (Card card : player.getHandCard().getCards()) {
+            if (card instanceof HelicopterCard) {
+                return (HelicopterCard) card;
+            }
+        }
+        return null;
     }
 
     /**
@@ -245,13 +270,7 @@ public class GameController {
         }
 
         // 查找玩家的直升机卡
-        HelicopterCard helicopterCard = null;
-        for (Card card : player.getHandCard().getCards()) {
-            if (card instanceof HelicopterCard) {
-                helicopterCard = (HelicopterCard) card;
-                break;
-            }
-        }
+        final HelicopterCard helicopterCard = findHelicopterCard(player);
 
         if (helicopterCard == null) {
             JOptionPane.showMessageDialog(null, "您没有直升机卡！");
@@ -262,13 +281,17 @@ public class GameController {
         List<Player> playersToMove = new ArrayList<>();
         playersToMove.add(player);
         if (helicopterCard.useForMovement(playersToMove, targetTile)) {
-            // 从玩家手牌中移除直升机卡
-            player.getHandCard().removeCard(helicopterCard);
-            playerInfoViews.get(playerIndex).removeCard(helicopterCard);
-            treasureDeck.discard(helicopterCard);
+            // 隐藏原位置的玩家图像
+            mapController.getMapView().hidePlayerImage(player.getCurrentTile().getRow(),
+                    player.getCurrentTile().getCol(), playerIndex);
 
-            // 更新玩家视图
-            updatePlayerView(playerIndex);
+            // 更新玩家位置
+            player.setCurrentTile(targetTile);
+
+            // 显示新位置的玩家图像
+            String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
+            String playerImagePath = "src/resources/Player/" + roleName + "2.png";
+            mapController.getMapView().showPlayerImage(row, col, playerImagePath, playerIndex);
 
             // 显示成功消息
             JOptionPane.showMessageDialog(null, "成功使用直升机卡移动到 " + targetTile.getName());
@@ -907,18 +930,35 @@ public class GameController {
     public void endTurn(int playerIndex) {
         Player currentPlayer = players.get(playerIndex);
 
+        // 暂时禁用手牌上限，允许抽新卡
+        currentPlayer.getHandCard().setEnforceLimit(false);
+
         // 在回合结束时抽两张宝藏卡
         List<Card> drawnCards = new ArrayList<>();
+        int cardsDrawn = 0; // 记录实际抽到的非洪水卡数量
+
         for (int i = 0; i < 2; i++) {
             Card card = treasureDeck.draw();
             if (card != null) {
                 drawnCards.add(card);
-                // 直接添加卡牌到玩家手中，不检查手牌上限
-                currentPlayer.getHandCard().addCardWithoutCheck(card);
-                PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
-                cardController.addCard(playerInfoView, card);
+                try {
+                    currentPlayer.getHandCard().addCard(card);
+                    PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
+                    cardController.addCard(playerInfoView, card);
+
+                    // 如果不是洪水卡，增加实际抽到的卡牌计数
+                    if (!(card instanceof WaterRiseCard)) {
+                        cardsDrawn++;
+                    }
+                } catch (HandCard.HandCardFullException e) {
+                    System.err.println("手牌已满，无法添加卡牌: " + e.getMessage());
+                    treasureDeck.discard(card);
+                }
             }
         }
+
+        // 重新启用手牌上限
+        currentPlayer.getHandCard().setEnforceLimit(true);
 
         // 检查是否有WaterRise卡牌并立即使用
         List<Card> cards = currentPlayer.getHandCard().getCards();
@@ -947,9 +987,20 @@ public class GameController {
             // 禁用所有动作按钮，只允许选择弃牌
             playerView.setButtonsEnabled(false);
 
-            // 启用卡牌选择模式
+            // 显示友好的弃牌提示
+            JOptionPane.showMessageDialog(null,
+                    String.format("你的手牌数量超过了5张（当前%d张），需要弃掉%d张卡牌。\n\n" +
+                            "在弃牌阶段，你可以：\n" +
+                            "1. 直接弃掉普通卡牌\n" +
+                            "2. 使用特殊卡牌（直升机卡或沙袋卡）\n" +
+                            "3. 使用特殊卡牌后，仍需弃掉足够的卡牌使手牌数量降至5张",
+                            cardCount, cardsToDiscard),
+                    "弃牌阶段",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            // 启用卡牌选择模式，并设置特殊卡牌处理
             System.out.println("准备进入弃牌模式，当前玩家: " + playerIndex); // 调试信息
-            cardController.enableDiscardMode(playerView, cardsToDiscard);
+            cardController.enableDiscardMode(playerView, cardsToDiscard, true); // 添加true参数表示允许使用特殊卡牌
             System.out.println("已进入弃牌模式"); // 调试信息
             return; // 不开始新回合，等待玩家选择弃牌
         }
@@ -1296,6 +1347,7 @@ public class GameController {
 
         if (cardChoice >= 0 && cardChoice < cardOptions.length) {
             Card selectedCard = hand.get(cardChoice);
+            boolean cardDiscarded = false;
 
             // 如果目标玩家手牌已满，先让他选择要丢弃的牌
             if (toPlayer.getHandCard().isFull()) {
@@ -1317,35 +1369,132 @@ public class GameController {
                         targetCardOptions[0]);
 
                 if (discardChoice >= 0 && discardChoice < targetCardOptions.length) {
-                    // 丢弃选中的牌
+                    // 获取要丢弃的牌
                     Card cardToDiscard = targetHand.get(discardChoice);
-                    toPlayer.getHandCard().removeCard(cardToDiscard);
-                    playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
-                    treasureDeck.discard(cardToDiscard);
+
+                    // 检查是否是特殊卡牌
+                    if (cardToDiscard instanceof HelicopterCard) {
+                        // 询问是否要使用直升机卡
+                        int useChoice = JOptionPane.showConfirmDialog(
+                                null,
+                                "这是一张直升机救援卡，是否要使用它？",
+                                "使用直升机卡",
+                                JOptionPane.YES_NO_OPTION);
+
+                        if (useChoice == JOptionPane.YES_OPTION) {
+                            // 保存当前选中的卡牌，以便在直升机卡使用完成后继续给牌
+                            final Card cardToGive = selectedCard;
+                            // 使用直升机卡
+                            handleHelicopterCard(toPlayerIndex);
+                            // 等待直升机卡使用完成后，再弃置并继续给牌
+                            SwingUtilities.invokeLater(() -> {
+                                // 从玩家手牌中移除直升机卡
+                                toPlayer.getHandCard().removeCard(cardToDiscard);
+                                playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
+                                treasureDeck.discard(cardToDiscard);
+                                // 继续给牌流程
+                                try {
+                                    // 从给予者手中移除卡牌
+                                    fromPlayer.getHandCard().removeCard(cardToGive);
+                                    playerInfoViews.get(fromPlayerIndex).removeCard(cardToGive);
+                                    // 添加到接收者手中
+                                    toPlayer.getHandCard().addCard(cardToGive);
+                                    playerInfoViews.get(toPlayerIndex).addCard(cardToGive);
+                                    JOptionPane.showMessageDialog(null,
+                                            String.format("成功将卡牌[%s]给予玩家%d！",
+                                                    cardToGive.getName(),
+                                                    toPlayerIndex + 1));
+                                } catch (HandCard.HandCardFullException e) {
+                                    JOptionPane.showMessageDialog(null, "给牌操作失败！");
+                                }
+                            });
+                            return true;
+                        } else {
+                            // 如果不使用，正常丢弃
+                            toPlayer.getHandCard().removeCard(cardToDiscard);
+                            playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
+                            treasureDeck.discard(cardToDiscard);
+                            cardDiscarded = true;
+                        }
+                    } else if (cardToDiscard instanceof SandbagCard) {
+                        // 询问是否要使用沙袋卡
+                        int useChoice = JOptionPane.showConfirmDialog(
+                                null,
+                                "这是一张沙袋卡，是否要使用它？",
+                                "使用沙袋卡",
+                                JOptionPane.YES_NO_OPTION);
+
+                        if (useChoice == JOptionPane.YES_OPTION) {
+                            // 使用沙袋卡
+                            if (mapController != null) {
+                                // 保存当前选中的卡牌，以便在沙袋卡使用完成后继续给牌
+                                final Card cardToGive = selectedCard;
+                                // 进入沙袋卡使用模式
+                                mapController.enterSandbagMode(toPlayerIndex, () -> {
+                                    // 从玩家手牌中移除沙袋卡
+                                    toPlayer.getHandCard().removeCard(cardToDiscard);
+                                    playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
+                                    treasureDeck.discard(cardToDiscard);
+                                    // 继续给牌流程
+                                    try {
+                                        // 从给予者手中移除卡牌
+                                        fromPlayer.getHandCard().removeCard(cardToGive);
+                                        playerInfoViews.get(fromPlayerIndex).removeCard(cardToGive);
+                                        // 添加到接收者手中
+                                        toPlayer.getHandCard().addCard(cardToGive);
+                                        playerInfoViews.get(toPlayerIndex).addCard(cardToGive);
+                                        JOptionPane.showMessageDialog(null,
+                                                String.format("成功将卡牌[%s]给予玩家%d！",
+                                                        cardToGive.getName(),
+                                                        toPlayerIndex + 1));
+                                    } catch (HandCard.HandCardFullException e) {
+                                        JOptionPane.showMessageDialog(null, "给牌操作失败！");
+                                    }
+                                });
+                                return true;
+                            }
+                        } else {
+                            // 如果不使用，正常丢弃
+                            toPlayer.getHandCard().removeCard(cardToDiscard);
+                            playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
+                            treasureDeck.discard(cardToDiscard);
+                            cardDiscarded = true;
+                        }
+                    } else {
+                        // 如果不是特殊卡牌，正常丢弃
+                        toPlayer.getHandCard().removeCard(cardToDiscard);
+                        playerInfoViews.get(toPlayerIndex).removeCard(cardToDiscard);
+                        treasureDeck.discard(cardToDiscard);
+                        cardDiscarded = true;
+                    }
                 } else {
                     return false; // 玩家取消了丢弃操作
                 }
+            } else {
+                cardDiscarded = true; // 如果手牌未满，不需要丢弃
             }
 
-            // 执行给牌操作
-            try {
-                // 从给予者手中移除卡牌
-                fromPlayer.getHandCard().removeCard(selectedCard);
-                playerInfoViews.get(fromPlayerIndex).removeCard(selectedCard);
+            // 只有在成功丢弃卡牌或手牌未满的情况下才执行给牌操作
+            if (cardDiscarded) {
+                try {
+                    // 从给予者手中移除卡牌
+                    fromPlayer.getHandCard().removeCard(selectedCard);
+                    playerInfoViews.get(fromPlayerIndex).removeCard(selectedCard);
 
-                // 添加到接收者手中
-                toPlayer.getHandCard().addCard(selectedCard);
-                playerInfoViews.get(toPlayerIndex).addCard(selectedCard);
+                    // 添加到接收者手中
+                    toPlayer.getHandCard().addCard(selectedCard);
+                    playerInfoViews.get(toPlayerIndex).addCard(selectedCard);
 
-                JOptionPane.showMessageDialog(null,
-                        String.format("成功将卡牌[%s]给予玩家%d！",
-                                selectedCard.getName(),
-                                toPlayerIndex + 1));
+                    JOptionPane.showMessageDialog(null,
+                            String.format("成功将卡牌[%s]给予玩家%d！",
+                                    selectedCard.getName(),
+                                    toPlayerIndex + 1));
 
-                return true;
-            } catch (HandCard.HandCardFullException e) {
-                JOptionPane.showMessageDialog(null, "给牌操作失败！");
-                return false;
+                    return true;
+                } catch (HandCard.HandCardFullException e) {
+                    JOptionPane.showMessageDialog(null, "给牌操作失败！");
+                    return false;
+                }
             }
         }
         return false;
@@ -1643,7 +1792,7 @@ public class GameController {
 
     /**
      * 加固指定瓦片
-     *
+     * 
      * @param playerIndex 玩家索引
      * @param row         目标行
      * @param col         目标列

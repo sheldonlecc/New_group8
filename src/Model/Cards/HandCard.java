@@ -14,11 +14,12 @@ import java.util.stream.Collectors;
  */
 public class HandCard implements Serializable {
     private static final long serialVersionUID = 1L;
-    
-    private final List<Card> cards;                    // 手牌列表
-    private static final int MAX_CARDS = 5;            // 手牌上限（规则书规定）
-    private static final int INITIAL_CARDS = 2;        // 初始手牌数量
-    
+
+    private final List<Card> cards; // 手牌列表
+    private static final int MAX_CARDS = 5; // 手牌上限（规则书规定）
+    private static final int INITIAL_CARDS = 2; // 初始手牌数量
+    private boolean enforceLimit = true; // 是否强制执行手牌上限
+
     // 事件监听器列表
     private final List<Consumer<Card>> onCardAddedListeners = new ArrayList<>();
     private final List<Consumer<Card>> onCardRemovedListeners = new ArrayList<>();
@@ -32,7 +33,17 @@ public class HandCard implements Serializable {
     }
 
     /**
+     * 设置是否强制执行手牌上限
+     * 
+     * @param enforce 是否强制执行
+     */
+    public void setEnforceLimit(boolean enforce) {
+        this.enforceLimit = enforce;
+    }
+
+    /**
      * 添加卡牌添加事件监听器
+     * 
      * @param listener 监听器
      */
     public void addOnCardAddedListener(Consumer<Card> listener) {
@@ -41,6 +52,7 @@ public class HandCard implements Serializable {
 
     /**
      * 添加卡牌移除事件监听器
+     * 
      * @param listener 监听器
      */
     public void addOnCardRemovedListener(Consumer<Card> listener) {
@@ -49,6 +61,7 @@ public class HandCard implements Serializable {
 
     /**
      * 添加手牌变化事件监听器
+     * 
      * @param listener 监听器
      */
     public void addOnHandCardChangedListener(Consumer<HandCard> listener) {
@@ -57,6 +70,7 @@ public class HandCard implements Serializable {
 
     /**
      * 添加卡牌到手牌，不检查手牌上限
+     * 
      * @param card 要添加的卡牌
      */
     public void addCardWithoutCheck(Card card) {
@@ -70,14 +84,15 @@ public class HandCard implements Serializable {
 
     /**
      * 添加卡牌到手牌
+     * 
      * @param card 要添加的卡牌
-     * @throws HandCardFullException 当手牌已满时抛出
+     * @throws HandCardFullException 当手牌已满且强制执行上限时抛出
      */
     public void addCard(Card card) throws HandCardFullException {
         if (card == null) {
             throw new IllegalArgumentException("卡牌不能为空");
         }
-        if (cards.size() >= MAX_CARDS) {
+        if (enforceLimit && cards.size() >= MAX_CARDS) {
             throw new HandCardFullException("手牌已满，最多持有 " + MAX_CARDS + " 张卡牌");
         }
         cards.add(card);
@@ -87,14 +102,15 @@ public class HandCard implements Serializable {
 
     /**
      * 批量添加卡牌
+     * 
      * @param cardsToAdd 要添加的卡牌列表
-     * @throws HandCardFullException 当添加后手牌数量超过上限时抛出
+     * @throws HandCardFullException 当添加后手牌数量超过上限且强制执行上限时抛出
      */
     public void addCards(List<Card> cardsToAdd) throws HandCardFullException {
         if (cardsToAdd == null) {
             throw new IllegalArgumentException("卡牌列表不能为空");
         }
-        if (cards.size() + cardsToAdd.size() > MAX_CARDS) {
+        if (enforceLimit && cards.size() + cardsToAdd.size() > MAX_CARDS) {
             throw new HandCardFullException("添加后手牌数量将超过上限 " + MAX_CARDS);
         }
         for (Card card : cardsToAdd) {
@@ -104,6 +120,7 @@ public class HandCard implements Serializable {
 
     /**
      * 从手牌中移除卡牌
+     * 
      * @param card 要移除的卡牌
      * @return 是否成功移除
      */
@@ -121,6 +138,7 @@ public class HandCard implements Serializable {
 
     /**
      * 批量移除卡牌
+     * 
      * @param cardsToRemove 要移除的卡牌列表
      * @return 成功移除的卡牌数量
      */
@@ -139,6 +157,7 @@ public class HandCard implements Serializable {
 
     /**
      * 获取手牌列表的副本
+     * 
      * @return 手牌列表的副本
      */
     public List<Card> getCards() {
@@ -147,48 +166,53 @@ public class HandCard implements Serializable {
 
     /**
      * 获取指定类型的卡牌列表
+     * 
      * @param type 卡牌类型
      * @return 指定类型的卡牌列表
      */
     public List<Card> getCardsByType(CardType type) {
         return cards.stream()
-                   .filter(card -> card.getType() == type)
-                   .collect(Collectors.toList());
+                .filter(card -> card.getType() == type)
+                .collect(Collectors.toList());
     }
 
     /**
      * 获取所有可用的卡牌类型
+     * 
      * @return 当前手牌中存在的卡牌类型集合
      */
     public Set<CardType> getAvailableCardTypes() {
         return cards.stream()
-                   .map(Card::getType)
-                   .collect(Collectors.toSet());
+                .map(Card::getType)
+                .collect(Collectors.toSet());
     }
 
     /**
      * 检查是否包含指定类型的卡牌
+     * 
      * @param type 要检查的卡牌类型
      * @return 如果包含则返回true
      */
     public boolean hasCardType(CardType type) {
         return cards.stream()
-                   .anyMatch(card -> card.getType() == type);
+                .anyMatch(card -> card.getType() == type);
     }
 
     /**
      * 获取指定类型卡牌的数量
+     * 
      * @param type 卡牌类型
      * @return 该类型卡牌的数量
      */
     public int getCardTypeCount(CardType type) {
         return (int) cards.stream()
-                         .filter(card -> card.getType() == type)
-                         .count();
+                .filter(card -> card.getType() == type)
+                .count();
     }
 
     /**
      * 获取手牌数量
+     * 
      * @return 当前手牌数量
      */
     public int getCardCount() {
@@ -197,22 +221,23 @@ public class HandCard implements Serializable {
 
     /**
      * 检查手牌是否已满
+     * 
      * @return 如果手牌数量达到上限则返回true
      */
     public boolean isFull() {
-        return cards.size() >= MAX_CARDS;
+        return enforceLimit && cards.size() >= MAX_CARDS;
     }
 
     /**
      * 获取手牌中各种类型卡牌的数量统计
+     * 
      * @return 卡牌类型及其数量的映射
      */
     public Map<CardType, Integer> getCardTypeCount() {
         return cards.stream()
-                   .collect(Collectors.groupingBy(
-                       Card::getType,
-                       Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
-                   ));
+                .collect(Collectors.groupingBy(
+                        Card::getType,
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
     }
 
     /**
@@ -229,6 +254,7 @@ public class HandCard implements Serializable {
 
     /**
      * 检查是否包含指定卡牌
+     * 
      * @param card 要检查的卡牌
      * @return 如果包含则返回true
      */
@@ -238,6 +264,7 @@ public class HandCard implements Serializable {
 
     /**
      * 获取初始手牌数量
+     * 
      * @return 初始手牌数量
      */
     public static int getInitialCardCount() {
@@ -246,6 +273,7 @@ public class HandCard implements Serializable {
 
     /**
      * 获取手牌上限
+     * 
      * @return 手牌上限数量
      */
     public static int getMaxCards() {
@@ -254,10 +282,11 @@ public class HandCard implements Serializable {
 
     /**
      * 验证手牌是否合法
+     * 
      * @return 如果手牌合法则返回true
      */
     public boolean isValid() {
-        return cards.size() <= MAX_CARDS;
+        return !enforceLimit || cards.size() <= MAX_CARDS;
     }
 
     /**
@@ -293,6 +322,7 @@ public class HandCard implements Serializable {
 
     /**
      * 重写toString方法
+     * 
      * @return 手牌信息的字符串表示
      */
     @Override

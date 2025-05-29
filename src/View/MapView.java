@@ -27,6 +27,7 @@ public class MapView extends JPanel {
     private Map<String, List<Integer>> tilePlayers;
     private Map<Integer, Point> playerFixedPositions;
     private boolean isHelicopterMode = false;
+    private boolean isSandbagMode = false;
 
     private static final List<Point> CLASSIC_MAP = Arrays.asList(
             new Point(0, 2), new Point(0, 3),
@@ -216,9 +217,9 @@ public class MapView extends JPanel {
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
                 System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n",
-                    i, j,
-                    layeredPanes[i][j].getSize(),
-                    layeredPanes[i][j].getPreferredSize());
+                        i, j,
+                        layeredPanes[i][j].getSize(),
+                        layeredPanes[i][j].getPreferredSize());
             }
         }
 
@@ -259,9 +260,9 @@ public class MapView extends JPanel {
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
                 System.out.printf("板块[%d,%d] 大小: %s, 首选大小: %s\n",
-                    i, j,
-                    layeredPanes[i][j].getSize(),
-                    layeredPanes[i][j].getPreferredSize());
+                        i, j,
+                        layeredPanes[i][j].getSize(),
+                        layeredPanes[i][j].getPreferredSize());
             }
         }
 
@@ -330,6 +331,7 @@ public class MapView extends JPanel {
 
     /**
      * 获取指定板块上的玩家数量
+     * 
      * @param row 行
      * @param col 列
      * @return 玩家数量
@@ -341,6 +343,7 @@ public class MapView extends JPanel {
 
     /**
      * 获取玩家的固定位置
+     * 
      * @param playerIndex 玩家索引
      * @return 固定位置点
      */
@@ -363,16 +366,17 @@ public class MapView extends JPanel {
 
     /**
      * 显示玩家图像
-     * @param row 行
-     * @param col 列
+     * 
+     * @param row             行
+     * @param col             列
      * @param playerImagePath 玩家图像路径
-     * @param playerIndex 玩家索引
+     * @param playerIndex     玩家索引
      */
     public void showPlayerImage(int row, int col, String playerImagePath, int playerIndex) {
         try {
             ImageIcon originalIcon = new ImageIcon(playerImagePath);
             Image scaledImage = originalIcon.getImage().getScaledInstance(
-                    BUTTON_SIZE , // 缩小图像尺寸
+                    BUTTON_SIZE, // 缩小图像尺寸
                     BUTTON_SIZE,
                     Image.SCALE_SMOOTH);
             ImageIcon scaledIcon = new ImageIcon(scaledImage);
@@ -386,8 +390,7 @@ public class MapView extends JPanel {
                     position.x,
                     position.y,
                     BUTTON_SIZE / 2,
-                    BUTTON_SIZE / 2
-            );
+                    BUTTON_SIZE / 2);
             playerLabel.setVisible(true);
 
             // 记录玩家位置
@@ -410,8 +413,9 @@ public class MapView extends JPanel {
 
     /**
      * 隐藏玩家图像
-     * @param row 行
-     * @param col 列
+     * 
+     * @param row         行
+     * @param col         列
      * @param playerIndex 玩家索引
      */
     public void hidePlayerImage(int row, int col, int playerIndex) {
@@ -440,37 +444,52 @@ public class MapView extends JPanel {
         }
     }
 
-    public void setHelicopterMode(boolean enabled) {
-        System.out.println("\n========== MapView.setHelicopterMode 开始 ==========");
-        System.out.println("方法被调用，参数enabled: " + enabled);
-        System.out.println("当前isHelicopterMode: " + isHelicopterMode);
-        System.out.println("MapView实例: " + this);
-        System.out.println("getAllTiles()返回的板块数量: " + getAllTiles().size());
-        
-        isHelicopterMode = enabled;
-        if (enabled) {
-            System.out.println("开始高亮未被沉没的板块");
-            int highlightedCount = 0;
-            // 高亮显示所有未被沉没的板块
-            for (Tile tile : getAllTiles()) {
-                if (tile.getState() != TileState.SUNK) {
-                    System.out.println("高亮板块: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]");
-                    highlightTile(tile.getRow(), tile.getCol());
-                    highlightedCount++;
+    public void setHelicopterMode(boolean isHelicopterMode) {
+        this.isHelicopterMode = isHelicopterMode;
+    }
+
+    public void setSandbagMode(boolean isSandbagMode) {
+        this.isSandbagMode = isSandbagMode;
+        if (isSandbagMode) {
+            // 高亮所有被淹没的板块
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    Tile tile = getTile(i, j);
+                    if (tile != null && tile.getState() == TileState.FLOODED) {
+                        JButton button = getButton(i, j);
+                        if (button != null) {
+                            button.setBackground(new Color(255, 255, 200));
+                        }
+                    }
                 }
             }
-            System.out.println("总共高亮了 " + highlightedCount + " 个板块");
+            // 禁用不可加固的板块
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    Tile tile = getTile(i, j);
+                    JButton button = getButton(i, j);
+                    if (button != null && (tile == null || tile.getState() != TileState.FLOODED)) {
+                        button.setEnabled(false);
+                    }
+                }
+            }
         } else {
-            System.out.println("清除所有高亮");
-            // 清除所有高亮
-            clearHighlights();
+            // 重置所有按钮状态
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    JButton button = getButton(i, j);
+                    if (button != null) {
+                        button.setEnabled(true);
+                        button.setBackground(null);
+                    }
+                }
+            }
         }
-        System.out.println("========== MapView.setHelicopterMode 结束 ==========\n");
-        repaint();
     }
 
     /**
      * 高亮显示指定位置的板块
+     * 
      * @param row 行
      * @param col 列
      */
