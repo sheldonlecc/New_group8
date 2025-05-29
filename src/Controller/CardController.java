@@ -274,26 +274,47 @@ public class CardController implements ActionListener {
             Player discardingPlayer = gameController.getPlayers().get(discardingPlayerIndex);
 
             // 检查是否是特殊卡
-            if (card instanceof SandbagCard) {
-                // 记录这张卡被弃掉
+            if (card instanceof SandbagCard || card instanceof HelicopterCard) {
+                // 创建选择窗口
+                String cardType = card instanceof SandbagCard ? "沙袋卡" : "直升机卡";
+                int choice = JOptionPane.showOptionDialog(
+                    null,
+                    "您选择弃掉一张" + cardType + "，是否要使用它的功能？",
+                    "特殊卡选择",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    new String[]{"使用功能", "直接弃掉"},
+                    "使用功能"
+                );
+
+                if (choice == 0) { // 选择使用功能
+                    // 记录这张卡被弃掉
+                    cardsDiscarded++;
+                    if (card instanceof SandbagCard) {
+                        // 如果是沙袋卡，进入沙袋模式
+                        gameController.getMapController().enterSandbagMode(discardingPlayerIndex);
+                    } else {
+                        // 如果是直升机卡，进入直升机模式
+                        gameController.getMapController().enterHelicopterMode(discardingPlayerIndex);
+                    }
+                    return; // 等待玩家使用特殊卡后再继续弃牌
+                } else { // 选择直接弃掉
+                    // 直接执行弃牌操作
+                    discardingPlayer.getHandCard().removeCard(card);
+                    removeCard(currentDiscardingPlayer, card);
+                    cardsDiscarded++;
+                    System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
+                }
+            } else {
+                // 如果不是特殊卡，继续正常的弃牌流程
+                discardingPlayer.getHandCard().removeCard(card);
+                removeCard(currentDiscardingPlayer, card);
                 cardsDiscarded++;
-                // 如果是沙袋卡，先进入沙袋模式
-                gameController.getMapController().enterSandbagMode(discardingPlayerIndex);
-                return; // 等待玩家使用沙袋卡后再继续弃牌
-            } else if (card instanceof HelicopterCard) {
-                // 记录这张卡被弃掉
-                cardsDiscarded++;
-                // 如果是直升机卡，先进入直升机模式
-                gameController.getMapController().enterHelicopterMode(discardingPlayerIndex);
-                return; // 等待玩家使用直升机卡后再继续弃牌
+                System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
             }
 
-            // 如果不是特殊卡，继续正常的弃牌流程
-            discardingPlayer.getHandCard().removeCard(card);
-            removeCard(currentDiscardingPlayer, card);
-            cardsDiscarded++;
-            System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
-
+            // 检查是否完成弃牌
             if (cardsDiscarded == cardsToDiscard) {
                 System.out.println("弃牌完成，退出弃牌模式"); // 调试信息
                 isDiscardMode = false;
