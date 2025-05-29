@@ -272,7 +272,23 @@ public class CardController implements ActionListener {
             // 获取正在弃牌的玩家
             int discardingPlayerIndex = gameController.getPlayerInfoViews().indexOf(currentDiscardingPlayer);
             Player discardingPlayer = gameController.getPlayers().get(discardingPlayerIndex);
-            // 从该玩家手中移除卡牌
+
+            // 检查是否是特殊卡
+            if (card instanceof SandbagCard) {
+                // 记录这张卡被弃掉
+                cardsDiscarded++;
+                // 如果是沙袋卡，先进入沙袋模式
+                gameController.getMapController().enterSandbagMode(discardingPlayerIndex);
+                return; // 等待玩家使用沙袋卡后再继续弃牌
+            } else if (card instanceof HelicopterCard) {
+                // 记录这张卡被弃掉
+                cardsDiscarded++;
+                // 如果是直升机卡，先进入直升机模式
+                gameController.getMapController().enterHelicopterMode(discardingPlayerIndex);
+                return; // 等待玩家使用直升机卡后再继续弃牌
+            }
+
+            // 如果不是特殊卡，继续正常的弃牌流程
             discardingPlayer.getHandCard().removeCard(card);
             removeCard(currentDiscardingPlayer, card);
             cardsDiscarded++;
@@ -416,5 +432,40 @@ public class CardController implements ActionListener {
         JOptionPane.showMessageDialog(null, "所有玩家乘坐直升机逃脱，游戏胜利！");
         gameController.endGameWithWin();
         return true;
+    }
+
+    /**
+     * 检查是否在弃牌模式中
+     * @return 如果在弃牌模式中则返回true
+     */
+    public boolean isInDiscardMode() {
+        return isDiscardMode;
+    }
+
+    /**
+     * 继续弃牌流程
+     * 在特殊卡使用完成后调用此方法继续弃牌
+     */
+    public void continueDiscardMode() {
+        if (isDiscardMode && currentDiscardingPlayer != null) {
+            // 获取正在弃牌的玩家
+            int discardingPlayerIndex = gameController.getPlayerInfoViews().indexOf(currentDiscardingPlayer);
+            Player discardingPlayer = gameController.getPlayers().get(discardingPlayerIndex);
+
+            // 检查是否还需要继续弃牌
+            if (cardsDiscarded < cardsToDiscard) {
+                JOptionPane.showMessageDialog(null,
+                        "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
+                        "弃牌阶段",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                // 如果不需要继续弃牌，结束弃牌模式
+                isDiscardMode = false;
+                gameController.updatePlayerView(discardingPlayerIndex);
+                currentDiscardingPlayer.setButtonsEnabled(true);
+                currentDiscardingPlayer = null;
+                gameController.startNewTurn();
+            }
+        }
     }
 }

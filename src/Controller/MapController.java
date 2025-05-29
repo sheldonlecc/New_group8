@@ -524,6 +524,10 @@ public class MapController implements ActionListener {
                 button.setBackground(null);
             }
         }
+        // 继续弃牌流程
+        if (gameController.getCardController().isInDiscardMode()) {
+            gameController.getCardController().continueDiscardMode();
+        }
     }
 
     /**
@@ -790,6 +794,10 @@ public class MapController implements ActionListener {
         isHelicopterMode = false;
         helicopterPlayerIndex = -1;
         mapView.setHelicopterMode(false);
+        // 继续弃牌流程
+        if (gameController.getCardController().isInDiscardMode()) {
+            gameController.getCardController().continueDiscardMode();
+        }
     }
 
     /**
