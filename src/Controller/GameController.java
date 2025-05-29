@@ -1589,24 +1589,24 @@ public class GameController {
 
         // 检查目标玩家是否是飞行员
         boolean isPilot = targetPlayer.getRole() instanceof Model.Role.Pilot;
-
-        // 如果是飞行员，允许全图飞
         if (isPilot) {
             return true;
         }
 
+        // 检查目标玩家是否是潜水员
+        boolean isDiver = targetPlayer.getRole().getClass().getSimpleName().equals("Diver");
+        if (isDiver) {
+            // 复用MapController的BFS判定
+            return mapController != null && mapController.isDiverReachable(currentTile, targetTile);
+        }
+
         // 检查目标玩家是否是探险家
         boolean isExplorer = targetPlayer.getRole() instanceof Model.Role.Explorer;
-
-        // 计算曼哈顿距离
         int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
         int colDistance = Math.abs(currentTile.getCol() - targetTile.getCol());
-
-        // 如果是探险家，允许斜向移动
         if (isExplorer) {
             return rowDistance <= 1 && colDistance <= 1;
         }
-
         // 其他玩家只能移动到相邻格子
         return (rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1);
     }

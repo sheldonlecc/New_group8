@@ -223,7 +223,7 @@ public class MapController implements ActionListener {
     }
 
     // Diver特殊移动能力：BFS遍历所有连通的FLOODED/SUNK区域，最终停在NORMAL或FLOODED
-    private boolean isDiverReachable(Tile start, Tile target) {
+    public boolean isDiverReachable(Tile start, Tile target) {
         if (start == null || target == null)
             return false;
         if (target.getState() == TileState.SUNK)
@@ -567,6 +567,14 @@ public class MapController implements ActionListener {
         this.targetPlayerIndex = targetPlayerIndex;
         this.isNavigatorMoveMode = true;
         System.out.println("[日志] 进入领航员移动模式，领航员: " + (navigatorIndex + 1) + ", 目标玩家: " + (targetPlayerIndex + 1));
+        // 不做BFS高亮，仅重置所有按钮状态
+        for (int i = 0; i < mapView.getButtonCount(); i++) {
+            JButton button = mapView.getButton(i);
+            if (button != null) {
+                button.setEnabled(true);
+                button.setBackground(null);
+            }
+        }
     }
 
     /**
@@ -598,24 +606,31 @@ public class MapController implements ActionListener {
 
         // 检查目标玩家是否是飞行员
         boolean isPilot = targetPlayer.getRole() instanceof Model.Role.Pilot;
-
-        // 如果是飞行员，允许全图飞
         if (isPilot) {
             gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
             return;
         }
 
-        // 其他玩家只能移动到相邻格子
+        // 检查目标玩家是否是潜水员
+        boolean isDiver = targetPlayer.getRole().getClass().getSimpleName().equals("Diver");
         Tile currentTile = targetPlayer.getCurrentTile();
         if (currentTile == null) {
             return;
         }
+        Tile targetTile = mapView.getTile(row, col);
+        if (isDiver) {
+            // 允许点击所有BFS可达的格子
+            if (isDiverReachable(currentTile, targetTile)) {
+                gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
+            } else {
+                JOptionPane.showMessageDialog(null, "潜水员只能移动到连通的可达板块！", "移动错误", JOptionPane.ERROR_MESSAGE);
+            }
+            return;
+        }
 
-        // 计算曼哈顿距离
+        // 其他玩家只能移动到相邻格子
         int rowDistance = Math.abs(currentTile.getRow() - row);
         int colDistance = Math.abs(currentTile.getCol() - col);
-
-        // 检查是否是相邻格子
         if ((rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1)) {
             gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
         } else {
