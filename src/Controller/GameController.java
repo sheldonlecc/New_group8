@@ -1554,11 +1554,28 @@ public class GameController {
                         endTurn(navigatorIndex);
                     }
                 } else {
-                    // 显示剩余移动次数
-                    JOptionPane.showMessageDialog(null,
-                            "玩家 " + (targetPlayerIndex + 1) + " 还可以移动 " + (currentActions - 1) + " 次！",
+                    // 询问是否继续第二次移动
+                    int option = JOptionPane.showConfirmDialog(null,
+                            "是否继续进行第二次移动？\n选择'否'将直接消耗领航员的一个行动点并结束本次能力。",
                             "领航员能力",
-                            JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.YES_NO_OPTION);
+                    if (option == JOptionPane.NO_OPTION) {
+                        // 玩家选择不继续第二次移动
+                        mapController.exitNavigatorMoveMode();
+                        PlayerInfoView navigatorView = playerInfoViews.get(navigatorIndex);
+                        String navigatorActionText = navigatorView.getActionPointsLabel().getText();
+                        int navigatorActions = Integer.parseInt(navigatorActionText.split(":")[1].trim());
+                        navigatorView.setActionPoints(navigatorActions - 1);
+                        if (navigatorActions - 1 == 0) {
+                            endTurn(navigatorIndex);
+                        }
+                    } else {
+                        // 玩家选择继续，提示还可以移动一次
+                        JOptionPane.showMessageDialog(null,
+                                "玩家 " + (targetPlayerIndex + 1) + " 还可以移动 1 次！",
+                                "领航员能力",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
                 }
             } else {
                 System.out.println("[日志] 非法移动：目标位置不可到达");
@@ -1585,6 +1602,14 @@ public class GameController {
         if (currentTile == null) {
             System.out.println("无法获取当前板块");
             return false;
+        }
+
+        // 检查目标玩家是否是飞行员
+        boolean isPilot = targetPlayer.getRole() instanceof Model.Role.Pilot;
+
+        // 如果是飞行员，允许全图飞
+        if (isPilot) {
+            return true;
         }
 
         // 检查目标玩家是否是探险家
