@@ -8,17 +8,17 @@ import java.util.List;
 
 public class Engineer extends Role {
     public Engineer() {
-        super("工程师", "花费1个行动可以加固2个板块");
+        super("Engineer", "Can spend 1 action to shore up 2 tiles");
     }
 
     @Override
     public boolean canUseAbility() {
-        return true; // 工程师的能力是永久的，不需要特殊条件
+        return true; // Engineer's ability is permanent, no special conditions required
     }
 
     @Override
     public void useSpecialAbility() {
-        // 工程师的能力是被动的，不需要主动使用
+        // Engineer's ability is passive, no active use required
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Engineer extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
+        return isTileMovable(tile); // Can move to any non-sunken tile
     }
 
     @Override

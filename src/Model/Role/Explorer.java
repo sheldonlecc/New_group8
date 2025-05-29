@@ -8,17 +8,17 @@ import java.util.List;
 
 public class Explorer extends Role {
     public Explorer() {
-        super("探险家", "可以斜向移动和加固板块");
+        super("Explorer", "Can move and shore up diagonally");
     }
 
     @Override
     public boolean canUseAbility() {
-        return true; // 探险家的能力是永久的，不需要特殊条件
+        return true; // Explorer's ability is permanent, no special conditions required
     }
 
     @Override
     public void useSpecialAbility() {
-        // 探险家的能力是被动的，不需要主动使用
+        // Explorer's ability is passive, no active use required
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Explorer extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
+        return isTileMovable(tile); // Can move to any non-sunken tile
     }
 
     @Override

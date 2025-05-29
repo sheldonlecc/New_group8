@@ -9,6 +9,13 @@
             "name": "MainView",
             "request": "launch",
             "mainClass": "View.MainView",
+            "projectName": "New_group8_fa2312a"
+        },
+        {
+            "type": "java",
+            "name": "MainView",
+            "request": "launch",
+            "mainClass": "View.MainView",
             "projectName": "New_group8_4_afda9a5f"
         },
         {

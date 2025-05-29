@@ -8,17 +8,17 @@ import java.util.List;
 
 public class Diver extends Role {
     public Diver() {
-        super("潜水员", "花费1个行动可以穿过一个或多个相邻的缺失和/或被淹没的板块");
+        super("Diver", "Can spend 1 action to move through one or more adjacent missing and/or flooded tiles");
     }
 
     @Override
     public boolean canUseAbility() {
-        return true; // 潜水员的能力是永久的，不需要特殊条件
+        return true; // Diver's ability is permanent, no special conditions required
     }
 
     @Override
     public void useSpecialAbility() {
-        // 潜水员的能力是被动的，不需要主动使用
+        // Diver's ability is passive, no active use required
     }
 
     @Override
@@ -37,7 +37,7 @@ public class Diver extends Role {
 
         // 潜水员可以移动到任何相邻的瓦片，包括被淹没的和缺失的
         for (Tile tile : adjacentTiles) {
-            if (tile.getState() != TileState.SUNK) { // 不能移动到已沉没的瓦片
+            if (tile.getState() != TileState.SUNK) { // Cannot move to sunken tiles
                 movableTiles.add(tile);
             }
         }

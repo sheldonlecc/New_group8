@@ -8,17 +8,17 @@ import java.util.List;
 
 public class Messenger extends Role {
     public Messenger() {
-        super("信使", "无需在同一板块上就可以赠送卡片");
+        super("Messenger", "Can give cards without being on the same tile");
     }
 
     @Override
     public boolean canUseAbility() {
-        return true; // 信使的能力是永久的，不需要特殊条件
+        return true; // Messenger's ability is permanent, no special conditions required
     }
 
     @Override
     public void useSpecialAbility() {
-        // 信使的能力是被动的，不需要主动使用
+        // Messenger's ability is passive, no active use required
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Messenger extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
+        return isTileMovable(tile); // Can move to any non-sunken tile
     }
 
     @Override

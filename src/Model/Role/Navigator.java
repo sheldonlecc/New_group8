@@ -8,17 +8,17 @@ import java.util.List;
 
 public class Navigator extends Role {
     public Navigator() {
-        super("领航员", "每个行动可以将其他玩家移动到最多2个相邻板块");
+        super("Navigator", "Can move other players up to 2 adjacent tiles per action");
     }
 
     @Override
     public boolean canUseAbility() {
-        return true; // 领航员的能力是永久的，不需要特殊条件
+        return true; // Navigator's ability is permanent, no special conditions required
     }
 
     @Override
     public void useSpecialAbility() {
-        // 领航员的能力需要主动使用，具体实现在Controller层
+        // Navigator's ability requires active use, specific implementation in Controller layer
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Navigator extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
+        return isTileMovable(tile); // Can move to any non-sunken tile
     }
 
     @Override

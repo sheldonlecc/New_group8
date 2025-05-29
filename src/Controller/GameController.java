@@ -629,7 +629,7 @@ public class GameController {
 
         boolean consumesAction = actionName.equals("Move") ||
                 actionName.equals("Give Cards") ||
-                actionName.equals("Get Treasure") ||
+                actionName.equals("Treasure") ||
                 actionName.equals("Shore up"); // 添加加固操作到消耗行动点的操作列表中
 
         if (!consumesAction || currentActions > 0) {
@@ -650,11 +650,11 @@ public class GameController {
                         currentActions--;
                     }
                     break;
-                case "Special Skill":
+                case "Special":
                     // 特殊技能不在这里消耗行动点，而是在技能完成后消耗
                     handleSpecialSkill(playerIndex);
                     break;
-                case "Get Treasure":
+                case "Treasure":
                     handleGetTreasure(playerIndex);
                     break;
                 case "Skip":

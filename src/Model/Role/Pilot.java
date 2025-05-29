@@ -7,20 +7,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Pilot extends Role {
-    private boolean hasUsedAbility = false; // 记录是否已经使用过能力
+    private boolean hasUsedAbility = false; // Track if ability has been used
 
     public Pilot() {
-        super("飞行员", "每轮可以花费1个行动移动到任意板块");
+        super("Pilot", "Can spend 1 action to move to any tile per turn");
     }
 
     @Override
     public boolean canUseAbility() {
-        return !hasUsedAbility; // 每回合只能使用一次能力
+        return !hasUsedAbility; // Can only use ability once per turn
     }
 
     @Override
     public void useSpecialAbility() {
-        hasUsedAbility = true; // 标记已使用能力
+        hasUsedAbility = true; // Mark ability as used
     }
 
     @Override
@@ -49,7 +49,7 @@ public class Pilot extends Role {
 
     @Override
     public boolean canMoveTo(Tile tile) {
-        return isTileMovable(tile); // 可以移动到任何未被沉没的瓦片
+        return isTileMovable(tile); // Can move to any non-sunken tile
     }
 
     @Override
@@ -57,7 +57,7 @@ public class Pilot extends Role {
         return tile != null && tile.getState() == TileState.FLOODED;
     }
 
-    // 重置能力使用状态（在回合开始时调用）
+    // Reset ability usage status (called at turn start)
     public void resetAbility() {
         hasUsedAbility = false;
     }
