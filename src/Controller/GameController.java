@@ -1279,7 +1279,12 @@ public class GameController {
         String[] cardOptions = new String[handCards.size() + 1];
         for (int i = 0; i < handCards.size(); i++) {
             Card card = handCards.get(i);
-            cardOptions[i] = card.getClass().getSimpleName();
+            if (card instanceof TreasureCard) {
+                TreasureCard treasureCard = (TreasureCard) card;
+                cardOptions[i] = treasureCard.getTreasureType().getDisplayName() + "宝藏卡";
+            } else {
+                cardOptions[i] = card.getClass().getSimpleName();
+            }
         }
         cardOptions[handCards.size()] = "取消";
 
