@@ -294,19 +294,68 @@ public class MapController implements ActionListener {
     public void enterShoreUpMode(int playerIndex) {
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        List<Tile> shoreableTiles = currentTile.getAdjacentTiles();
-        shoreableTiles.add(currentTile); // 添加当前瓦片
+        
+        // 检查是否是探险家
+        boolean isExplorer = player.getRole().getClass().getSimpleName().equals("Explorer");
+        
+        // 获取可加固的板块列表
+        List<Tile> shoreableTiles = new ArrayList<>();
+        
+        // 添加当前板块
+        shoreableTiles.add(currentTile);
+        
+        // 添加相邻板块
+        shoreableTiles.addAll(currentTile.getAdjacentTiles());
+        
+        // 如果是探险家，添加斜向板块
+        if (isExplorer) {
+            int currentRow = currentTile.getRow();
+            int currentCol = currentTile.getCol();
+            
+            // 左上
+            if (currentRow > 0 && currentCol > 0) {
+                Tile upLeftTile = mapView.getTile(currentRow - 1, currentCol - 1);
+                if (upLeftTile != null) {
+                    shoreableTiles.add(upLeftTile);
+                }
+            }
+            // 右上
+            if (currentRow > 0 && currentCol < 5) {
+                Tile upRightTile = mapView.getTile(currentRow - 1, currentCol + 1);
+                if (upRightTile != null) {
+                    shoreableTiles.add(upRightTile);
+                }
+            }
+            // 左下
+            if (currentRow < 5 && currentCol > 0) {
+                Tile downLeftTile = mapView.getTile(currentRow + 1, currentCol - 1);
+                if (downLeftTile != null) {
+                    shoreableTiles.add(downLeftTile);
+                }
+            }
+            // 右下
+            if (currentRow < 5 && currentCol < 5) {
+                Tile downRightTile = mapView.getTile(currentRow + 1, currentCol + 1);
+                if (downRightTile != null) {
+                    shoreableTiles.add(downRightTile);
+                }
+            }
+        }
+        
+        // 检查是否有可加固的板块
         boolean hasShoreable = false;
         for (Tile tile : shoreableTiles) {
-            if (tile.isShoreable()) {
+            if (tile != null && tile.getState() == TileState.FLOODED) {
                 hasShoreable = true;
                 break;
             }
         }
+        
         if (!hasShoreable) {
             JOptionPane.showMessageDialog(mapView, "周围没有可加固的瓦片！", "提示", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+        
         isInShoreUpMode = true;
         isMoveMode = false;
         currentPlayerIndex = playerIndex;
@@ -320,8 +369,12 @@ public class MapController implements ActionListener {
      * @param playerIndex 当前玩家索引
      */
     private void highlightShoreableTiles(int playerIndex) {
+        System.out.println("\n========== 开始高亮可加固板块 ==========");
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
+        System.out.println("当前玩家: " + (playerIndex + 1));
+        System.out.println("玩家角色: " + player.getRole().getClass().getSimpleName());
+        System.out.println("当前位置: " + currentTile.getName() + " [" + currentTile.getRow() + "," + currentTile.getCol() + "]");
 
         // 检查是否有沙袋卡
         boolean hasSandbag = false;
@@ -331,6 +384,7 @@ public class MapController implements ActionListener {
                 break;
             }
         }
+        System.out.println("是否有沙袋卡: " + hasSandbag);
 
         // 重置所有按钮状态
         for (int i = 0; i < mapView.getButtonCount(); i++) {
@@ -343,6 +397,7 @@ public class MapController implements ActionListener {
 
         if (hasSandbag) {
             // 如果有沙袋卡，高亮所有被淹没的板块
+            System.out.println("使用沙袋卡模式，高亮所有被淹没的板块");
             for (int i = 0; i < 6; i++) {
                 for (int j = 0; j < 6; j++) {
                     Tile tile = mapView.getTile(i, j);
@@ -350,22 +405,117 @@ public class MapController implements ActionListener {
                         JButton button = mapView.getButton(i, j);
                         if (button != null) {
                             button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+                            System.out.println("高亮被淹没板块: " + tile.getName() + " [" + i + "," + j + "]");
                         }
                     }
                 }
             }
         } else {
-            // 如果没有沙袋卡，只高亮当前瓦片和相邻瓦片
-            List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
-            adjacentTiles.add(currentTile); // 添加当前瓦片
+            // 如果没有沙袋卡，根据角色类型高亮可加固的瓦片
+            List<Tile> adjacentTiles = new ArrayList<>();
+            
+            // 获取当前瓦片的相邻瓦片
+            int currentRow = currentTile.getRow();
+            int currentCol = currentTile.getCol();
+            
+            // 检查是否是探险家
+            boolean isExplorer = player.getRole().getClass().getSimpleName().equals("Explorer");
+            System.out.println("是否是探险家: " + isExplorer);
+            
+            // 添加上下左右四个方向的瓦片
+            if (currentRow > 0) {
+                Tile upTile = mapView.getTile(currentRow - 1, currentCol);
+                if (upTile != null) {
+                    adjacentTiles.add(upTile);
+                    System.out.println("添加上方板块: " + upTile.getName() + " [" + (currentRow - 1) + "," + currentCol + "]");
+                }
+            }
+            if (currentRow < 5) {
+                Tile downTile = mapView.getTile(currentRow + 1, currentCol);
+                if (downTile != null) {
+                    adjacentTiles.add(downTile);
+                    System.out.println("添加下方板块: " + downTile.getName() + " [" + (currentRow + 1) + "," + currentCol + "]");
+                }
+            }
+            if (currentCol > 0) {
+                Tile leftTile = mapView.getTile(currentRow, currentCol - 1);
+                if (leftTile != null) {
+                    adjacentTiles.add(leftTile);
+                    System.out.println("添加左方板块: " + leftTile.getName() + " [" + currentRow + "," + (currentCol - 1) + "]");
+                }
+            }
+            if (currentCol < 5) {
+                Tile rightTile = mapView.getTile(currentRow, currentCol + 1);
+                if (rightTile != null) {
+                    adjacentTiles.add(rightTile);
+                    System.out.println("添加右方板块: " + rightTile.getName() + " [" + currentRow + "," + (currentCol + 1) + "]");
+                }
+            }
+            
+            // 如果是探险家，添加斜向的瓦片
+            if (isExplorer) {
+                System.out.println("探险家模式，添加斜向板块");
+                // 左上
+                if (currentRow > 0 && currentCol > 0) {
+                    Tile upLeftTile = mapView.getTile(currentRow - 1, currentCol - 1);
+                    if (upLeftTile != null) {
+                        adjacentTiles.add(upLeftTile);
+                        System.out.println("添加左上板块: " + upLeftTile.getName() + " [" + (currentRow - 1) + "," + (currentCol - 1) + "]");
+                    }
+                }
+                // 右上
+                if (currentRow > 0 && currentCol < 5) {
+                    Tile upRightTile = mapView.getTile(currentRow - 1, currentCol + 1);
+                    if (upRightTile != null) {
+                        adjacentTiles.add(upRightTile);
+                        System.out.println("添加右上板块: " + upRightTile.getName() + " [" + (currentRow - 1) + "," + (currentCol + 1) + "]");
+                    }
+                }
+                // 左下
+                if (currentRow < 5 && currentCol > 0) {
+                    Tile downLeftTile = mapView.getTile(currentRow + 1, currentCol - 1);
+                    if (downLeftTile != null) {
+                        adjacentTiles.add(downLeftTile);
+                        System.out.println("添加左下板块: " + downLeftTile.getName() + " [" + (currentRow + 1) + "," + (currentCol - 1) + "]");
+                    }
+                }
+                // 右下
+                if (currentRow < 5 && currentCol < 5) {
+                    Tile downRightTile = mapView.getTile(currentRow + 1, currentCol + 1);
+                    if (downRightTile != null) {
+                        adjacentTiles.add(downRightTile);
+                        System.out.println("添加右下板块: " + downRightTile.getName() + " [" + (currentRow + 1) + "," + (currentCol + 1) + "]");
+                    }
+                }
+            }
+            
+            // 添加当前瓦片
+            adjacentTiles.add(currentTile);
+            System.out.println("添加当前板块: " + currentTile.getName() + " [" + currentRow + "," + currentCol + "]");
 
+            // 高亮可加固的瓦片
+            System.out.println("\n开始高亮可加固板块:");
+            boolean hasShoreableTile = false;
             for (Tile tile : adjacentTiles) {
-                if (tile.isShoreable()) { // 只高亮可加固的瓦片
+                if (tile != null && tile.getState() == TileState.FLOODED) {
                     JButton button = mapView.getButton(tile.getRow(), tile.getCol());
                     if (button != null) {
                         button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+                        hasShoreableTile = true;
+                        System.out.println("高亮可加固板块: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "] 状态: " + tile.getState());
                     }
+                } else {
+                    System.out.println("板块不可加固: " + (tile != null ? tile.getName() : "null") + 
+                        " [" + (tile != null ? tile.getRow() : "N/A") + "," + (tile != null ? tile.getCol() : "N/A") + "]" +
+                        " 状态: " + (tile != null ? tile.getState() : "null"));
                 }
+            }
+
+            if (!hasShoreableTile) {
+                System.out.println("没有可加固的板块");
+                JOptionPane.showMessageDialog(mapView, "周围没有可加固的瓦片！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                exitShoreUpMode();
+                return;
             }
         }
 
@@ -376,6 +526,7 @@ public class MapController implements ActionListener {
                 button.setEnabled(false);
             }
         }
+        System.out.println("========== 高亮可加固板块完成 ==========\n");
     }
 
     /**

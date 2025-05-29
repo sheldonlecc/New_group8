@@ -1130,10 +1130,14 @@ public class GameController {
         // 检查是否是探险家
         boolean isExplorer = role instanceof Model.Role.Explorer;
 
-        // 如果是探险家，允许斜向加固
-        boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 &&
-                Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1)
-                : (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
+        // 计算曼哈顿距离
+        int distance = Math.abs(currentTile.getRow() - targetTile.getRow()) + 
+                      Math.abs(currentTile.getCol() - targetTile.getCol());
+
+        // 如果是探险家，允许斜向加固（距离为2）
+        boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 && 
+                                         Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1) :
+                           (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
 
         boolean isShoreable = targetTile.isShoreable();
         return isAdjacent && isShoreable;
