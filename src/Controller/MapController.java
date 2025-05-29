@@ -6,6 +6,7 @@ import Model.Player;
 import Model.Enumeration.TileState;
 import Model.Role.Role;
 import View.MapView;
+import View.PlayerInfoView;
 import Model.Cards.Card;
 import Model.Cards.SandbagCard;
 import Model.Cards.HelicopterCard;
@@ -151,8 +152,24 @@ public class MapController implements ActionListener {
                 exitMoveMode();
                 return;
             }
+
             // 执行移动
             gameController.movePlayer(currentPlayerIndex, row, col);
+
+            // 如果是飞行员且使用了特殊能力，消耗一个行动点
+            Role role = currentPlayer.getRole();
+            if (role instanceof Model.Role.Pilot && !role.canUseAbility()) {
+                PlayerInfoView playerView = gameController.getPlayerInfoView(currentPlayerIndex);
+                String actionText = playerView.getActionPointsLabel().getText();
+                int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+                playerView.setActionPoints(currentActions - 1);
+
+                // 如果行动点用完，结束回合
+                if (currentActions - 1 == 0) {
+                    gameController.endTurn(currentPlayerIndex);
+                }
+            }
+
             exitMoveMode();
         } else if (isInShoreUpMode) {
             // 检查加固是否合法
@@ -325,15 +342,6 @@ public class MapController implements ActionListener {
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
 
-        // 检查是否有沙袋卡
-        boolean hasSandbag = false;
-        for (Card card : player.getHandCard().getCards()) {
-            if (card instanceof SandbagCard) {
-                hasSandbag = true;
-                break;
-            }
-        }
-
         // 重置所有按钮状态
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
@@ -343,30 +351,38 @@ public class MapController implements ActionListener {
             }
         }
 
-        if (hasSandbag) {
-            // 如果有沙袋卡，高亮所有被淹没的板块
-            for (int i = 0; i < 6; i++) {
-                for (int j = 0; j < 6; j++) {
-                    Tile tile = mapView.getTile(i, j);
-                    if (tile != null && tile.getState() == TileState.FLOODED) {
-                        JButton button = mapView.getButton(i, j);
-                        if (button != null) {
-                            button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+        // 获取可加固的瓦片列表
+        List<Tile> shoreableTiles = new ArrayList<>();
+        shoreableTiles.add(currentTile); // 添加当前瓦片
+
+        // 如果是探险家，添加斜向相邻的瓦片
+        if (player.getRole() instanceof Model.Role.Explorer) {
+            // 遍历所有相邻的瓦片（包括斜向）
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    if (i == 0 && j == 0)
+                        continue; // 跳过当前瓦片
+                    int newRow = currentTile.getRow() + i;
+                    int newCol = currentTile.getCol() + j;
+                    if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 6) {
+                        Tile tile = mapView.getTile(newRow, newCol);
+                        if (tile != null) {
+                            shoreableTiles.add(tile);
                         }
                     }
                 }
             }
         } else {
-            // 如果没有沙袋卡，只高亮当前瓦片和相邻瓦片
-            List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
-            adjacentTiles.add(currentTile); // 添加当前瓦片
+            // 非探险家只能加固相邻瓦片
+            shoreableTiles.addAll(currentTile.getAdjacentTiles());
+        }
 
-            for (Tile tile : adjacentTiles) {
-                if (tile.isShoreable()) { // 只高亮可加固的瓦片
-                    JButton button = mapView.getButton(tile.getRow(), tile.getCol());
-                    if (button != null) {
-                        button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
-                    }
+        // 高亮显示可加固的瓦片
+        for (Tile tile : shoreableTiles) {
+            if (tile.isShoreable()) { // 只高亮可加固的瓦片
+                JButton button = mapView.getButton(tile.getRow(), tile.getCol());
+                if (button != null) {
+                    button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
                 }
             }
         }

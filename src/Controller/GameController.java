@@ -704,6 +704,27 @@ public class GameController {
      */
     private void handleMove(int playerIndex) {
         System.out.println("\n========== 处理玩家移动 ==========");
+        Player player = players.get(playerIndex);
+        Role role = player.getRole();
+
+        // 如果是飞行员且使用了特殊能力，不消耗行动点
+        if (role instanceof Model.Role.Pilot && role.canUseAbility()) {
+            System.out.println("[日志] 飞行员使用特殊能力移动，不消耗行动点");
+            mapController.enterMoveMode(playerIndex);
+            return;
+        }
+
+        // 检查是否有足够的行动点
+        PlayerInfoView playerView = playerInfoViews.get(playerIndex);
+        String actionText = playerView.getActionPointsLabel().getText();
+        int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+
+        if (currentActions <= 0) {
+            System.out.println("[日志] 玩家没有足够的行动点进行移动");
+            JOptionPane.showMessageDialog(null, "你没有足够的行动点进行移动！");
+            return;
+        }
+
         // 进入移动模式，等待玩家点击目标位置
         mapController.enterMoveMode(playerIndex);
         System.out.println("========== 移动处理完成 ==========\n");
@@ -1185,9 +1206,12 @@ public class GameController {
         // 检查是否是探险家
         boolean isExplorer = role instanceof Model.Role.Explorer;
 
-        // 如果是探险家，允许斜向加固
-        boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 &&
-                Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1)
+        // 计算曼哈顿距离
+        int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
+        int colDistance = Math.abs(currentTile.getCol() - targetTile.getCol());
+
+        // 如果是探险家，允许斜向加固（距离为1或2）
+        boolean isAdjacent = isExplorer ? (rowDistance <= 1 && colDistance <= 1)
                 : (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
 
         boolean isShoreable = targetTile.isShoreable();
@@ -1574,19 +1598,9 @@ public class GameController {
         if (role instanceof Model.Role.Pilot) {
             // 飞行员可以飞到任何位置
             System.out.println("[日志] 飞行员可以使用飞行能力");
+            role.useSpecialAbility(); // 标记能力已使用
             mapController.enterMoveMode(playerIndex);
-            role.useSpecialAbility();
-
-            // 飞行员使用特殊技能后立即消耗一个行动点
-            PlayerInfoView playerView = playerInfoViews.get(playerIndex);
-            String actionText = playerView.getActionPointsLabel().getText();
-            int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
-            playerView.setActionPoints(currentActions - 1);
-
-            // 如果行动点用完，结束回合
-            if (currentActions - 1 == 0) {
-                endTurn(playerIndex);
-            }
+            // 注意：不在这里消耗行动点，而是在移动完成后消耗
         } else if (role instanceof Model.Role.Navigator) {
             // 领航员可以移动其他玩家
             System.out.println("[日志] 领航员可以使用移动其他玩家的能力");
