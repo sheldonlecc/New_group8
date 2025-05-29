@@ -48,12 +48,12 @@ public class FloodCard extends Card {
     /**
      * 使用洪水卡
      * 如果地块未被淹没，则将其淹没
-     * 如果地块已被淹没，则使其沉没
+     * 如果地块已被淹没，则使其沉没，并从洪水牌堆中移除对应卡牌
      * 
+     * @param floodDeck 洪水牌堆（用于移除沉没板块的卡牌）
      * @return 使用是否成功
      */
-    @Override
-    public void use() {
+    public void use(Model.Deck.FloodDeck floodDeck) {
         if (!canUse()) {
             return;
         }
@@ -68,7 +68,15 @@ public class FloodCard extends Card {
             tile.setState(TileState.SUNK);
             System.out.println(
                     "[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: 被淹没 -> 沉没");
+            if (floodDeck != null) {
+                floodDeck.removeCardForSunkTile(tile);
+            }
         }
+    }
+
+    @Override
+    public void use() {
+        use(null);
     }
 
     /**

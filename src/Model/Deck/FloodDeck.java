@@ -133,4 +133,31 @@ public class FloodDeck extends Deck<FloodCard> {
                 drawPile.stream().allMatch(card -> card != null && card.getTargetTile() != null) &&
                 discardPile.stream().allMatch(card -> card != null && card.getTargetTile() != null);
     }
+
+    /**
+     * 移除指定瓦片对应的洪水卡（无论在抽牌堆还是弃牌堆）
+     * 
+     * @param tile 沉没的瓦片
+     */
+    public void removeCardForSunkTile(Tile tile) {
+        drawPile.removeIf(card -> card.getTargetTile().equals(tile));
+        discardPile.removeIf(card -> card.getTargetTile().equals(tile));
+    }
+
+    /**
+     * 重洗弃牌堆
+     * 只将未沉没瓦片的卡牌洗回抽牌堆
+     */
+    @Override
+    public void reshuffleDiscardPile() {
+        List<FloodCard> toReshuffle = new java.util.ArrayList<>();
+        for (FloodCard card : discardPile) {
+            if (card.getTargetTile().getState() != TileState.SUNK) {
+                toReshuffle.add(card);
+            }
+        }
+        drawPile.addAll(toReshuffle);
+        discardPile.removeAll(toReshuffle);
+        shuffle();
+    }
 }

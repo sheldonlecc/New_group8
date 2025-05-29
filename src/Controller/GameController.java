@@ -459,7 +459,7 @@ public class GameController {
             if (card != null) {
                 Tile targetTile = card.getTargetTile();
                 TileState beforeState = targetTile.getState();
-                card.use();
+                card.use(floodDeck);
                 floodDeck.discard(card);
 
                 String stateMsg = "";
@@ -1600,14 +1600,9 @@ public class GameController {
             return mapController != null && mapController.isDiverReachable(currentTile, targetTile);
         }
 
-        // 检查目标玩家是否是探险家
-        boolean isExplorer = targetPlayer.getRole() instanceof Model.Role.Explorer;
+        // 其他玩家（包括探险家）只能移动到相邻格子
         int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
         int colDistance = Math.abs(currentTile.getCol() - targetTile.getCol());
-        if (isExplorer) {
-            return rowDistance <= 1 && colDistance <= 1;
-        }
-        // 其他玩家只能移动到相邻格子
         return (rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1);
     }
 
