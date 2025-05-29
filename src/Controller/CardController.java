@@ -522,7 +522,23 @@ public class CardController implements ActionListener {
                 gameController.updatePlayerView(discardingPlayerIndex);
                 currentDiscardingPlayer.setButtonsEnabled(true);
                 currentDiscardingPlayer = null;
-                gameController.startNewTurn();
+                // 修复：如有pendingGiveCardPlayerIndex，消耗A行动点并判断是否回到A或切换回合
+                if (pendingGiveCardPlayerIndex != null) {
+                    int aIndex = pendingGiveCardPlayerIndex;
+                    PlayerInfoView aView = gameController.getPlayerInfoView(aIndex);
+                    String actionText = aView.getActionPointsLabel().getText();
+                    int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
+                    aView.setActionPoints(currentActions - 1);
+                    currentActions--;
+                    if (currentActions <= 0) {
+                        gameController.startNewTurn();
+                    } else {
+                        gameController.resumeGiveCardTurn(aIndex);
+                    }
+                    pendingGiveCardPlayerIndex = null;
+                } else {
+                    gameController.startNewTurn();
+                }
             }
         }
     }
