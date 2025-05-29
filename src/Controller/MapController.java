@@ -972,8 +972,9 @@ public class MapController implements ActionListener {
         isInEmergencyMoveMode = false;
         emergencyMovePlayerIndex = -1;
         emergencyMoveAvailableTiles = null;
-
         // 清除所有高亮
         mapView.clearHighlights();
+        // 通知GameController继续处理下一个紧急移动
+        gameController.processNextEmergencyMove();
     }
 }
