@@ -128,7 +128,7 @@ public class TreasureDeck extends Deck<Card> {
      * @return 如果该类型宝藏已收集4个则返回true
      */
     public boolean isTreasureCollected(TreasureType type) {
-        return collectedTreasures.getOrDefault(type, 0) >= 4;
+        return collectedTreasures.getOrDefault(type, 0) >= 1;
     }
 
     /**
