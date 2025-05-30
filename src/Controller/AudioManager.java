@@ -22,21 +22,21 @@ public class AudioManager {
         if (!isMusicEnabled) return;
         
         try {
-            // 停止之前的音乐
+            // Stop the previous music
             stopBackgroundMusic();
             
-            // 加载音频文件
+            // Load audio file
             File audioFile = new File("src/resources/Audio/Ortus.wav");
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
             
-            // 创建音频剪辑
+            // Create audio clips
             backgroundMusicClip = AudioSystem.getClip();
             backgroundMusicClip.open(audioInputStream);
             
-            // 设置循环播放
+            // Set to loop playback
             backgroundMusicClip.loop(Clip.LOOP_CONTINUOUSLY);
             
-            // 开始播放
+            // Start playing
             backgroundMusicClip.start();
             
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
