@@ -1744,6 +1744,11 @@ public class GameController {
         }
         JOptionPane.showMessageDialog(null, "恭喜！你们集齐宝物并成功逃脱，获得胜利！");
         System.out.println("========== 游戏胜利 ==========");
+        // 返回主菜单
+        View.MainView mainView = View.MainView.getInstance();
+        if (mainView != null) {
+            mainView.showStartScreen();
+        }
     }
 
     // 添加设置BoardView的方法
