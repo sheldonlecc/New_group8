@@ -8,7 +8,7 @@ import java.util.List;
 public abstract class Role {
     private String name;
     private String ability;
-    private Player player; // 持有该角色的玩家
+    private Player player;
 
     public Role(String name, String ability) {
         this.name = name;

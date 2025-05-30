@@ -8,28 +8,28 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * 水位类
- * 管理游戏的水位系统
- * 包括：水位等级、抽牌数量、水位变化等
+ * Water Level Class
+ * Manages the water level system of the game
+ * Including: water level, card draw count, water level changes, etc.
  */
 public class WaterLevel {
-    // 水位等级常量
-    public static final int MIN_LEVEL = 1;     // 最低水位等级
-    public static final int MAX_LEVEL = 10;    // 最高水位等级
-    public static final int START_LEVEL = 1;   // 初始水位等级（保持不变，通过难度设置覆盖）
+    // Water level constants
+    public static final int MIN_LEVEL = 1;     // Minimum water level
+    public static final int MAX_LEVEL = 10;    // Maximum water level
+    public static final int START_LEVEL = 1;   // Initial water level (remains unchanged, overridden by difficulty settings)
 
-    // 单例实例
+    // Singleton instance
     private static WaterLevel instance;
     private static WaterLevelView waterLevelView;
 
-    // 核心属性
-    private int currentLevel;                  // 当前水位等级
-    private WaterLevelState state;             // 水位状态
-    private final List<Consumer<WaterLevel>> onLevelChangeListeners;    // 水位变化监听器
+    // Core attributes
+    private int currentLevel;                  // Current water level
+    private WaterLevelState state;             // Water level state
+    private final List<Consumer<WaterLevel>> onLevelChangeListeners;    // Water level change listeners
 
     /**
-     * 私有构造函数
-     * 初始化水位系统
+     * Private constructor
+     * Initialize water level system
      */
     private WaterLevel() {
         this.currentLevel = START_LEVEL;
@@ -38,8 +38,8 @@ public class WaterLevel {
     }
 
     /**
-     * 获取WaterLevel单例实例
-     * @return WaterLevel实例
+     * Get WaterLevel singleton instance
+     * @return WaterLevel instance
      */
     public static WaterLevel getInstance() {
         if (instance == null) {
@@ -49,37 +49,37 @@ public class WaterLevel {
     }
 
     /**
-     * 设置水位视图
-     * @param view 水位视图
+     * Set water level view
+     * @param view Water level view
      */
     public static void setWaterLevelView(WaterLevelView view) {
         waterLevelView = view;
     }
 
-    // =============== 水位管理 ===============
+    // =============== Water Level Management ===============
 
     /**
-     * 获取当前水位等级
-     * @return 当前水位等级
+     * Get current water level
+     * @return Current water level
      */
     public int getCurrentLevel() {
         return currentLevel;
     }
 
     /**
-     * 获取当前水位状态
-     * @return 水位状态
+     * Get current water level state
+     * @return Water level state
      */
     public WaterLevelState getState() {
         return state;
     }
 
     /**
-     * 获取当前水位对应的抽牌数量
-     * @return 抽牌数量
+     * Get card draw count for current water level
+     * @return Card draw count
      */
     public int getDrawCount() {
-        // 根据水位等级返回对应的抽牌数量
+        // Return corresponding card draw count based on water level
         if (currentLevel <= 2) return 2;
         if (currentLevel <= 5) return 3;
         if (currentLevel <= 7) return 4;
@@ -87,8 +87,8 @@ public class WaterLevel {
     }
 
     /**
-     * 提升水位等级
-     * @return 是否成功提升
+     * Increase water level
+     * @return Whether increase was successful
      */
     public boolean increaseLevel() {
         if (currentLevel >= MAX_LEVEL) {
@@ -104,8 +104,8 @@ public class WaterLevel {
     }
 
     /**
-     * 降低水位等级
-     * @return 是否成功降低
+     * Decrease water level
+     * @return Whether decrease was successful
      */
     public boolean decreaseLevel() {
         if (currentLevel <= MIN_LEVEL) {
@@ -121,7 +121,7 @@ public class WaterLevel {
     }
 
     /**
-     * 重置水位等级
+     * Reset water level
      */
     public void resetLevel() {
         currentLevel = START_LEVEL;
@@ -132,11 +132,11 @@ public class WaterLevel {
         }
     }
 
-    // =============== 状态管理 ===============
+    // =============== State Management ===============
 
     /**
-     * 更新水位状态
-     * 根据当前水位等级更新状态
+     * Update water level state
+     * Update state based on current water level
      */
     private void updateState() {
         if (currentLevel >= MAX_LEVEL) {
@@ -148,11 +148,11 @@ public class WaterLevel {
         }
     }
 
-    // =============== 事件监听器管理 ===============
+    // =============== Event Listener Management ===============
 
     /**
-     * 添加水位变化监听器
-     * @param listener 监听器
+     * Add water level change listener
+     * @param listener Listener
      */
     public void addOnLevelChangeListener(Consumer<WaterLevel> listener) {
         onLevelChangeListeners.add(listener);
@@ -162,11 +162,11 @@ public class WaterLevel {
         onLevelChangeListeners.forEach(listener -> listener.accept(this));
     }
 
-    // =============== 数据验证 ===============
+    // =============== Data Validation ===============
 
     /**
-     * 验证水位状态是否有效
-     * @return 如果水位状态有效则返回true
+     * Validate if water level state is valid
+     * @return Returns true if water level state is valid
      */
     public boolean isValid() {
         return currentLevel >= MIN_LEVEL && 
@@ -176,13 +176,13 @@ public class WaterLevel {
 
     @Override
     public String toString() {
-        return String.format("水位等级: %d, 状态: %s, 抽牌数量: %d", 
+        return String.format("Water Level: %d, State: %s, Card Draw Count: %d", 
             currentLevel, state, getDrawCount());
     }
 
     /**
-     * 设置当前水位等级（用于初始化）
-     * @param level 水位等级
+     * Set current water level (for initialization)
+     * @param level Water level
      */
     public void setCurrentLevel(int level) {
         if (level >= MIN_LEVEL && level <= MAX_LEVEL) {

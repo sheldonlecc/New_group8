@@ -1,10 +1,14 @@
 package Model.Enumeration;
 
+/**
+ * Treasure Type Enumeration
+ * Defines the types of treasures that can be collected in the game
+ */
 public enum TreasureType {
-    EARTH("Earth"),      // 大地
-    WIND("Wind"),       // 风息
-    FIRE("Fire"),       // 火焰
-    WATER("Water");      // 海洋
+    EARTH("Earth"),      // Earth Crystal
+    WIND("Wind"),       // Wind Statue
+    FIRE("Fire"),       // Fire Gem
+    WATER("Water");      // Ocean Chalice
 
     private final String displayName;
 
@@ -12,6 +16,10 @@ public enum TreasureType {
         this.displayName = displayName;
     }
 
+    /**
+     * Get the display name of the treasure
+     * @return The display name of the treasure
+     */
     public String getDisplayName() {
         return displayName;
     }

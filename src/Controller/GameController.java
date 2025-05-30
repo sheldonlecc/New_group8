@@ -47,45 +47,45 @@ public class GameController {
     private final TreasureDeck treasureDeck;
     private int currentPlayerIndex = 0;
     private static final int MAX_ACTIONS_PER_TURN = 3;
-    private final Tile helicopterTile; // 直升机场位置
-    private WaterLevelView waterLevelView; // 添加水位视图
-    private int currentWaterLevel; // 初始水位通过构造函数设置
-    private TilePosition tilePosition; // 添加TilePosition对象
-    private MapController mapController; // 添加MapController成员变量
+    private final Tile helicopterTile; // Helicopter landing position
+    private WaterLevelView waterLevelView; // Water level view
+    private int currentWaterLevel; // Initial water level set through constructor
+    private TilePosition tilePosition; // TilePosition object
+    private MapController mapController; // MapController member variable
     private FloodDeck floodDeck;
-    private BoardView boardView; // 添加 BoardView 引用
-    private final int playerCount; // 添加玩家数量字段
+    private BoardView boardView; // BoardView reference
+    private final int playerCount; // Player count field
 
-    // ========== 工程师加固两次机制 ==========
+    // ========== Engineer shore up twice mechanism ==========
     private int engineerShoreUpCount = 0;
     private boolean isEngineerShoreUpMode = false;
     private boolean engineerSandbagConsumed = false;
 
-    // 紧急移动队列
+    // Emergency move queue
     private List<Integer> emergencyMoveQueue = new ArrayList<>();
     private boolean isHandlingEmergencyMoves = false;
 
     public GameController(int playerCount, Tile helicopterTile, WaterLevelView waterLevelView, int initialWaterLevel) {
-        System.out.println("\n========== 开始初始化游戏控制器 ==========");
-        this.playerCount = playerCount; // 初始化玩家数量
+        System.out.println("\n========== Starting Game Controller Initialization ==========");
+        this.playerCount = playerCount; // Initialize player count
         this.players = new ArrayList<>();
         this.playerInfoViews = new ArrayList<>();
         this.cardController = new CardController(this);
         this.treasureDeck = new TreasureDeck(helicopterTile);
         this.helicopterTile = helicopterTile;
         this.waterLevelView = waterLevelView;
-        this.currentWaterLevel = initialWaterLevel; // 使用传入的初始水位
+        this.currentWaterLevel = initialWaterLevel; // Use the passed initial water level
         this.tilePosition = null;
         this.mapController = null;
-        // floodDeck 不在这里初始化，也不new任何Tile
+        // floodDeck not initialized here, no new Tile created
 
-        // 设置WaterLevel单例的初始水位
+        // Set initial water level for WaterLevel singleton
         WaterLevel waterLevelInstance = WaterLevel.getInstance();
-        // 需要添加一个方法来设置初始水位
+        // Need to add a method to set initial water level
         waterLevelInstance.setCurrentLevel(initialWaterLevel);
 
-        System.out.println("正在初始化 " + playerCount + " 个玩家...");
-        // 初始化玩家
+        System.out.println("Initializing " + playerCount + " players...");
+        // Initialize players
         for (int i = 0; i < playerCount; i++) {
             Player player = new Player();
             players.add(player);
@@ -94,24 +94,24 @@ public class GameController {
             playerInfoViews.add(playerInfoView);
         }
 
-        // 初始化水位
+        // Initialize water level
         waterLevelView.updateWaterLevel(currentWaterLevel);
 
-        System.out.println("正在分配角色...");
-        // 分配角色
+        System.out.println("Assigning roles...");
+        // Assign roles
         assignRoles();
 
-        System.out.println("正在发放初始卡牌...");
-        // 初始发牌
+        System.out.println("Dealing initial cards...");
+        // Deal initial cards
         dealInitialCards();
 
-        System.out.println("正在初始化第一个玩家的回合...");
-        // 初始化第一个玩家的回合
+        System.out.println("Initializing first player's turn...");
+        // Initialize first player's turn
         initializeFirstTurn();
 
-        System.out.println("========== 游戏控制器初始化完成 ==========\n");
+        System.out.println("========== Game Controller Initialization Complete ==========\n");
 
-        // 为每个玩家的沙袋按钮添加监听器
+        // Add listeners for each player's sandbag button
         for (int i = 0; i < playerInfoViews.size(); i++) {
             final int playerIndex = i;
             PlayerInfoView view = playerInfoViews.get(i);
@@ -128,17 +128,17 @@ public class GameController {
                     if (mapController != null) {
                         mapController.enterSandbagMode(playerIndex);
                     } else {
-                        JOptionPane.showMessageDialog(null, "地图未初始化，无法使用沙袋卡！");
+                        JOptionPane.showMessageDialog(null, "Map not initialized, cannot use sandbag card!");
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用！");
+                    JOptionPane.showMessageDialog(null, "You don't have a sandbag card, cannot use it!");
                 }
             });
         }
     }
 
     private void dealInitialCards() {
-        // 为每个玩家发放两张初始卡牌
+        // Deal two initial cards to each player
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
             for (int j = 0; j < 2; j++) {
@@ -148,14 +148,14 @@ public class GameController {
                         player.addCard(card);
                         playerInfoViews.get(i).addCard(card);
                     } catch (HandCard.HandCardFullException e) {
-                        System.err.println("初始发牌时手牌已满: " + e.getMessage());
-                        // 如果手牌已满，将卡牌放回牌堆
+                        System.err.println("Hand full during initial card dealing: " + e.getMessage());
+                        // If hand is full, return card to deck
                         treasureDeck.discard(card);
                     }
                 }
             }
         }
-        // 初始发牌完成后标记结束
+        // Mark end of initial card dealing
         treasureDeck.finishInitialDraw();
     }
 
@@ -184,12 +184,12 @@ public class GameController {
         Player player = players.get(playerIndex);
         PlayerInfoView view = playerInfoViews.get(playerIndex);
 
-        // 更新角色信息
+        // Update role information
         if (player.getRole() != null) {
             view.setRole(player.getRole().getClass().getSimpleName());
         }
 
-        // 更新手牌显示
+        // Update hand card display
         view.clearCards();
         for (Card card : player.getHandCard().getCards()) {
             view.addCard(card);
@@ -202,21 +202,21 @@ public class GameController {
         currentPlayerView.setActionPoints(MAX_ACTIONS_PER_TURN);
         updatePlayerView(currentPlayerIndex);
 
-        // 更新所有玩家的按钮状态
+        // Update button states for all players
         for (int i = 0; i < playerInfoViews.size(); i++) {
             final int playerIndex = i;
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
-            // 设置直升机卡按钮的点击事件
+            // Set click event for helicopter card button
             playerInfoViews.get(i).getHelicopterButton().addActionListener(e -> handleHelicopterCard(playerIndex));
         }
     }
 
     public void handleHelicopterCard(int playerIndex) {
-        System.out.println("\n========== 处理直升机卡 ==========");
-        System.out.println("玩家索引: " + playerIndex);
+        System.out.println("\n========== Handling Helicopter Card ==========");
+        System.out.println("Player index: " + playerIndex);
 
         Player player = players.get(playerIndex);
-        // 检查玩家是否有直升机卡
+        // Check if player has helicopter card
         boolean hasHelicopterCard = false;
         HelicopterCard helicopterCard = null;
         for (Card card : player.getHandCard().getCards()) {
@@ -227,36 +227,36 @@ public class GameController {
             }
         }
 
-        System.out.println("是否有直升机卡: " + hasHelicopterCard);
+        System.out.println("Has helicopter card: " + hasHelicopterCard);
         if (!hasHelicopterCard) {
-            System.out.println("玩家没有直升机卡！");
-            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
+            System.out.println("Player doesn't have a helicopter card!");
+            JOptionPane.showMessageDialog(null, "You don't have a helicopter card!");
             return;
         }
 
-        System.out.println("进入直升机卡使用模式");
-        // 进入直升机卡使用模式，等待玩家点击目标位置
+        System.out.println("Entering helicopter card usage mode");
+        // Enter helicopter card usage mode, wait for player to click target position
         mapController.enterHelicopterMode(playerIndex);
-        System.out.println("========== 直升机卡处理完成 ==========\n");
+        System.out.println("========== Helicopter Card Handling Complete ==========\n");
     }
 
     /**
-     * 处理直升机卡移动
+     * Handle helicopter card movement
      * 
-     * @param playerIndex 使用直升机卡的玩家索引
-     * @param row         目标行
-     * @param col         目标列
+     * @param playerIndex Player using the helicopter card
+     * @param row Target row
+     * @param col Target column
      */
     public void handleHelicopterMove(int playerIndex, int row, int col) {
         Player player = players.get(playerIndex);
         Tile targetTile = mapController.getMapView().getTile(row, col);
 
         if (targetTile == null || targetTile.getState() == TileState.SUNK) {
-            JOptionPane.showMessageDialog(null, "无法移动到已沉没的板块！");
+            JOptionPane.showMessageDialog(null, "Cannot move to a sunken tile!");
             return;
         }
 
-        // 查找玩家的直升机卡
+        // Find player's helicopter card
         HelicopterCard helicopterCard = null;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof HelicopterCard) {
@@ -266,41 +266,41 @@ public class GameController {
         }
 
         if (helicopterCard == null) {
-            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
+            JOptionPane.showMessageDialog(null, "You don't have a helicopter card!");
             return;
         }
 
-        // 使用直升机卡移动玩家
+        // Use helicopter card to move player
         List<Player> playersToMove = new ArrayList<>();
         playersToMove.add(player);
         if (helicopterCard.useForMovement(playersToMove, targetTile)) {
-            // 从玩家手牌中移除直升机卡
+            // Remove helicopter card from player's hand
             player.getHandCard().removeCard(helicopterCard);
             playerInfoViews.get(playerIndex).removeCard(helicopterCard);
             treasureDeck.discard(helicopterCard);
 
-            // 更新玩家视图
+            // Update player view
             updatePlayerView(playerIndex);
 
-            // 显示成功消息
-            JOptionPane.showMessageDialog(null, "成功使用直升机卡移动到 " + targetTile.getName());
+            // Show success message
+            JOptionPane.showMessageDialog(null, "Successfully used helicopter card to move to " + targetTile.getName());
         } else {
-            JOptionPane.showMessageDialog(null, "直升机卡使用失败！");
+            JOptionPane.showMessageDialog(null, "Helicopter card usage failed!");
         }
 
-        // 退出直升机卡使用模式
+        // Exit helicopter card usage mode
         mapController.exitHelicopterMode();
     }
 
     /**
-     * 处理玩家紧急移动
-     * 当玩家所在板块沉没时，必须立即移动到最近的可用板块
+     * Handle player emergency movement
+     * When a player's tile sinks, they must immediately move to the nearest available tile
      * 
-     * @param playerIndex 需要紧急移动的玩家索引
-     * @return 如果移动成功返回true，如果无法移动返回false
+     * @param playerIndex Index of player needing emergency movement
+     * @return true if movement successful, false if unable to move
      */
     private boolean handleEmergencyMove(int playerIndex) {
-        // 该方法不再直接进入紧急移动模式，而是由队列统一调度
+        // This method no longer directly enters emergency move mode, but is managed by queue
         if (!emergencyMoveQueue.contains(playerIndex)) {
             emergencyMoveQueue.add(playerIndex);
         }
@@ -311,11 +311,11 @@ public class GameController {
         return true;
     }
 
-    // 依次处理紧急移动队列
+    // Process emergency moves in queue
     public void processNextEmergencyMove() {
         if (emergencyMoveQueue.isEmpty()) {
             isHandlingEmergencyMoves = false;
-            // 所有紧急移动完成，继续游戏
+            // All emergency moves complete, continue game
             return;
         }
         int playerIndex = emergencyMoveQueue.remove(0);
@@ -325,7 +325,7 @@ public class GameController {
             processNextEmergencyMove();
             return;
         }
-        // 获取所有可用的相邻板块
+        // Get all available adjacent tiles
         List<Tile> availableTiles = new ArrayList<>();
         boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
         for (Tile tile : mapController.getMapView().getAllTiles()) {
@@ -344,14 +344,14 @@ public class GameController {
             }
         }
         if (availableTiles.isEmpty()) {
-            endGameWithLose("玩家" + (playerIndex + 1) + "所在板块沉没且无法移动到其他板块，游戏失败！");
+            endGameWithLose("Player " + (playerIndex + 1) + " is on a sunken tile and cannot move to another tile, game over!");
             isHandlingEmergencyMoves = false;
             emergencyMoveQueue.clear();
             return;
         }
         JOptionPane.showMessageDialog(null,
-                "玩家" + (playerIndex + 1) + "所在板块已沉没！\n请点击一个相邻的可用板块进行移动。",
-                "紧急移动",
+                "Player " + (playerIndex + 1) + "'s tile has sunk!\nPlease click an adjacent available tile to move.",
+                "Emergency Move",
                 JOptionPane.WARNING_MESSAGE);
         mapController.enterEmergencyMoveMode(playerIndex, availableTiles);
     }
@@ -361,7 +361,6 @@ public class GameController {
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
         if (currentTile == null || currentTile.getState() != TileState.SUNK) {
-            // processNextEmergencyMove(); // 移除这里的调用
             return true;
         }
         boolean isExplorer = player.getRole() instanceof Model.Role.Explorer;
@@ -374,7 +373,7 @@ public class GameController {
             isValidTarget = currentTile.isAdjacentTo(targetTile);
         }
         if (!isValidTarget || targetTile.getState() == TileState.SUNK) {
-            JOptionPane.showMessageDialog(null, "无法移动到该板块！");
+            JOptionPane.showMessageDialog(null, "Cannot move to this tile!");
             return false;
         }
         mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
@@ -383,8 +382,7 @@ public class GameController {
         String playerImagePath = "src/resources/Player/" + roleName + "2.png";
         mapController.getMapView().showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath,
                 playerIndex);
-        System.out.println("紧急移动完成");
-        // 不再这里处理下一个玩家，由MapController.exitEmergencyMoveMode负责
+        System.out.println("Emergency move completed");
         return true;
     }
 
@@ -394,7 +392,7 @@ public class GameController {
      * @return 如果所有玩家都成功移动返回true，否则返回false
      */
     private boolean checkAndHandleEmergencyMoves() {
-        System.out.println("\n========== 检查紧急移动 ==========");
+        System.out.println("\n========== Checking Emergency Moves ==========");
         boolean allSuccess = true;
 
         // 收集所有需要紧急移动的玩家
@@ -414,7 +412,7 @@ public class GameController {
             }
         }
 
-        System.out.println("========== 紧急移动检查完成 ==========\n");
+        System.out.println("========== Emergency Move Check Complete ==========\n");
         return allSuccess;
     }
 
@@ -431,14 +429,14 @@ public class GameController {
 
         // 检查水位是否达到10
         if (currentWaterLevel >= 10) {
-            System.out.println("\n========== 游戏结束 ==========");
-            System.out.println("水位已达到10，游戏失败！");
-            JOptionPane.showMessageDialog(null, "水位已达到10，游戏失败！");
-            endGameWithLose("水位已达到10，游戏失败！");
+            System.out.println("\n========== Game Over ==========");
+            System.out.println("Water level has reached 10, game over!");
+            JOptionPane.showMessageDialog(null, "Water level has reached 10, game over!");
+            endGameWithLose("Water level has reached 10, game over!");
             return;
         }
 
-        System.out.println("\n========== 开始抽取洪水卡 ==========");
+        System.out.println("\n========== Drawing Flood Cards ==========");
         int floodCardCount;
         // 根据水位决定抽取的洪水卡数量
         if (currentWaterLevel <= 2) {
@@ -451,7 +449,7 @@ public class GameController {
             floodCardCount = 5;
         }
 
-        System.out.println("当前水位: " + currentWaterLevel + "，需要抽取 " + floodCardCount + " 张洪水卡");
+        System.out.println("Current water level: " + currentWaterLevel + ", need to draw " + floodCardCount + " flood cards");
 
         for (int i = 0; i < floodCardCount; i++) {
             FloodCard card = floodDeck.draw();
@@ -464,48 +462,48 @@ public class GameController {
                 String stateMsg = "";
                 switch (targetTile.getState()) {
                     case FLOODED:
-                        stateMsg = "被淹没";
+                        stateMsg = "flooded";
                         break;
                     case SUNK:
-                        stateMsg = "沉没";
+                        stateMsg = "sunken";
                         break;
                     default:
-                        stateMsg = "正常";
+                        stateMsg = "normal";
                         break;
                 }
 
                 String stateChange = "";
                 if (beforeState == TileState.NORMAL && targetTile.getState() == TileState.FLOODED) {
-                    stateChange = "正常 -> 被淹没";
+                    stateChange = "normal -> flooded";
                 } else if (beforeState == TileState.FLOODED && targetTile.getState() == TileState.SUNK) {
-                    stateChange = "被淹没 -> 沉没";
+                    stateChange = "flooded -> sunken";
                 }
 
-                System.out.println("[日志] 洪水卡抽取：" + targetTile.getName() +
-                        " [坐标: " + targetTile.getRow() + "," + targetTile.getCol() + "]" +
-                        "，状态变化：" + stateChange +
-                        "，当前状态：" + stateMsg);
+                System.out.println("[Log] Flood card drawn: " + targetTile.getName() +
+                        " [Coordinates: " + targetTile.getRow() + "," + targetTile.getCol() + "]" +
+                        ", State change: " + stateChange +
+                        ", Current state: " + stateMsg);
 
                 // 如果板块沉没，立即检查是否有玩家需要紧急移动
                 if (targetTile.getState() == TileState.SUNK) {
-                    System.out.println("[日志] 板块" + targetTile.getName() + "沉没，检查玩家是否需要紧急移动");
+                    System.out.println("[Log] Tile " + targetTile.getName() + " has sunk, checking if players need emergency movement");
                     for (int j = 0; j < players.size(); j++) {
                         Player player = players.get(j);
                         if (player.getCurrentTile().equals(targetTile)) {
-                            System.out.println("[日志] 玩家" + (j + 1) + "在沉没的板块上，需要紧急移动");
+                            System.out.println("[Log] Player " + (j + 1) + " is on sunken tile, needs emergency movement");
                             if (!handleEmergencyMove(j)) {
-                                System.out.println("[日志] 玩家" + (j + 1) + "无法移动，游戏失败");
-                                endGameWithLose("玩家" + (j + 1) + "所在板块沉没且无法移动到其他板块，游戏失败！");
+                                System.out.println("[Log] Player " + (j + 1) + " cannot move, game over");
+                                endGameWithLose("Player " + (j + 1) + " is on a sunken tile and cannot move to another tile, game over!");
                                 return;
                             }
                         }
                     }
                 }
             } else {
-                System.out.println("[警告] 洪水牌堆已空！");
+                System.out.println("[Warning] Flood deck is empty!");
             }
         }
-        System.out.println("========== 洪水卡抽取完成 ==========");
+        System.out.println("========== Flood Card Drawing Complete ==========");
 
         // 检查所有失败条件
         checkGameOver();
@@ -513,7 +511,7 @@ public class GameController {
 
     // 游戏失败判定
     private void checkGameOver() {
-        // 1. 愚人码头沉没
+        // 1. Fool's Landing sinks
         Tile foolsLanding = null;
         for (Tile tile : mapController.getMapView().getAllTiles()) {
             if (tile.getName().name().equals("FOOLS_LANDING")) {
@@ -522,49 +520,49 @@ public class GameController {
             }
         }
         if (foolsLanding == null || foolsLanding.getState() == TileState.SUNK) {
-            endGameWithLose("愚人码头沉没，游戏失败！");
+            endGameWithLose("Fool's Landing has sunk, game over!");
             return;
         }
 
-        // 2. 宝物板块全部沉没且未收集对应宝物
-        // 神庙（地球宝藏）
+        // 2. Treasure tiles all sink and corresponding treasures not collected
+        // Temple (Earth treasure)
         if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.EARTH)) {
             boolean temple1Sunk = isTileSunk("TEMPLE_OF_THE_MOON");
             boolean temple2Sunk = isTileSunk("TEMPLE_OF_THE_SUN");
             if (temple1Sunk && temple2Sunk) {
-                endGameWithLose("神庙全部沉没且未收集地球宝藏，游戏失败！");
+                endGameWithLose("All temples have sunk and Earth treasure not collected, game over!");
                 return;
             }
         }
-        // 洞穴（火焰宝藏）
+        // Cave (Fire treasure)
         if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.FIRE)) {
             boolean cave1Sunk = isTileSunk("CAVE_OF_SHADOWS");
             boolean cave2Sunk = isTileSunk("CAVE_OF_EMBERS");
             if (cave1Sunk && cave2Sunk) {
-                endGameWithLose("洞穴全部沉没且未收集火焰宝藏，游戏失败！");
+                endGameWithLose("All caves have sunk and Fire treasure not collected, game over!");
                 return;
             }
         }
-        // 花园（风之宝藏）
+        // Garden (Wind treasure)
         if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.WIND)) {
             boolean garden1Sunk = isTileSunk("WHISPERING_GARDEN");
             boolean garden2Sunk = isTileSunk("HOWLING_GARDEN");
             if (garden1Sunk && garden2Sunk) {
-                endGameWithLose("花园全部沉没且未收集风之宝藏，游戏失败！");
+                endGameWithLose("All gardens have sunk and Wind treasure not collected, game over!");
                 return;
             }
         }
-        // 宫殿（水之宝藏）
+        // Palace (Water treasure)
         if (!treasureDeck.isTreasureCollected(Model.Enumeration.TreasureType.WATER)) {
             boolean palace1Sunk = isTileSunk("CORAL_PALACE");
             boolean palace2Sunk = isTileSunk("TIDAL_PALACE");
             if (palace1Sunk && palace2Sunk) {
-                endGameWithLose("宫殿全部沉没且未收集水之宝藏，游戏失败！");
+                endGameWithLose("All palaces have sunk and Water treasure not collected, game over!");
                 return;
             }
         }
 
-        // 3. 玩家棋子所在板块沉没且无相邻板块可移至
+        // 3. Player's tile sinks and no adjacent tiles to move to
         for (Player player : players) {
             Tile tile = player.getCurrentTile();
             if (tile != null && tile.getState() == TileState.SUNK) {
@@ -576,7 +574,7 @@ public class GameController {
                     }
                 }
                 if (!canEscape) {
-                    endGameWithLose("玩家棋子所在板块沉没且无相邻板块可移至，游戏失败！");
+                    endGameWithLose("Player's tile has sunk and no adjacent tiles to move to, game over!");
                     return;
                 }
             }
@@ -599,7 +597,7 @@ public class GameController {
             view.setButtonsEnabled(false);
         }
         JOptionPane.showMessageDialog(null, reason);
-        System.out.println("========== 游戏失败 ==========");
+        System.out.println("========== Game Over ==========");
         System.exit(0);
     }
 

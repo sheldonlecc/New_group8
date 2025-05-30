@@ -8,74 +8,74 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * 手牌管理类
- * 负责管理玩家的手牌集合，包括添加、移除、查看等操作
- * 同时负责控制手牌数量上限和手牌状态
+ * Hand Card Management Class
+ * Responsible for managing player's hand card collection, including adding, removing, viewing operations
+ * Also responsible for controlling hand card limit and hand card status
  */
 public class HandCard implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final List<Card> cards; // 手牌列表
-    private static final int MAX_CARDS = 5; // 手牌上限（规则书规定）
-    private static final int INITIAL_CARDS = 2; // 初始手牌数量
-    private boolean enforceLimit = true; // 是否强制执行手牌上限
+    private final List<Card> cards; // Hand card list
+    private static final int MAX_CARDS = 5; // Hand card limit (as per rulebook)
+    private static final int INITIAL_CARDS = 2; // Initial hand card count
+    private boolean enforceLimit = true; // Whether to enforce hand card limit
 
-    // 事件监听器列表
+    // Event listener lists
     private final List<Consumer<Card>> onCardAddedListeners = new ArrayList<>();
     private final List<Consumer<Card>> onCardRemovedListeners = new ArrayList<>();
     private final List<Consumer<HandCard>> onHandCardChangedListeners = new ArrayList<>();
 
     /**
-     * 创建手牌管理器
+     * Create hand card manager
      */
     public HandCard() {
         this.cards = new ArrayList<>();
     }
 
     /**
-     * 设置是否强制执行手牌上限
+     * Set whether to enforce hand card limit
      * 
-     * @param enforce 是否强制执行
+     * @param enforce Whether to enforce limit
      */
     public void setEnforceLimit(boolean enforce) {
         this.enforceLimit = enforce;
     }
 
     /**
-     * 添加卡牌添加事件监听器
+     * Add card added event listener
      * 
-     * @param listener 监听器
+     * @param listener Listener
      */
     public void addOnCardAddedListener(Consumer<Card> listener) {
         onCardAddedListeners.add(listener);
     }
 
     /**
-     * 添加卡牌移除事件监听器
+     * Add card removed event listener
      * 
-     * @param listener 监听器
+     * @param listener Listener
      */
     public void addOnCardRemovedListener(Consumer<Card> listener) {
         onCardRemovedListeners.add(listener);
     }
 
     /**
-     * 添加手牌变化事件监听器
+     * Add hand card changed event listener
      * 
-     * @param listener 监听器
+     * @param listener Listener
      */
     public void addOnHandCardChangedListener(Consumer<HandCard> listener) {
         onHandCardChangedListeners.add(listener);
     }
 
     /**
-     * 添加卡牌到手牌，不检查手牌上限
+     * Add card to hand without checking limit
      * 
-     * @param card 要添加的卡牌
+     * @param card Card to add
      */
     public void addCardWithoutCheck(Card card) {
         if (card == null) {
-            throw new IllegalArgumentException("卡牌不能为空");
+            throw new IllegalArgumentException("Card cannot be null");
         }
         cards.add(card);
         notifyCardAdded(card);
@@ -83,17 +83,17 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 添加卡牌到手牌
+     * Add card to hand
      * 
-     * @param card 要添加的卡牌
-     * @throws HandCardFullException 当手牌已满且强制执行上限时抛出
+     * @param card Card to add
+     * @throws HandCardFullException Thrown when hand is full and limit is enforced
      */
     public void addCard(Card card) throws HandCardFullException {
         if (card == null) {
-            throw new IllegalArgumentException("卡牌不能为空");
+            throw new IllegalArgumentException("Card cannot be null");
         }
         if (enforceLimit && cards.size() >= MAX_CARDS) {
-            throw new HandCardFullException("手牌已满，最多持有 " + MAX_CARDS + " 张卡牌");
+            throw new HandCardFullException("Hand is full, maximum " + MAX_CARDS + " cards allowed");
         }
         cards.add(card);
         notifyCardAdded(card);
@@ -101,17 +101,17 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 批量添加卡牌
+     * Add multiple cards
      * 
-     * @param cardsToAdd 要添加的卡牌列表
-     * @throws HandCardFullException 当添加后手牌数量超过上限且强制执行上限时抛出
+     * @param cardsToAdd List of cards to add
+     * @throws HandCardFullException Thrown when adding would exceed limit and limit is enforced
      */
     public void addCards(List<Card> cardsToAdd) throws HandCardFullException {
         if (cardsToAdd == null) {
-            throw new IllegalArgumentException("卡牌列表不能为空");
+            throw new IllegalArgumentException("Card list cannot be null");
         }
         if (enforceLimit && cards.size() + cardsToAdd.size() > MAX_CARDS) {
-            throw new HandCardFullException("添加后手牌数量将超过上限 " + MAX_CARDS);
+            throw new HandCardFullException("Adding would exceed limit of " + MAX_CARDS);
         }
         for (Card card : cardsToAdd) {
             addCard(card);
@@ -119,10 +119,10 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 从手牌中移除卡牌
+     * Remove card from hand
      * 
-     * @param card 要移除的卡牌
-     * @return 是否成功移除
+     * @param card Card to remove
+     * @return Whether removal was successful
      */
     public boolean removeCard(Card card) {
         if (card == null) {
@@ -137,10 +137,10 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 批量移除卡牌
+     * Remove multiple cards
      * 
-     * @param cardsToRemove 要移除的卡牌列表
-     * @return 成功移除的卡牌数量
+     * @param cardsToRemove List of cards to remove
+     * @return Number of cards successfully removed
      */
     public int removeCards(List<Card> cardsToRemove) {
         if (cardsToRemove == null) {
@@ -156,19 +156,19 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 获取手牌列表的副本
+     * Get copy of hand card list
      * 
-     * @return 手牌列表的副本
+     * @return Copy of hand card list
      */
     public List<Card> getCards() {
         return new ArrayList<>(cards);
     }
 
     /**
-     * 获取指定类型的卡牌列表
+     * Get list of cards of specified type
      * 
-     * @param type 卡牌类型
-     * @return 指定类型的卡牌列表
+     * @param type Card type
+     * @return List of cards of specified type
      */
     public List<Card> getCardsByType(CardType type) {
         return cards.stream()
@@ -177,9 +177,9 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 获取所有可用的卡牌类型
+     * Get all available card types
      * 
-     * @return 当前手牌中存在的卡牌类型集合
+     * @return Set of card types present in current hand
      */
     public Set<CardType> getAvailableCardTypes() {
         return cards.stream()
@@ -188,10 +188,10 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 检查是否包含指定类型的卡牌
+     * Check if hand contains card of specified type
      * 
-     * @param type 要检查的卡牌类型
-     * @return 如果包含则返回true
+     * @param type Card type to check
+     * @return True if contains card of specified type
      */
     public boolean hasCardType(CardType type) {
         return cards.stream()
@@ -199,10 +199,10 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 获取指定类型卡牌的数量
+     * Get count of cards of specified type
      * 
-     * @param type 卡牌类型
-     * @return 该类型卡牌的数量
+     * @param type Card type
+     * @return Count of cards of specified type
      */
     public int getCardTypeCount(CardType type) {
         return (int) cards.stream()
@@ -211,27 +211,27 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 获取手牌数量
+     * Get hand card count
      * 
-     * @return 当前手牌数量
+     * @return Current hand card count
      */
     public int getCardCount() {
         return cards.size();
     }
 
     /**
-     * 检查手牌是否已满
+     * Check if hand is full
      * 
-     * @return 如果手牌数量达到上限则返回true
+     * @return True if hand count has reached limit
      */
     public boolean isFull() {
         return enforceLimit && cards.size() >= MAX_CARDS;
     }
 
     /**
-     * 获取手牌中各种类型卡牌的数量统计
+     * Get count statistics for each card type in hand
      * 
-     * @return 卡牌类型及其数量的映射
+     * @return Map of card types and their counts
      */
     public Map<CardType, Integer> getCardTypeCount() {
         return cards.stream()
@@ -241,7 +241,7 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 清空手牌
+     * Clear hand
      */
     public void clear() {
         List<Card> removedCards = new ArrayList<>(cards);
@@ -253,45 +253,45 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 检查是否包含指定卡牌
+     * Check if hand contains specified card
      * 
-     * @param card 要检查的卡牌
-     * @return 如果包含则返回true
+     * @param card Card to check
+     * @return True if contains specified card
      */
     public boolean contains(Card card) {
         return cards.contains(card);
     }
 
     /**
-     * 获取初始手牌数量
+     * Get initial hand card count
      * 
-     * @return 初始手牌数量
+     * @return Initial hand card count
      */
     public static int getInitialCardCount() {
         return INITIAL_CARDS;
     }
 
     /**
-     * 获取手牌上限
+     * Get hand card limit
      * 
-     * @return 手牌上限数量
+     * @return Hand card limit
      */
     public static int getMaxCards() {
         return MAX_CARDS;
     }
 
     /**
-     * 验证手牌是否合法
+     * Validate if hand is legal
      * 
-     * @return 如果手牌合法则返回true
+     * @return True if hand is legal
      */
     public boolean isValid() {
         return !enforceLimit || cards.size() <= MAX_CARDS;
     }
 
     /**
-     * 手牌已满异常
-     * 当尝试添加卡牌但手牌已满时抛出
+     * Hand Card Full Exception
+     * Thrown when attempting to add card but hand is full
      */
     public static class HandCardFullException extends Exception {
         public HandCardFullException(String message) {
@@ -299,21 +299,21 @@ public class HandCard implements Serializable {
         }
     }
 
-    // 私有方法：通知卡牌添加事件
+    // Private method: Notify card added event
     private void notifyCardAdded(Card card) {
         for (Consumer<Card> listener : onCardAddedListeners) {
             listener.accept(card);
         }
     }
 
-    // 私有方法：通知卡牌移除事件
+    // Private method: Notify card removed event
     private void notifyCardRemoved(Card card) {
         for (Consumer<Card> listener : onCardRemovedListeners) {
             listener.accept(card);
         }
     }
 
-    // 私有方法：通知手牌变化事件
+    // Private method: Notify hand card changed event
     private void notifyHandCardChanged() {
         for (Consumer<HandCard> listener : onHandCardChangedListeners) {
             listener.accept(this);
@@ -321,17 +321,17 @@ public class HandCard implements Serializable {
     }
 
     /**
-     * 重写toString方法
+     * Override toString method
      * 
-     * @return 手牌信息的字符串表示
+     * @return String representation of hand card information
      */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("手牌数量: ").append(cards.size()).append("/").append(MAX_CARDS).append("\n");
+        sb.append("Hand Card Count: ").append(cards.size()).append("/").append(MAX_CARDS).append("\n");
         Map<CardType, Integer> typeCount = getCardTypeCount();
         for (Map.Entry<CardType, Integer> entry : typeCount.entrySet()) {
-            sb.append(entry.getKey().name()).append(": ").append(entry.getValue()).append("张\n");
+            sb.append(entry.getKey().name()).append(": ").append(entry.getValue()).append(" cards\n");
         }
         return sb.toString();
     }
