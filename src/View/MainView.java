@@ -65,8 +65,7 @@ public class MainView extends JFrame {
         authorLabel.setForeground(Color.WHITE);
         
         authorPanel.add(authorLabel);
-        
-        // 将作者信息添加到顶部
+
         mainPanel.add(authorPanel, BorderLayout.NORTH);
 
         // Create button panel
