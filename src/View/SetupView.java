@@ -23,7 +23,6 @@ public class SetupView extends JPanel {
 
     public SetupView(MainView mainView) {
         this.mainView = mainView;
-        // 加载背景图片
         try {
             backgroundImage = ImageIO.read(new File("src/resources/background.png"));
         } catch (IOException e) {

@@ -22,9 +22,8 @@ public class WaterLevelView extends JPanel {
         waterLevelImage = new JLabel();
         waterLevelImage.setPreferredSize(new Dimension(IMAGE_WIDTH, IMAGE_HEIGHT));
         waterLevelImage.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // 添加水位标签用于调试
-        waterLevelLabel = new JLabel("当前水位: 0");
+
+        waterLevelLabel = new JLabel("current water level: 0");
         waterLevelLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(waterLevelLabel);
         
@@ -34,7 +33,7 @@ public class WaterLevelView extends JPanel {
 
     private void updateWaterLevelImage(int level) {
         String imagePath = "/resources/WaterLevel/" + level + ".png";
-        System.out.println("正在尝试加载水位图像: " + imagePath); // 调试信息
+        System.out.println("正在尝试加载水位图像: " + imagePath); // 调试信息D
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(imagePath));
             if (icon.getImageLoadStatus() == MediaTracker.COMPLETE) {

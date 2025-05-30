@@ -16,12 +16,12 @@ public class PlayerInfoView extends JPanel {
     private JButton sandbagButton;
     private JButton helicopterButton;
     private JLabel roleIconLabel;
-    private int playerCount; // 新增玩家数量字段
-    private JButton[] actionButtons; // 添加这行声明
+    private int playerCount;
+    private JButton[] actionButtons;
 
     public PlayerInfoView(GameController gameController) {
         this.gameController = gameController;
-        this.playerCount = gameController.getPlayerCount(); // 获取玩家数量
+        this.playerCount = gameController.getPlayerCount();
         initializeUI();
         setPlayerName("Player");
     }
@@ -30,15 +30,14 @@ public class PlayerInfoView extends JPanel {
         setLayout(new BorderLayout(3, 3));
         setBorder(BorderFactory.createTitledBorder(""));
     
-        // 根据玩家数量动态设置面板尺寸
+
         int panelWidth, panelHeight;
         if (playerCount <= 2) {
             panelWidth = 750;
             panelHeight = 170;
         } else {
-            // 3-4人游戏时减小宽度
             panelWidth = 750;
-            panelHeight = 165; // 稍微减小高度
+            panelHeight = 165;
         }
         
         setMaximumSize(new Dimension(panelWidth, panelHeight));

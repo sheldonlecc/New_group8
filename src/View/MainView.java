@@ -23,17 +23,17 @@ public class MainView extends JFrame {
         setTitle("Forbidden Island");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        // 设置为全屏模式
+        // Set to fullscreen mode
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setUndecorated(true); // 移除窗口装饰（可选）
+        setUndecorated(true); // Remove window decorations (optional)
         
-        // 获取屏幕尺寸并设置为全屏
+        // Get screen size and set to fullscreen
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setSize(screenSize.width, screenSize.height);
         setLocationRelativeTo(null);
         setResizable(false);
         
-        // 启动背景音乐
+        // Start background music
         AudioManager.getInstance().playBackgroundMusic();
         
         mainPanel = new JPanel() {
@@ -55,7 +55,7 @@ public class MainView extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 创建作者信息面板，放置在顶部右侧
+        // Create author info panel, placed at top right
         JPanel authorPanel = new JPanel();
         authorPanel.setOpaque(false);
         authorPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -98,16 +98,16 @@ public class MainView extends JFrame {
     }
 
     private JButton createButton(String text) {
-        // 增大按钮尺寸从200x50到280x70
+        // Increase button size from 200x50 to 280x70
         JButton button = new JButton(text, new ImageIcon(buttonImage.getScaledInstance(300, 60, Image.SCALE_SMOOTH)));
-        button.setHorizontalTextPosition(JButton.CENTER);  // 水平居中
-        button.setVerticalTextPosition(JButton.CENTER);    // 垂直居中 - 这里改为CENTER
-        button.setFont(new Font("Arial", Font.BOLD, 30)); // 增大字体从24到28
+        button.setHorizontalTextPosition(JButton.CENTER);  // Horizontal center
+        button.setVerticalTextPosition(JButton.CENTER);    // Vertical center - changed to CENTER here
+        button.setFont(new Font("Arial", Font.BOLD, 30)); // Increase font from 24 to 28
         button.setForeground(Color.WHITE);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setMaximumSize(new Dimension(300, 60)); // 更新最大尺寸
+        button.setMaximumSize(new Dimension(300, 60)); // Update maximum size
         return button;
     }
 
@@ -121,19 +121,19 @@ public class MainView extends JFrame {
     }
 
     private void showGameBoard() {
-        // 移除条件判断，每次都创建新的BoardView实例
+        // Remove conditional check, always create new BoardView instance
         int playerCount = setupView.getPlayerCount();
         String mapType = setupView.getSelectedMap();
-        int initialWaterLevel = setupView.getInitialWaterLevel(); // 获取初始水位
-        boardView = new BoardView(playerCount, mapType, initialWaterLevel); // 传递初始水位
+        int initialWaterLevel = setupView.getInitialWaterLevel(); // Get initial water level
+        boardView = new BoardView(playerCount, mapType, initialWaterLevel); // Pass initial water level
         setContentPane(boardView);
         revalidate();
         repaint();
     }
     
     public void showStartScreen() {
-        // 重置游戏状态
-        boardView = null; // 清除之前的游戏实例
+        // Reset game state
+        boardView = null; // Clear previous game instance
         setContentPane(mainPanel);
         revalidate();
         repaint();
@@ -150,7 +150,7 @@ public class MainView extends JFrame {
         AudioManager audioManager = AudioManager.getInstance();
         audioManager.setMusicEnabled(!audioManager.isMusicEnabled());
         
-        // 可以添加视觉反馈
+        // Can add visual feedback
         String status = audioManager.isMusicEnabled() ? "ON" : "OFF";
         JOptionPane.showMessageDialog(this, "Music: " + status, "Music Control", JOptionPane.INFORMATION_MESSAGE);
     }

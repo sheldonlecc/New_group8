@@ -15,7 +15,7 @@ public class RuleView extends JFrame implements KeyListener {
     private JButton closeButton;
     private JLabel pageLabel;
     private int currentPagePair = 1;
-    private final int totalPagePairs = 4; // 8页分为4对
+    private final int totalPagePairs = 4;
     private Image[] ruleImages;
     private Image backgroundImage;
     private JPanel mainPanel;
@@ -27,8 +27,7 @@ public class RuleView extends JFrame implements KeyListener {
         createComponents();
         setupLayout();
         setupEventListeners();
-        
-        // 确保窗口完全显示后再设置按钮位置
+
         SwingUtilities.invokeLater(() -> {
             setVisible(true);
             updateLayout();

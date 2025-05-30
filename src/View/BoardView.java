@@ -14,32 +14,32 @@ public class BoardView extends JPanel {
     private PlayerInfoView[] playerInfoViews;
     private int playerCount;
     private GameController gameController;
-    private int initialWaterLevel; // 添加成员变量保存初始水位
-
-    // 在BoardView类中添加新的构造函数
+    private int initialWaterLevel; // Add member variable to save initial water level
+    
+    // Add new constructor in BoardView class
     public BoardView(int playerCount, String mapType, int initialWaterLevel) {
         this.playerCount = playerCount;
-        this.initialWaterLevel = initialWaterLevel; // 保存初始水位
-        // 创建直升机场瓦片（使用FOOLS_LANDING作为直升机场）
+        this.initialWaterLevel = initialWaterLevel; // Save initial water level
+        // Create helicopter landing tile (use FOOLS_LANDING as helicopter landing)
         Tile helicopterTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
         
-        // 先创建WaterLevelView实例
+        // Create WaterLevelView instance first
         this.waterLevelView = new WaterLevelView();
         
-        // 先创建和初始化MapView
+        // Create and initialize MapView first
         this.mapView = new MapView();
         this.mapView.setMapType(mapType);
         
-        // 在创建GameController时传递初始水位
+        // Pass initial water level when creating GameController
         gameController = new GameController(playerCount, helicopterTile, waterLevelView, initialWaterLevel);
         
-        // 将MapView设置到GameController
+        // Set MapView to GameController
         this.gameController.setMapView(mapView);
         
-        // 将BoardView设置到GameController
+        // Set BoardView to GameController
         this.gameController.setBoardView(this);
         
-        // 从GameController获取PlayerInfoView实例
+        // Get PlayerInfoView instances from GameController
         this.playerInfoViews = new PlayerInfoView[playerCount];
         for (int i = 0; i < playerCount; i++) {
             this.playerInfoViews[i] = gameController.getPlayerInfoViews().get(i);
@@ -50,14 +50,14 @@ public class BoardView extends JPanel {
     private void initializeUI(String mapType) {
         setLayout(new BorderLayout());
         
-        // 创建一个新的面板来容纳其他组件，使用GridBagLayout
+        // Create a new panel to contain other components, using GridBagLayout
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         JPanel contentPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(3, 10, 3, 10);
         gbc.fill = GridBagConstraints.BOTH;
     
-        // 添加退出按钮到顶部
+        // Add exit button to top
         JPanel topControlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         topControlPanel.setOpaque(false);
         JButton exitButton = new JButton("Exit Game");
@@ -74,16 +74,16 @@ public class BoardView extends JPanel {
                 JOptionPane.QUESTION_MESSAGE
             );
             if (result == JOptionPane.YES_OPTION) {
-                // 返回主菜单
+                // Return to main menu
                 MainView.getInstance().showStartScreen();
             }
         });
         topControlPanel.add(exitButton);
         
-        // 将退出按钮面板添加到顶部
+        // Add exit button panel to top
         add(topControlPanel, BorderLayout.NORTH);
     
-        // 上方玩家区域（Player1和Player2）
+        // Top player area (Player1 and Player2)
         JPanel topPanel = new JPanel(new GridLayout(1, 2, 5, 0));
         // Player1
         if (playerCount > 0) {
@@ -101,37 +101,37 @@ public class BoardView extends JPanel {
         gbc.gridy = 0;
         gbc.gridwidth = 3;
         gbc.weightx = 1.0;
-        gbc.weighty = 0.15; // 从0.2减少到0.15
+        gbc.weighty = 0.15; // Reduced from 0.2 to 0.15
         contentPanel.add(topPanel, gbc);
 
-        // 中间区域（宝藏状态、地图、水位计）- 增加地图权重
+        // Middle area (treasure status, map, water level meter) - increase map weight
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        gbc.weighty = 0.7; // 从0.6增加到0.7
+        gbc.weighty = 0.7; // Increased from 0.6 to 0.7
 
-        // 左侧宝藏状态 - 减小宽度权重
+        // Left treasure status - reduce width weight
         treasureView = new TreasureView();
         gbc.gridx = 0;
-        gbc.weightx = 0.15; // 从0.2减少到0.15
+        gbc.weightx = 0.15; // Reduced from 0.2 to 0.15
         gbc.anchor = GridBagConstraints.CENTER;
         contentPanel.add(treasureView, gbc);
 
-        // 中间地图 - 增加宽度权重
+        // Center map - increase width weight
         gbc.gridx = 1;
-        gbc.weightx = 0.7; // 从0.6增加到0.7
-        JPanel mapCenterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20)); // 减小垂直间距
+        gbc.weightx = 0.7; // Increased from 0.6 to 0.7
+        JPanel mapCenterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20)); // Reduce vertical spacing
         mapCenterPanel.add(mapView);
         contentPanel.add(mapCenterPanel, gbc);
 
-        // 右侧水位计 - 减小宽度权重
-        waterLevelView.updateWaterLevel(initialWaterLevel); // 修改这里
+        // Right water level meter - reduce width weight
+        waterLevelView.updateWaterLevel(initialWaterLevel); // Modified here
         WaterLevel.setWaterLevelView(waterLevelView);
         gbc.gridx = 2;
-        gbc.weightx = 0.15; // 从0.2减少到0.15
+        gbc.weightx = 0.15; // Reduced from 0.2 to 0.15
         gbc.anchor = GridBagConstraints.CENTER;
         contentPanel.add(waterLevelView, gbc);
 
-        // 下方玩家区域（Player3和Player4）- 减小高度权重
+        // Bottom player area (Player3 and Player4) - reduce height weight
         JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 5, 0));
         // Player3
         if (playerCount > 2) {
@@ -149,13 +149,13 @@ public class BoardView extends JPanel {
         gbc.gridy = 2;
         gbc.gridwidth = 3;
         gbc.weightx = 1.0;
-        gbc.weighty = 0.15; // 从0.2减少到0.15
+        gbc.weighty = 0.15; // Reduced from 0.2 to 0.15
         contentPanel.add(bottomPanel, gbc);
 
-        // 添加contentPanel到主面板
+        // Add contentPanel to main panel
         add(contentPanel, BorderLayout.CENTER);
 
-        // 减小边距
+        // Reduce margins
         contentPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
     }
 
