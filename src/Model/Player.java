@@ -11,26 +11,26 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * 玩家类
- * 管理玩家的核心属性和基本操作
- * 包括：位置、角色、状态、手牌等基本属性
- * 以及对这些属性的基本访问和修改操作
+ * Player Class
+ * Manages core attributes and basic operations of players
+ * Including: position, role, state, hand cards and other basic attributes
+ * As well as basic access and modification operations for these attributes
  */
 public class Player {
-    // 核心属性
-    private final HandCard handCard;           // 手牌管理器
-    private Tile currentTile;                  // 当前位置
-    private Role role;                         // 角色
-    private PlayerState state;                 // 玩家状态
-    private boolean isRescued;                 // 是否已获救
+    // Core attributes
+    private final HandCard handCard;           // Hand card manager
+    private Tile currentTile;                  // Current position
+    private Role role;                         // Role
+    private PlayerState state;                 // Player state
+    private boolean isRescued;                 // Whether rescued
 
-    // 事件监听器（用于通知状态变化）
-    private final List<Consumer<Player>> onStateChangeListeners;    // 状态变化监听器
-    private final List<Consumer<Player>> onCardChangeListeners;     // 卡牌变化监听器
+    // Event listeners (for state change notifications)
+    private final List<Consumer<Player>> onStateChangeListeners;    // State change listeners
+    private final List<Consumer<Player>> onCardChangeListeners;     // Card change listeners
 
     /**
-     * 构造函数
-     * 初始化玩家基本属性和事件监听器
+     * Constructor
+     * Initialize player's basic attributes and event listeners
      */
     public Player() {
         this.handCard = new HandCard();
@@ -39,51 +39,51 @@ public class Player {
         this.onCardChangeListeners = new ArrayList<>();
     }
 
-    // =============== 基本属性访问 ===============
+    // =============== Basic Attribute Access ===============
 
     /**
-     * 获取玩家当前位置
-     * @return 当前瓦片
+     * Get player's current position
+     * @return Current tile
      */
     public Tile getCurrentTile() {
         return currentTile;
     }
 
     /**
-     * 设置玩家当前位置
-     * @param tile 目标位置
+     * Set player's current position
+     * @param tile Target position
      */
     public void setCurrentTile(Tile tile) {
         this.currentTile = tile;
     }
 
     /**
-     * 获取玩家角色
-     * @return 角色对象
+     * Get player's role
+     * @return Role object
      */
     public Role getRole() {
         return role;
     }
 
     /**
-     * 设置玩家角色
-     * @param role 角色对象
+     * Set player's role
+     * @param role Role object
      */
     public void setRole(Role role) {
         this.role = role;
     }
 
     /**
-     * 获取玩家当前状态
-     * @return 玩家状态
+     * Get player's current state
+     * @return Player state
      */
     public PlayerState getState() {
         return state;
     }
 
     /**
-     * 设置玩家状态
-     * @param newState 新状态
+     * Set player's state
+     * @param newState New state
      */
     public void setState(PlayerState newState) {
         if (this.state != newState) {
@@ -93,7 +93,7 @@ public class Player {
     }
 
     /**
-     * 标记玩家为已获救状态
+     * Mark player as rescued
      */
     public void rescue() {
         this.isRescued = true;
@@ -101,19 +101,19 @@ public class Player {
     }
 
     /**
-     * 检查玩家是否已获救
-     * @return 如果玩家已获救则返回true
+     * Check if player is rescued
+     * @return Returns true if player is rescued
      */
     public boolean isRescued() {
         return isRescued;
     }
 
-    // =============== 手牌管理 ===============
+    // =============== Hand Card Management ===============
 
     /**
-     * 添加卡牌到手牌
-     * @param card 要添加的卡牌
-     * @throws HandCardFullException 当手牌已满时抛出
+     * Add card to hand
+     * @param card Card to add
+     * @throws HandCardFullException Thrown when hand is full
      */
     public void addCard(Card card) throws HandCardFullException {
         handCard.addCard(card);
@@ -121,8 +121,8 @@ public class Player {
     }
 
     /**
-     * 从手牌移除卡牌
-     * @param card 要移除的卡牌
+     * Remove card from hand
+     * @param card Card to remove
      */
     public void removeCard(Card card) {
         handCard.removeCard(card);
@@ -130,36 +130,36 @@ public class Player {
     }
 
     /**
-     * 获取手牌管理器
-     * @return 手牌管理器
+     * Get hand card manager
+     * @return Hand card manager
      */
     public HandCard getHandCard() {
         return handCard;
     }
 
     /**
-     * 检查是否有指定类型的卡牌
-     * @param cardType 卡牌类型
-     * @return 如果有则返回true
+     * Check if player has a specific type of card
+     * @param cardType Card type
+     * @return Returns true if player has the card
      */
     public boolean hasCardType(Class<? extends Card> cardType) {
         return handCard.getCards().stream()
                       .anyMatch(cardType::isInstance);
     }
 
-    // =============== 事件监听器管理 ===============
+    // =============== Event Listener Management ===============
 
     /**
-     * 添加状态变化监听器
-     * @param listener 监听器
+     * Add state change listener
+     * @param listener Listener
      */
     public void addOnStateChangeListener(Consumer<Player> listener) {
         onStateChangeListeners.add(listener);
     }
 
     /**
-     * 添加卡牌变化监听器
-     * @param listener 监听器
+     * Add card change listener
+     * @param listener Listener
      */
     public void addOnCardChangeListener(Consumer<Player> listener) {
         onCardChangeListeners.add(listener);
@@ -173,11 +173,11 @@ public class Player {
         onCardChangeListeners.forEach(listener -> listener.accept(this));
     }
 
-    // =============== 数据验证 ===============
+    // =============== Data Validation ===============
 
     /**
-     * 验证玩家状态是否有效
-     * @return 如果玩家状态有效则返回true
+     * Validate if player state is valid
+     * @return Returns true if player state is valid
      */
     public boolean isValid() {
         return role != null &&

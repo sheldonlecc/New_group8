@@ -8,20 +8,20 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * 牌堆抽象基类
- * 提供牌堆的基本操作和状态管理
+ * Deck Abstract Base Class
+ * Provides basic operations and state management for card decks
  * 
- * @param <T> 卡牌类型，必须是Card的子类
+ * @param <T> Card type, must be a subclass of Card
  */
 public abstract class Deck<T extends Card> {
-    /** 抽牌堆 */
+    /** Draw pile */
     protected final Stack<T> drawPile;
-    /** 弃牌堆 */
+    /** Discard pile */
     protected final Stack<T> discardPile;
 
     /**
-     * 构造函数
-     * 初始化抽牌堆和弃牌堆
+     * Constructor
+     * Initializes draw pile and discard pile
      */
     protected Deck() {
         this.drawPile = new Stack<>();
@@ -29,19 +29,19 @@ public abstract class Deck<T extends Card> {
     }
 
     /**
-     * 洗牌
-     * 随机打乱抽牌堆中卡牌的顺序
+     * Shuffle
+     * Randomly shuffles the cards in the draw pile
      */
     public void shuffle() {
         Collections.shuffle(drawPile);
     }
 
     /**
-     * 抽牌
-     * 从抽牌堆顶部抽取一张卡牌
-     * 如果抽牌堆为空，则重洗弃牌堆
+     * Draw a card
+     * Draws a card from the top of the draw pile
+     * If the draw pile is empty, reshuffles the discard pile
      * 
-     * @return 抽到的卡牌，如果牌堆为空则返回null
+     * @return The drawn card, or null if the deck is empty
      */
     public T draw() {
         if (drawPile.isEmpty()) {
@@ -51,10 +51,10 @@ public abstract class Deck<T extends Card> {
     }
 
     /**
-     * 弃牌
-     * 将卡牌放入弃牌堆
+     * Discard a card
+     * Places a card in the discard pile
      * 
-     * @param card 要弃置的卡牌
+     * @param card The card to discard
      */
     public void discard(T card) {
         if (card != null) {
@@ -63,8 +63,8 @@ public abstract class Deck<T extends Card> {
     }
 
     /**
-     * 重洗弃牌堆
-     * 将弃牌堆中的所有卡牌重新加入抽牌堆并洗牌
+     * Reshuffle discard pile
+     * Moves all cards from the discard pile back to the draw pile and shuffles
      */
     public void reshuffleDiscardPile() {
         while (!discardPile.isEmpty()) {
@@ -74,63 +74,63 @@ public abstract class Deck<T extends Card> {
     }
 
     /**
-     * 查看牌堆顶部卡牌
-     * 不改变牌堆状态
+     * Peek at the top card
+     * Does not modify the deck state
      * 
-     * @return 牌堆顶部的卡牌，如果牌堆为空则返回null
+     * @return The top card of the draw pile, or null if empty
      */
     public T peek() {
         return drawPile.isEmpty() ? null : drawPile.peek();
     }
 
     /**
-     * 获取抽牌堆剩余卡牌数量
+     * Get the number of cards remaining in the draw pile
      * 
-     * @return 抽牌堆中的卡牌数量
+     * @return Number of cards in the draw pile
      */
     public int getDrawPileSize() {
         return drawPile.size();
     }
 
     /**
-     * 获取弃牌堆卡牌数量
+     * Get the number of cards in the discard pile
      * 
-     * @return 弃牌堆中的卡牌数量
+     * @return Number of cards in the discard pile
      */
     public int getDiscardPileSize() {
         return discardPile.size();
     }
 
     /**
-     * 检查牌堆是否为空
+     * Check if the deck is empty
      * 
-     * @return 如果抽牌堆和弃牌堆都为空则返回true
+     * @return true if both draw pile and discard pile are empty
      */
     public boolean isEmpty() {
         return drawPile.isEmpty() && discardPile.isEmpty();
     }
 
     /**
-     * 获取抽牌堆的不可修改视图
+     * Get an unmodifiable view of the draw pile
      * 
-     * @return 抽牌堆的只读列表
+     * @return Read-only list of the draw pile
      */
     public List<T> getDrawPileView() {
         return Collections.unmodifiableList(new ArrayList<>(drawPile));
     }
 
     /**
-     * 获取弃牌堆的不可修改视图
+     * Get an unmodifiable view of the discard pile
      * 
-     * @return 弃牌堆的只读列表
+     * @return Read-only list of the discard pile
      */
     public List<T> getDiscardPileView() {
         return Collections.unmodifiableList(new ArrayList<>(discardPile));
     }
 
     /**
-     * 清空牌堆
-     * 清空抽牌堆和弃牌堆
+     * Clear the deck
+     * Empties both draw pile and discard pile
      */
     public void clear() {
         drawPile.clear();
@@ -138,10 +138,10 @@ public abstract class Deck<T extends Card> {
     }
 
     /**
-     * 检查牌堆状态是否有效
-     * 子类可以重写此方法以添加特定的验证逻辑
+     * Check if the deck state is valid
+     * Subclasses can override this method to add specific validation logic
      * 
-     * @return 如果牌堆状态有效则返回true
+     * @return true if the deck state is valid
      */
     public boolean isValid() {
         return drawPile != null && discardPile != null;

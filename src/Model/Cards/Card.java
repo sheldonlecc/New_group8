@@ -5,15 +5,26 @@ import Model.Enumeration.CardType;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * Card Class
+ * Abstract base class for all card types in the game
+ * Defines basic card properties and behaviors
+ */
 public abstract class Card implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
     
-    private final String id;           // 卡牌唯一标识
-    private final CardType type;       // 卡牌类型
-    private final String name;         // 卡牌名称
-    private final String description;  // 卡牌描述
-    private boolean isUsable;          // 卡牌是否可用
+    private final String id;           // Unique identifier for the card
+    private final CardType type;       // Card type
+    private final String name;         // Card name
+    private final String description;  // Card description
+    private boolean isUsable;          // Whether the card is usable
 
+    /**
+     * Constructor
+     * @param type Card type
+     * @param name Card name
+     * @param description Card description
+     */
     public Card(CardType type, String name, String description) {
         this.id = UUID.randomUUID().toString();
         this.type = type;
@@ -22,40 +33,64 @@ public abstract class Card implements Serializable, Cloneable {
         this.isUsable = true;
     }
 
-    // 抽象方法：使用卡牌
+    /**
+     * Abstract method: Use the card
+     * Must be implemented by subclasses
+     */
     public abstract void use();
 
-    // 验证卡牌是否可以使用
+    /**
+     * Check if the card can be used
+     * @return true if the card is usable
+     */
     public boolean canUse() {
         return isUsable;
     }
 
-    // 设置卡牌是否可用
+    /**
+     * Set whether the card is usable
+     * @param usable Whether the card is usable
+     */
     public void setUsable(boolean usable) {
         this.isUsable = usable;
     }
 
-    // 获取卡牌ID
+    /**
+     * Get card ID
+     * @return Card's unique identifier
+     */
     public String getId() {
         return id;
     }
 
-    // 获取卡牌类型
+    /**
+     * Get card type
+     * @return Card type
+     */
     public CardType getType() {
         return type;
     }
 
-    // 获取卡牌名称
+    /**
+     * Get card name
+     * @return Card name
+     */
     public String getName() {
         return name;
     }
 
-    // 获取卡牌描述
+    /**
+     * Get card description
+     * @return Card description
+     */
     public String getDescription() {
         return description;
     }
 
-    // 克隆卡牌
+    /**
+     * Clone the card
+     * @return A clone of the card
+     */
     @Override
     public Card clone() {
         try {
@@ -65,7 +100,10 @@ public abstract class Card implements Serializable, Cloneable {
         }
     }
 
-    // 重写equals方法
+    /**
+     * Override equals method
+     * Two cards are equal if they have the same ID
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -74,13 +112,19 @@ public abstract class Card implements Serializable, Cloneable {
         return id.equals(card.id);
     }
 
-    // 重写hashCode方法
+    /**
+     * Override hashCode method
+     * @return Hash code based on card ID
+     */
     @Override
     public int hashCode() {
         return id.hashCode();
     }
 
-    // 重写toString方法
+    /**
+     * Override toString method
+     * @return String representation of the card
+     */
     @Override
     public String toString() {
         return String.format("%s [%s] - %s", name, type, description);

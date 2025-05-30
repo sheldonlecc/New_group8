@@ -8,29 +8,29 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * 瓦片类
- * 管理游戏中每个瓦片的状态和属性
- * 包括：名称、状态、位置、相邻关系等
+ * Tile Class
+ * Manages the state and attributes of each tile in the game
+ * Including: name, state, position, adjacent relationships, etc.
  */
 public class Tile {
-    // 核心属性
-    private final TileName name; // 瓦片名称（如：FOOLS_LANDING、TEMPLE_OF_THE_SUN等）
-    private TileState state; // 瓦片状态（如：正常、被淹没、沉没）
-    private final int row; // 行坐标
-    private final int col; // 列坐标
-    private final List<Tile> adjacentTiles; // 相邻瓦片列表
-    private final String imagePath; // 瓦片图片路径
+    // Core attributes
+    private final TileName name; // Tile name (e.g., FOOLS_LANDING, TEMPLE_OF_THE_SUN, etc.)
+    private TileState state; // Tile state (e.g., normal, flooded, sunk)
+    private final int row; // Row coordinate
+    private final int col; // Column coordinate
+    private final List<Tile> adjacentTiles; // List of adjacent tiles
+    private final String imagePath; // Tile image path
     private boolean highlighted = false;
 
-    // 事件监听器
-    private final List<Consumer<Tile>> onStateChangeListeners; // 状态变化监听器
+    // Event listeners
+    private final List<Consumer<Tile>> onStateChangeListeners; // State change listeners
 
     /**
-     * 构造函数
+     * Constructor
      *
-     * @param name 瓦片名称
-     * @param row  行坐标
-     * @param col  列坐标
+     * @param name Tile name
+     * @param row  Row coordinate
+     * @param col  Column coordinate
      */
     public Tile(TileName name, int row, int col) {
         this.name = name;
@@ -42,22 +42,22 @@ public class Tile {
         this.imagePath = "src/resources/Tiles/" + name.getDisplayName() + ".png";
     }
 
-    // =============== 基本属性访问 ===============
+    // =============== Basic Attribute Access ===============
 
     /**
-     * 获取瓦片名称
+     * Get tile name
      *
-     * @return 瓦片名称
+     * @return Tile name
      */
     public TileName getName() {
         return name;
     }
 
     /**
-     * 获取瓦片名称（向后兼容方法）
+     * Get tile name (for backward compatibility)
      *
-     * @return 瓦片名称
-     * @deprecated 请使用getName()方法
+     * @return Tile name
+     * @deprecated Please use getName() method
      */
     @Deprecated
     public TileName getTileName() {
@@ -65,50 +65,50 @@ public class Tile {
     }
 
     /**
-     * 获取瓦片状态
+     * Get tile state
      *
-     * @return 瓦片状态
+     * @return Tile state
      */
     public TileState getState() {
         return state;
     }
 
     /**
-     * 设置瓦片状态
+     * Set tile state
      *
-     * @param newState 新状态
+     * @param newState New state
      */
     public void setState(TileState newState) {
         if (this.state != newState) {
             System.out
-                    .println("[调试] Tile " + name + " [" + row + "," + col + "] 状态: " + this.state + " -> " + newState);
+                    .println("[Debug] Tile " + name + " [" + row + "," + col + "] State: " + this.state + " -> " + newState);
             this.state = newState;
             notifyStateChangeListeners();
         }
     }
 
     /**
-     * 获取行坐标
+     * Get row coordinate
      *
-     * @return 行坐标
+     * @return Row coordinate
      */
     public int getRow() {
         return row;
     }
 
     /**
-     * 获取列坐标
+     * Get column coordinate
      *
-     * @return 列坐标
+     * @return Column coordinate
      */
     public int getCol() {
         return col;
     }
 
     /**
-     * 获取瓦片图片路径
+     * Get tile image path
      *
-     * @return 图片路径
+     * @return Image path
      */
     public String getImagePath(TileState state) {
         if (state == TileState.SUNK) {
@@ -120,12 +120,12 @@ public class Tile {
         return imagePath;
     }
 
-    // =============== 相邻瓦片管理 ===============
+    // =============== Adjacent Tile Management ===============
 
     /**
-     * 添加相邻瓦片
+     * Add adjacent tile
      *
-     * @param tile 相邻瓦片
+     * @param tile Adjacent tile
      */
     public void addAdjacentTile(Tile tile) {
         if (!adjacentTiles.contains(tile)) {
@@ -134,59 +134,59 @@ public class Tile {
     }
 
     /**
-     * 移除相邻瓦片
+     * Remove adjacent tile
      *
-     * @param tile 要移除的相邻瓦片
+     * @param tile Adjacent tile to remove
      */
     public void removeAdjacentTile(Tile tile) {
         adjacentTiles.remove(tile);
     }
 
     /**
-     * 获取所有相邻瓦片
+     * Get all adjacent tiles
      *
-     * @return 相邻瓦片列表
+     * @return List of adjacent tiles
      */
     public List<Tile> getAdjacentTiles() {
         return new ArrayList<>(adjacentTiles);
     }
 
     /**
-     * 检查是否与指定瓦片相邻
+     * Check if tile is adjacent to specified tile
      *
-     * @param tile 目标瓦片
-     * @return 如果相邻则返回true
+     * @param tile Target tile
+     * @return Returns true if tiles are adjacent
      */
     public boolean isAdjacentTo(Tile tile) {
         return adjacentTiles.contains(tile);
     }
 
-    // =============== 状态检查 ===============
+    // =============== State Checks ===============
 
     /**
-     * 检查瓦片是否可通行
+     * Check if tile is passable
      *
-     * @return 如果瓦片状态允许通行则返回true
+     * @return Returns true if tile state allows passage
      */
     public boolean isPassable() {
         return state != TileState.SUNK;
     }
 
     /**
-     * 检查瓦片是否可加固
+     * Check if tile can be shored up
      *
-     * @return 如果瓦片状态允许加固则返回true
+     * @return Returns true if tile state allows shoring up
      */
     public boolean isShoreable() {
         return this.state == TileState.FLOODED;
     }
 
-    // =============== 事件监听器管理 ===============
+    // =============== Event Listener Management ===============
 
     /**
-     * 添加状态变化监听器
+     * Add state change listener
      *
-     * @param listener 监听器
+     * @param listener Listener
      */
     public void addOnStateChangeListener(Consumer<Tile> listener) {
         onStateChangeListeners.add(listener);
@@ -196,12 +196,12 @@ public class Tile {
         onStateChangeListeners.forEach(listener -> listener.accept(this));
     }
 
-    // =============== 数据验证 ===============
+    // =============== Data Validation ===============
 
     /**
-     * 验证瓦片状态是否有效
+     * Validate if tile state is valid
      *
-     * @return 如果瓦片状态有效则返回true
+     * @return Returns true if tile state is valid
      */
     public boolean isValid() {
         return name != null &&
@@ -226,16 +226,16 @@ public class Tile {
     }
 
     /**
-     * 设置板块是否高亮
-     * @param highlighted 是否高亮
+     * Set whether the tile is highlighted
+     * @param highlighted Whether to highlight
      */
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
     }
 
     /**
-     * 获取板块是否高亮
-     * @return 是否高亮
+     * Get whether the tile is highlighted
+     * @return Whether highlighted
      */
     public boolean isHighlighted() {
         return highlighted;

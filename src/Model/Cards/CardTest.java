@@ -9,148 +9,148 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 卡牌功能测试类
- * 用于测试所有类型卡牌的基本功能
+ * Card functionality test class
+ * Used to test the basic functionality of all types of cards
  */
 public class CardTest {
     private static final List<String> testResults = new ArrayList<>();
     
     public static void main(String[] args) {
-        System.out.println("开始卡牌功能测试...\n");
+        System.out.println("Starting card functionality tests...\n");
         
-        // 测试宝藏卡
+        // Test treasure cards
         testTreasureCards();
         
-        // 测试特殊卡
+        // Test special cards
         testSpecialCards();
         
-        // 测试洪水卡
+        // Test flood cards
         testFloodCards();
         
-        // 打印测试结果
-        System.out.println("\n测试结果汇总：");
+        // Print test results
+        System.out.println("\nTest Results Summary:");
         for (String result : testResults) {
             System.out.println(result);
         }
     }
     
     private static void testTreasureCards() {
-        System.out.println("=== 测试宝藏卡 ===");
+        System.out.println("=== Testing Treasure Cards ===");
         
-        // 测试所有类型的宝藏卡
+        // Test all types of treasure cards
         for (TreasureType type : TreasureType.values()) {
             TreasureCard card = new TreasureCard(type);
             
-            // 测试基本信息
-            testBasicCardInfo(card, "宝藏卡");
+            // Test basic info
+            testBasicCardInfo(card, "Treasure Card");
             
-            // 测试宝藏类型
+            // Test treasure type
             if (card.getTreasureType() == type) {
-                addTestResult("✓ 宝藏卡 " + type.getDisplayName() + " 类型正确");
+                addTestResult("✓ Treasure Card " + type.getDisplayName() + " type is correct");
             } else {
-                addTestResult("✗ 宝藏卡 " + type.getDisplayName() + " 类型错误");
+                addTestResult("✗ Treasure Card " + type.getDisplayName() + " type is incorrect");
             }
             
-            // 测试使用条件
+            // Test usage condition
             Tile testTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
             List<Player> players = new ArrayList<>();
             Player player = new Player();
-            player.setCurrentTile(testTile);  // 使用setCurrentTile方法设置玩家位置
+            player.setCurrentTile(testTile);  // Set player position using setCurrentTile method
             players.add(player);
             
             if (card.canUse(players, testTile)) {
-                addTestResult("✓ 宝藏卡 " + type.getDisplayName() + " 使用条件检查正确");
+                addTestResult("✓ Treasure Card " + type.getDisplayName() + " usage condition check is correct");
             } else {
-                addTestResult("✗ 宝藏卡 " + type.getDisplayName() + " 使用条件检查错误");
+                addTestResult("✗ Treasure Card " + type.getDisplayName() + " usage condition check is incorrect");
             }
         }
     }
     
     private static void testSpecialCards() {
-        System.out.println("\n=== 测试特殊卡 ===");
+        System.out.println("\n=== Testing Special Cards ===");
         
-        // 测试直升机卡
+        // Test helicopter card
         Tile helicopterTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
         HelicopterCard helicopterCard = new HelicopterCard(helicopterTile);
-        testBasicCardInfo(helicopterCard, "直升机救援卡");
+        testBasicCardInfo(helicopterCard, "Helicopter Rescue Card");
         
-        // 测试沙袋卡
+        // Test sandbag card
         SandbagCard sandbagCard = new SandbagCard();
-        testBasicCardInfo(sandbagCard, "沙袋卡");
+        testBasicCardInfo(sandbagCard, "Sandbag Card");
         
-        // 测试沙袋卡使用功能
+        // Test sandbag card usage
         Tile floodedTile = new Tile(TileName.CORAL_PALACE, 1, 1);
-        floodedTile.setState(TileState.FLOODED); // 将瓦片设置为被淹没状态
+        floodedTile.setState(TileState.FLOODED); // Set tile to flooded state
         if (sandbagCard.canUse(floodedTile)) {
-            addTestResult("✓ 沙袋卡可以用于被淹没的瓦片");
+            addTestResult("✓ Sandbag card can be used on flooded tile");
             if (sandbagCard.useCard(floodedTile)) {
-                addTestResult("✓ 沙袋卡成功加固瓦片");
+                addTestResult("✓ Sandbag card successfully shored up the tile");
                 if (floodedTile.getState() == TileState.NORMAL) {
-                    addTestResult("✓ 瓦片成功恢复干燥状态");
+                    addTestResult("✓ Tile successfully restored to dry state");
                 } else {
-                    addTestResult("✗ 瓦片状态未正确更新");
+                    addTestResult("✗ Tile state not updated correctly");
                 }
             } else {
-                addTestResult("✗ 沙袋卡使用失败");
+                addTestResult("✗ Sandbag card usage failed");
             }
         } else {
-            addTestResult("✗ 沙袋卡无法用于被淹没的瓦片");
+            addTestResult("✗ Sandbag card cannot be used on flooded tile");
         }
         
-        // 测试水位上升卡
+        // Test water rise card
         WaterRiseCard waterRiseCard = new WaterRiseCard();
-        testBasicCardInfo(waterRiseCard, "水位上升卡");
+        testBasicCardInfo(waterRiseCard, "Water Rise Card");
     }
     
     private static void testFloodCards() {
-        System.out.println("\n=== 测试洪水卡 ===");
+        System.out.println("\n=== Testing Flood Cards ===");
         
-        // 测试洪水卡
+        // Test flood card
         Tile targetTile = new Tile(TileName.CORAL_PALACE, 1, 1);
         FloodCard floodCard = new FloodCard(targetTile);
-        testBasicCardInfo(floodCard, "洪水卡");
+        testBasicCardInfo(floodCard, "Flood Card");
         
-        // 测试洪水卡使用功能
+        // Test flood card usage
         if (floodCard.canUse()) {
-            addTestResult("✓ 洪水卡可以使用");
+            addTestResult("✓ Flood card can be used");
             floodCard.use();
             if (targetTile.getState() == TileState.FLOODED) {
-                addTestResult("✓ 洪水卡成功淹没目标瓦片");
+                addTestResult("✓ Flood card successfully flooded the target tile");
             } else {
-                addTestResult("✗ 洪水卡未能正确淹没目标瓦片");
+                addTestResult("✗ Flood card did not correctly flood the target tile");
             }
         } else {
-            addTestResult("✗ 洪水卡无法使用");
+            addTestResult("✗ Flood card cannot be used");
         }
     }
     
     private static void testBasicCardInfo(Card card, String expectedType) {
-        // 测试卡牌类型
+        // Test card type
         if (card.getType() != null) {
-            addTestResult("✓ " + card.getName() + " 类型正确");
+            addTestResult("✓ " + card.getName() + " type is correct");
         } else {
-            addTestResult("✗ " + card.getName() + " 类型为空");
+            addTestResult("✗ " + card.getName() + " type is null");
         }
         
-        // 测试卡牌名称
+        // Test card name
         if (card.getName() != null && !card.getName().isEmpty()) {
-            addTestResult("✓ " + card.getName() + " 名称正确");
+            addTestResult("✓ " + card.getName() + " name is correct");
         } else {
-            addTestResult("✗ " + card.getName() + " 名称为空");
+            addTestResult("✗ " + card.getName() + " name is null");
         }
         
-        // 测试卡牌描述
+        // Test card description
         if (card.getDescription() != null && !card.getDescription().isEmpty()) {
-            addTestResult("✓ " + card.getName() + " 描述正确");
+            addTestResult("✓ " + card.getName() + " description is correct");
         } else {
-            addTestResult("✗ " + card.getName() + " 描述为空");
+            addTestResult("✗ " + card.getName() + " description is null");
         }
         
-        // 测试卡牌可用性
+        // Test card usability
         if (card.canUse()) {
-            addTestResult("✓ " + card.getName() + " 初始状态可用");
+            addTestResult("✓ " + card.getName() + " is usable initially");
         } else {
-            addTestResult("✗ " + card.getName() + " 初始状态不可用");
+            addTestResult("✗ " + card.getName() + " is not usable initially");
         }
     }
     
