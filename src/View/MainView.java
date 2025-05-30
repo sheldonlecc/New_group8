@@ -48,7 +48,7 @@ public class MainView extends JFrame {
 
         try {
             backgroundImage = ImageIO.read(new File("src/resources/Background.png"));
-            buttonImage = ImageIO.read(new File("src/resources/button.jpg"));
+            buttonImage = ImageIO.read(new File("src/resources/button.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -101,8 +101,8 @@ public class MainView extends JFrame {
     private JButton createButton(String text) {
         // 增大按钮尺寸从200x50到280x70
         JButton button = new JButton(text, new ImageIcon(buttonImage.getScaledInstance(300, 60, Image.SCALE_SMOOTH)));
-        button.setHorizontalTextPosition(JButton.CENTER);
-        button.setVerticalTextPosition(JButton.TOP);
+        button.setHorizontalTextPosition(JButton.CENTER);  // 水平居中
+        button.setVerticalTextPosition(JButton.CENTER);    // 垂直居中 - 这里改为CENTER
         button.setFont(new Font("Arial", Font.BOLD, 30)); // 增大字体从24到28
         button.setForeground(Color.WHITE);
         button.setBorderPainted(false);

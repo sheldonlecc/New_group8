@@ -53,7 +53,6 @@ public class GameController {
     private TilePosition tilePosition; // 添加TilePosition对象
     private MapController mapController; // 添加MapController成员变量
     private FloodDeck floodDeck;
-    private boolean floodDeckInitialized = false;
     private BoardView boardView; // 添加 BoardView 引用
     private final int playerCount; // 添加玩家数量字段
 
@@ -960,12 +959,10 @@ public class GameController {
         System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
         this.tilePosition = mapView.getTilePosition();
         this.mapController = new MapController(this, mapView);
-        // 只在第一次设置地图时初始化洪水牌堆
-        if (!floodDeckInitialized) {
-            List<Tile> allTiles = mapView.getAllTiles();
-            this.floodDeck = new FloodDeck(allTiles);
-            floodDeckInitialized = true;
-        }
+        
+        // 每次设置地图时都重新初始化洪水牌堆
+        List<Tile> allTiles = mapView.getAllTiles();
+        this.floodDeck = new FloodDeck(allTiles);
         System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
         if (this.tilePosition != null) {
             Map<String, int[]> positions = this.tilePosition.getAllTilePositions();

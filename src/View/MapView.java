@@ -27,7 +27,10 @@ public class MapView extends JPanel {
     private Map<String, List<Integer>> tilePlayers;
     private Map<Integer, Point> playerFixedPositions;
     private boolean isHelicopterMode = false;
-
+    
+    // 添加成员变量
+    private int tileNameIndex = 0;
+    
     private static final List<Point> CLASSIC_MAP = Arrays.asList(
             new Point(0, 2), new Point(0, 3),
             new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(1, 4),
@@ -91,13 +94,13 @@ public class MapView extends JPanel {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(GAP_SIZE, GAP_SIZE, GAP_SIZE, GAP_SIZE);
-        gbc.fill = GridBagConstraints.NONE; // 防止组件被拉伸
+        gbc.fill = GridBagConstraints.NONE;
 
         // 随机分配地点名称
         List<TileName> availableTileNames = new ArrayList<>(Arrays.asList(TileName.values()));
         Collections.shuffle(availableTileNames);
-        int tileNameIndex = 0;
-
+        // 移除这行：int tileNameIndex = 0;
+        
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
                 // 创建层级面板
@@ -220,6 +223,19 @@ public class MapView extends JPanel {
         
         // 移除所有现有组件
         removeAll();
+        
+        // 清空瓦片位置信息，防止重复添加
+        tilePosition.clear();
+        
+        // **关键修复：完全清空瓦片数组**
+        for (int i = 0; i < MAP_SIZE; i++) {
+            for (int j = 0; j < MAP_SIZE; j++) {
+                tiles[i][j] = null;
+            }
+        }
+        
+        // 重置瓦片名称索引
+        tileNameIndex = 0;
         
         // 重新初始化UI
         initializeUI();

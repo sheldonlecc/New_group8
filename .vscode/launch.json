@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CardTest",
+            "request": "launch",
+            "mainClass": "Model.Cards.CardTest",
+            "projectName": "New_group8_fa2312a"
+        },
+        {
+            "type": "java",
             "name": "MainView",
             "request": "launch",
             "mainClass": "View.MainView",

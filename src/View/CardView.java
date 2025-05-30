@@ -11,7 +11,7 @@ import java.awt.event.MouseEvent;
 
 public class CardView extends JButton {
     private Card card;
-    private static final int CARD_WIDTH = 70;  // 减小宽度避免超出
+    private static final int CARD_WIDTH = 65;  // 减小宽度避免超出
     private int cardHeight;
     private static final Font CARD_FONT = new Font("Microsoft YaHei", Font.BOLD, 10);
     private static final Font TITLE_FONT = new Font("Microsoft YaHei", Font.BOLD, 8);

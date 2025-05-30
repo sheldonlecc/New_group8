@@ -5,14 +5,24 @@ import Model.Cards.FloodCard;
 import Model.Tile;
 import Model.Enumeration.TileState;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * 洪水牌堆类
  * 管理游戏中的洪水卡牌堆，处理洪水卡的特殊规则
+ * 新机制：每次从所有地点中抽取6张作为当前FloodDeck，抽完后重新抽取6张
  */
 public class FloodDeck extends Deck<FloodCard> {
+    /** 主牌堆 - 包含所有可用的洪水卡 */
+    private final List<FloodCard> masterDeck;
+    /** 当前活跃的6张卡牌 */
+    private final List<FloodCard> activeDeck;
+    /** 当前活跃牌堆的索引 */
+    private int currentIndex;
+    
     /**
      * 构造函数
      * 根据初始瓦片列表创建洪水卡牌堆
@@ -21,46 +31,105 @@ public class FloodDeck extends Deck<FloodCard> {
      */
     public FloodDeck(List<Tile> initialTiles) {
         super();
+        this.masterDeck = new ArrayList<>();
+        this.activeDeck = new ArrayList<>();
+        this.currentIndex = 0;
+        
         if (initialTiles != null) {
-            initialTiles.forEach(tile -> drawPile.push(new FloodCard(tile)));
-            shuffle();
+            initialTiles.forEach(tile -> masterDeck.add(new FloodCard(tile)));
+            refillActiveDeck();
         }
     }
-
+    
+    /**
+     * 重新填充活跃牌堆
+     * 从主牌堆中随机抽取6张卡牌作为新的活跃牌堆
+     */
+    private void refillActiveDeck() {
+        activeDeck.clear();
+        currentIndex = 0;
+        
+        // 获取所有可用的卡牌（对应未沉没的瓦片）
+        List<FloodCard> availableCards = masterDeck.stream()
+                .filter(card -> card.getTargetTile().getState() != TileState.SUNK)
+                .collect(Collectors.toList());
+        
+        if (availableCards.isEmpty()) {
+            System.out.println("[警告] 没有可用的洪水卡！");
+            return;
+        }
+        
+        // 随机选择最多6张卡牌
+        Collections.shuffle(availableCards);
+        int cardCount = Math.min(6, availableCards.size());
+        
+        for (int i = 0; i < cardCount; i++) {
+            activeDeck.add(availableCards.get(i));
+        }
+        
+        System.out.println("[日志] 重新填充FloodDeck，当前活跃卡牌数量: " + activeDeck.size());
+    }
+    
+    /**
+     * 抽牌
+     * 从当前活跃的6张卡牌中按顺序抽取
+     * 当6张卡牌抽完后，重新填充活跃牌堆
+     * 
+     * @return 抽到的卡牌，如果没有可抽取的卡牌则返回null
+     */
+    @Override
+    public FloodCard draw() {
+        // 如果当前活跃牌堆已抽完，重新填充
+        if (currentIndex >= activeDeck.size()) {
+            refillActiveDeck();
+            if (activeDeck.isEmpty()) {
+                return null;
+            }
+        }
+        
+        FloodCard card = activeDeck.get(currentIndex);
+        currentIndex++;
+        
+        System.out.println("[日志] 从FloodDeck抽取卡牌: " + card.getTargetTile().getName() + 
+                          " (剩余: " + (activeDeck.size() - currentIndex) + "/" + activeDeck.size() + ")");
+        
+        return card;
+    }
+    
     /**
      * 获取所有被淹没的瓦片
      * 
      * @return 当前状态为FLOODED的瓦片列表
      */
     public List<Tile> getFloodedTiles() {
-        return Stream.concat(drawPile.stream(), discardPile.stream())
+        return masterDeck.stream()
                 .map(FloodCard::getTargetTile)
                 .filter(tile -> tile.getState() == TileState.FLOODED)
                 .collect(Collectors.toList());
     }
-
+    
     /**
      * 获取所有未被淹没的瓦片
      * 
-     * @return 当前在抽牌堆中的洪水卡对应的瓦片列表
+     * @return 当前在主牌堆中对应未沉没瓦片的列表
      */
     public List<Tile> getUnfloodedTiles() {
-        return drawPile.stream()
+        return masterDeck.stream()
                 .map(FloodCard::getTargetTile)
+                .filter(tile -> tile.getState() != TileState.SUNK)
                 .collect(Collectors.toList());
     }
-
+    
     /**
      * 检查指定瓦片是否被淹没
      * 
      * @param tile 要检查的瓦片
-     * @return 如果瓦片对应的洪水卡在弃牌堆中则返回true
+     * @return 如果瓦片状态为FLOODED则返回true
      */
     public boolean isTileFlooded(Tile tile) {
-        return discardPile.stream()
-                .anyMatch(card -> card.getTargetTile().equals(tile));
+        return tile.getState() == TileState.FLOODED;
     }
-
+    
     /**
      * 获取指定瓦片对应的洪水卡
      * 
@@ -68,96 +137,94 @@ public class FloodDeck extends Deck<FloodCard> {
      * @return 对应的洪水卡，如果不存在则返回null
      */
     public FloodCard getFloodCardForTile(Tile tile) {
-        return Stream.concat(drawPile.stream(), discardPile.stream())
+        return masterDeck.stream()
                 .filter(card -> card.getTargetTile().equals(tile))
                 .findFirst()
                 .orElse(null);
     }
-
+    
     /**
      * 检查是否所有瓦片都被淹没
      * 
-     * @return 如果抽牌堆为空且弃牌堆不为空则返回true
+     * @return 如果所有瓦片都处于SUNK状态则返回true
      */
     public boolean areAllTilesFlooded() {
-        return drawPile.isEmpty() && !discardPile.isEmpty();
+        return masterDeck.stream()
+                .map(FloodCard::getTargetTile)
+                .allMatch(tile -> tile.getState() == TileState.SUNK);
     }
-
+    
     /**
      * 重置洪水卡状态
-     * 将所有弃牌堆中的卡牌重新加入抽牌堆并洗牌
-     * 用于游戏重置或特殊事件
+     * 重新填充活跃牌堆
      */
     public void resetFloodCards() {
-        reshuffleDiscardPile();
+        refillActiveDeck();
     }
-
+    
     /**
-     * 获取可抽取的洪水卡
-     * 只返回与未被沉没的地块对应的卡牌
-     * 
-     * @return 可抽取的洪水卡列表
-     */
-    private List<FloodCard> getDrawableCards() {
-        return drawPile.stream()
-                .filter(card -> card.getTargetTile().getState() != TileState.SUNK)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 抽牌
-     * 重写父类方法，每次抽牌前都进行洗牌
-     * 
-     * @return 抽到的卡牌，如果没有可抽取的卡牌则返回null
-     */
-    @Override
-    public FloodCard draw() {
-        // 只有在抽牌堆为空时才reshuffle弃牌堆
-        if (drawPile.isEmpty()) {
-            reshuffleDiscardPile();
-        }
-        List<FloodCard> drawableCards = getDrawableCards();
-        if (drawableCards.isEmpty()) {
-            return null;
-        }
-        // 从可抽取的卡牌中随机选择一张
-        int randomIndex = (int) (Math.random() * drawableCards.size());
-        FloodCard selectedCard = drawableCards.get(randomIndex);
-        drawPile.remove(selectedCard);
-        return selectedCard;
-    }
-
-    @Override
-    public boolean isValid() {
-        return super.isValid() &&
-                drawPile.stream().allMatch(card -> card != null && card.getTargetTile() != null) &&
-                discardPile.stream().allMatch(card -> card != null && card.getTargetTile() != null);
-    }
-
-    /**
-     * 移除指定瓦片对应的洪水卡（无论在抽牌堆还是弃牌堆）
+     * 移除指定瓦片对应的洪水卡（当瓦片沉没时）
      * 
      * @param tile 沉没的瓦片
      */
     public void removeCardForSunkTile(Tile tile) {
-        drawPile.removeIf(card -> card.getTargetTile().equals(tile));
-        discardPile.removeIf(card -> card.getTargetTile().equals(tile));
+        masterDeck.removeIf(card -> card.getTargetTile().equals(tile));
+        activeDeck.removeIf(card -> card.getTargetTile().equals(tile));
+        // 如果活跃牌堆中的卡牌被移除，需要调整索引
+        if (currentIndex > activeDeck.size()) {
+            currentIndex = activeDeck.size();
+        }
     }
-
+    
     /**
-     * 重洗弃牌堆
-     * 只将未沉没瓦片的卡牌洗回抽牌堆
+     * 获取当前活跃牌堆剩余卡牌数量
+     * 
+     * @return 活跃牌堆中剩余的卡牌数量
      */
+    public int getActiveDeckRemainingCount() {
+        return Math.max(0, activeDeck.size() - currentIndex);
+    }
+    
+    /**
+     * 获取主牌堆总卡牌数量
+     * 
+     * @return 主牌堆中的卡牌总数
+     */
+    public int getMasterDeckSize() {
+        return masterDeck.size();
+    }
+    
+    /**
+     * 强制重新填充活跃牌堆
+     * 用于特殊情况下的重置
+     */
+    public void forceRefillActiveDeck() {
+        refillActiveDeck();
+    }
+    
+    @Override
+    public boolean isValid() {
+        return masterDeck != null && activeDeck != null &&
+                masterDeck.stream().allMatch(card -> card != null && card.getTargetTile() != null) &&
+                activeDeck.stream().allMatch(card -> card != null && card.getTargetTile() != null);
+    }
+    
+    // 以下方法保持兼容性，但在新机制下不再使用
+    @Override
+    public void discard(FloodCard card) {
+        // 在新机制下，不需要弃牌堆
+        // 保留此方法以保持兼容性
+    }
+    
     @Override
     public void reshuffleDiscardPile() {
-        List<FloodCard> toReshuffle = new java.util.ArrayList<>();
-        for (FloodCard card : discardPile) {
-            if (card.getTargetTile().getState() != TileState.SUNK) {
-                toReshuffle.add(card);
-            }
-        }
-        drawPile.addAll(toReshuffle);
-        discardPile.removeAll(toReshuffle);
-        shuffle();
+        // 在新机制下，通过refillActiveDeck实现类似功能
+        refillActiveDeck();
+    }
+    
+    @Override
+    public void shuffle() {
+        // 在新机制下，每次refillActiveDeck时会自动洗牌
+        Collections.shuffle(masterDeck);
     }
 }
