@@ -5,6 +5,7 @@ import java.awt.*;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import Controller.AudioManager;
 
 public class MainView extends JFrame {
     private static MainView instance;
@@ -32,6 +33,9 @@ public class MainView extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         
+        // 启动背景音乐
+        AudioManager.getInstance().playBackgroundMusic();
+        
         mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -51,10 +55,24 @@ public class MainView extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
+        // 创建作者信息面板，放置在顶部右侧
+        JPanel authorPanel = new JPanel();
+        authorPanel.setOpaque(false);
+        authorPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        
+        JLabel authorLabel = new JLabel("Created by: Jiuzhou Zhu, Zhixiao Li, Haoyang You");
+        authorLabel.setFont(new Font("Arial", Font.ITALIC, 16));
+        authorLabel.setForeground(Color.WHITE);
+        
+        authorPanel.add(authorLabel);
+        
+        // 将作者信息添加到顶部
+        mainPanel.add(authorPanel, BorderLayout.NORTH);
+
         // Create button panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.setOpaque(false);
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 0));
 
         // Create buttons
         JButton startButton = createButton("START");
@@ -64,7 +82,10 @@ public class MainView extends JFrame {
         // Add button event listeners
         startButton.addActionListener(e -> showGameSetup());
         rulesButton.addActionListener(e -> showRules());
-        exitButton.addActionListener(e -> System.exit(0));
+        exitButton.addActionListener(e -> {
+            AudioManager.getInstance().stopBackgroundMusic();
+            System.exit(0);
+        });
 
         // Add buttons to button panel
         buttonPanel.add(startButton);
@@ -78,15 +99,16 @@ public class MainView extends JFrame {
     }
 
     private JButton createButton(String text) {
-        JButton button = new JButton(text, new ImageIcon(buttonImage.getScaledInstance(200, 50, Image.SCALE_SMOOTH)));
+        // 增大按钮尺寸从200x50到280x70
+        JButton button = new JButton(text, new ImageIcon(buttonImage.getScaledInstance(300, 60, Image.SCALE_SMOOTH)));
         button.setHorizontalTextPosition(JButton.CENTER);
         button.setVerticalTextPosition(JButton.TOP);
-        button.setFont(new Font("Arial", Font.BOLD, 24));
+        button.setFont(new Font("Arial", Font.BOLD, 30)); // 增大字体从24到28
         button.setForeground(Color.WHITE);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setMaximumSize(new Dimension(200, 50));
+        button.setMaximumSize(new Dimension(300, 60)); // 更新最大尺寸
         return button;
     }
 
@@ -119,21 +141,19 @@ public class MainView extends JFrame {
     }
 
     private void showRules() {
-        try {
-            File pdfFile = new File("src/resources/RULES.pdf");
-            if (pdfFile.exists()) {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(pdfFile);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Desktop is not supported on this platform.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "RULES.pdf not found at " + pdfFile.getAbsolutePath(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error opening PDF file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        SwingUtilities.invokeLater(() -> {
+            RuleView ruleView = new RuleView();
+            ruleView.setVisible(true);
+        });
+    }
+
+    private void toggleMusic() {
+        AudioManager audioManager = AudioManager.getInstance();
+        audioManager.setMusicEnabled(!audioManager.isMusicEnabled());
+        
+        // 可以添加视觉反馈
+        String status = audioManager.isMusicEnabled() ? "ON" : "OFF";
+        JOptionPane.showMessageDialog(this, "Music: " + status, "Music Control", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void confirmSetup() {

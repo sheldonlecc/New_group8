@@ -5,24 +5,46 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import Controller.AudioManager;
 
 public class SetupView extends JPanel {
     private boolean confirmed = false;
     private JComboBox<String> playerCountSelector;
     private JComboBox<String> mapSelector;
-    private JComboBox<String> difficultySelector; // 新增难度选择器
+    private JComboBox<String> difficultySelector;
+    private JCheckBox musicCheckBox;
     private MainView mainView;
-    private Image backgroundImage;  // 添加背景图片变量
+    private Image backgroundImage;
+    private JPanel mapPreviewPanel;
+    private JLabel[] mapImageLabels;
+    private Image[] mapImages;
 
     public SetupView(MainView mainView) {
         this.mainView = mainView;
         // 加载背景图片
         try {
-            backgroundImage = ImageIO.read(new File("src/resources/Background.png"));
+            backgroundImage = ImageIO.read(new File("src/resources/background.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        loadMapImages();
         initializeUI();
+    }
+
+    private void loadMapImages() {
+        String[] mapNames = {"CLASSIC", "ADVANCED", "EXPERT"};
+        mapImages = new Image[3];
+        
+        for (int i = 0; i < mapNames.length; i++) {
+            try {
+                mapImages[i] = ImageIO.read(new File("src/resources/Map/" + mapNames[i] + ".png"));
+            } catch (IOException e) {
+                System.err.println("Failed to load map image: " + mapNames[i] + ".png");
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -35,10 +57,30 @@ public class SetupView extends JPanel {
 
     private void initializeUI() {
         setPreferredSize(new Dimension(800, 600));
+        setLayout(new BorderLayout());
 
-        setLayout(new GridBagLayout());
+        // 添加更大的顶部空白区域，让选择区域向下移动更多
+        JPanel topSpacer = new JPanel();
+        topSpacer.setOpaque(false);
+        topSpacer.setPreferredSize(new Dimension(0, 400)); // 从50增加到100像素
+        add(topSpacer, BorderLayout.NORTH);
+
+        // 创建中央控制面板
+        JPanel centerPanel = createCenterPanel();
+        add(centerPanel, BorderLayout.CENTER);
+
+        // 创建地图预览面板
+        createMapPreviewPanel();
+        add(mapPreviewPanel, BorderLayout.SOUTH);
+    }
+
+    private JPanel createCenterPanel() {
+        JPanel centerPanel = new JPanel();
+        centerPanel.setOpaque(false);
+        centerPanel.setLayout(new GridBagLayout());
+        
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Title
@@ -46,36 +88,55 @@ public class SetupView extends JPanel {
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         JLabel titleLabel = new JLabel("Game Setup");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        add(titleLabel, gbc);
+        titleLabel.setForeground(Color.WHITE);
+        centerPanel.add(titleLabel, gbc);
 
         // Player count selection
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        add(new JLabel("Number of Players:"), gbc);
+        gbc.anchor = GridBagConstraints.EAST;
+        JLabel playerLabel = new JLabel("Number of Players:");
+        playerLabel.setForeground(Color.WHITE);
+        playerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        centerPanel.add(playerLabel, gbc);
 
         gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
         String[] playerCounts = {"2 Players", "3 Players", "4 Players"};
         playerCountSelector = new JComboBox<>(playerCounts);
-        add(playerCountSelector, gbc);
+        playerCountSelector.setPreferredSize(new Dimension(150, 30));
+        centerPanel.add(playerCountSelector, gbc);
 
         // Map selection
         gbc.gridx = 0;
         gbc.gridy = 2;
-        add(new JLabel("Select Map:"), gbc);
+        gbc.anchor = GridBagConstraints.EAST;
+        JLabel mapLabel = new JLabel("Select Map:");
+        mapLabel.setForeground(Color.WHITE);
+        mapLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        centerPanel.add(mapLabel, gbc);
 
         gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
         String[] mapOptions = {"CLASSIC", "ADVANCED", "EXPERT"};
         mapSelector = new JComboBox<>(mapOptions);
-        add(mapSelector, gbc);
+        mapSelector.setPreferredSize(new Dimension(150, 30));
+        mapSelector.addActionListener(e -> updateMapPreview());
+        centerPanel.add(mapSelector, gbc);
 
-        // Difficulty selection (修改难度选项)
+        // Difficulty selection
         gbc.gridx = 0;
         gbc.gridy = 3;
-        add(new JLabel("Select Difficulty:"), gbc);
+        gbc.anchor = GridBagConstraints.EAST;
+        JLabel difficultyLabel = new JLabel("Select Difficulty:");
+        difficultyLabel.setForeground(Color.WHITE);
+        difficultyLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        centerPanel.add(difficultyLabel, gbc);
 
         gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
         String[] difficultyOptions = {
             "NOVICE", 
             "NORMAL", 
@@ -83,15 +144,47 @@ public class SetupView extends JPanel {
             "LEGENDAIRE"
         };
         difficultySelector = new JComboBox<>(difficultyOptions);
-        add(difficultySelector, gbc);
+        difficultySelector.setPreferredSize(new Dimension(150, 30));
+        centerPanel.add(difficultySelector, gbc);
+
+        // Music toggle
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.EAST;
+        JLabel musicLabel = new JLabel("Background Music:");
+        musicLabel.setForeground(Color.WHITE);
+        musicLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        centerPanel.add(musicLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        musicCheckBox = new JCheckBox("Enable Music");
+        musicCheckBox.setSelected(AudioManager.getInstance().isMusicEnabled());
+        musicCheckBox.setOpaque(false);
+        musicCheckBox.setForeground(Color.WHITE);
+        musicCheckBox.setFont(new Font("Arial", Font.BOLD, 14));
+        musicCheckBox.addActionListener(e -> {
+            AudioManager.getInstance().setMusicEnabled(musicCheckBox.isSelected());
+        });
+        centerPanel.add(musicCheckBox, gbc);
 
         // Button panel
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(20, 10, 10, 10);
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setOpaque(false);
+        
         JButton confirmButton = new JButton("Confirm");
         JButton cancelButton = new JButton("Cancel");
+        
+        confirmButton.setPreferredSize(new Dimension(100, 35));
+        cancelButton.setPreferredSize(new Dimension(100, 35));
+        
+        confirmButton.setFont(new Font("Arial", Font.BOLD, 14));
+        cancelButton.setFont(new Font("Arial", Font.BOLD, 14));
 
         confirmButton.addActionListener(e -> {
             confirmed = true;
@@ -104,19 +197,66 @@ public class SetupView extends JPanel {
         });
 
         buttonPanel.add(confirmButton);
+        buttonPanel.add(Box.createHorizontalStrut(20));
         buttonPanel.add(cancelButton);
-        add(buttonPanel, gbc);
+        centerPanel.add(buttonPanel, gbc);
+        
+        return centerPanel;
+    }
 
-        // 设置所有标签为白色文字，以便在深色背景上更容易看见
-        titleLabel.setForeground(Color.WHITE);
-        for (Component comp : getComponents()) {
-            if (comp instanceof JLabel) {
-                ((JLabel) comp).setForeground(Color.WHITE);
+    private void createMapPreviewPanel() {
+        mapPreviewPanel = new JPanel();
+        // 增加地图之间的距离从30增加到50
+        mapPreviewPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 150, 20));
+        mapPreviewPanel.setOpaque(false);
+        mapPreviewPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        
+        String[] mapNames = {"CLASSIC", "ADVANCED", "EXPERT"};
+        mapImageLabels = new JLabel[3];
+        
+        for (int i = 0; i < 3; i++) {
+            JPanel mapContainer = new JPanel();
+            mapContainer.setLayout(new BorderLayout());
+            mapContainer.setOpaque(false);
+            
+            // 创建地图名称标签
+            JLabel nameLabel = new JLabel(mapNames[i]);
+            nameLabel.setForeground(Color.WHITE);
+            nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            
+            // 创建地图图片标签
+            mapImageLabels[i] = new JLabel();
+            if (mapImages[i] != null) {
+                // 缩放图片到合适大小
+                Image scaledImage = mapImages[i].getScaledInstance(180, 180, Image.SCALE_SMOOTH);
+                mapImageLabels[i].setIcon(new ImageIcon(scaledImage));
+            }
+            mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+            mapImageLabels[i].setPreferredSize(new Dimension(180, 180));
+            
+            mapContainer.add(nameLabel, BorderLayout.NORTH);
+            mapContainer.add(mapImageLabels[i], BorderLayout.CENTER);
+            
+            mapPreviewPanel.add(mapContainer);
+        }
+        
+        // 初始化时高亮第一个地图
+        updateMapPreview();
+    }
+    
+    private void updateMapPreview() {
+        int selectedIndex = mapSelector.getSelectedIndex();
+        
+        for (int i = 0; i < mapImageLabels.length; i++) {
+            if (i == selectedIndex) {
+                // 高亮选中的地图
+                mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
+            } else {
+                // 普通边框
+                mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
             }
         }
-
-        // 设置按钮面板为透明
-        buttonPanel.setOpaque(false);
     }
 
     public boolean isConfirmed() {
@@ -132,11 +272,8 @@ public class SetupView extends JPanel {
         return (String) mapSelector.getSelectedItem();
     }
 
-    // 获取难度对应的初始水位方法
     public int getInitialWaterLevel() {
         int selectedIndex = difficultySelector.getSelectedIndex();
         return selectedIndex + 1; // NOVICE=1, NORMAL=2, ELITE=3, LEGENDAIRE=4
     }
-
-    // 删除原来的isRandomGeneration方法，因为不再需要
 }

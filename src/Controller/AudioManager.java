@@ -1,0 +1,87 @@
+package Controller;
+
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
+
+public class AudioManager {
+    private static AudioManager instance;
+    private Clip backgroundMusicClip;
+    private boolean isMusicEnabled = true;
+    
+    private AudioManager() {}
+    
+    public static AudioManager getInstance() {
+        if (instance == null) {
+            instance = new AudioManager();
+        }
+        return instance;
+    }
+    
+    public void playBackgroundMusic() {
+        if (!isMusicEnabled) return;
+        
+        try {
+            // 停止之前的音乐
+            stopBackgroundMusic();
+            
+            // 加载音频文件
+            File audioFile = new File("src/resources/Audio/Ortus.wav");
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
+            
+            // 创建音频剪辑
+            backgroundMusicClip = AudioSystem.getClip();
+            backgroundMusicClip.open(audioInputStream);
+            
+            // 设置循环播放
+            backgroundMusicClip.loop(Clip.LOOP_CONTINUOUSLY);
+            
+            // 开始播放
+            backgroundMusicClip.start();
+            
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.err.println("Error playing background music: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    public void stopBackgroundMusic() {
+        if (backgroundMusicClip != null && backgroundMusicClip.isRunning()) {
+            backgroundMusicClip.stop();
+            backgroundMusicClip.close();
+        }
+    }
+    
+    public void pauseBackgroundMusic() {
+        if (backgroundMusicClip != null && backgroundMusicClip.isRunning()) {
+            backgroundMusicClip.stop();
+        }
+    }
+    
+    public void resumeBackgroundMusic() {
+        if (backgroundMusicClip != null && !backgroundMusicClip.isRunning()) {
+            backgroundMusicClip.start();
+        }
+    }
+    
+    public void setMusicEnabled(boolean enabled) {
+        this.isMusicEnabled = enabled;
+        if (!enabled) {
+            stopBackgroundMusic();
+        } else {
+            playBackgroundMusic();
+        }
+    }
+    
+    public boolean isMusicEnabled() {
+        return isMusicEnabled;
+    }
+    
+    public void setVolume(float volume) {
+        if (backgroundMusicClip != null) {
+            FloatControl volumeControl = (FloatControl) backgroundMusicClip.getControl(FloatControl.Type.MASTER_GAIN);
+            float dB = (float) (Math.log(volume) / Math.log(10.0) * 20.0);
+            volumeControl.setValue(dB);
+        }
+    }
+}
