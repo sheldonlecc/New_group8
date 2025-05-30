@@ -719,11 +719,11 @@ public class GameController {
             }
         }
 
-        // 从玩家手牌中移除这些卡并丢弃
+        // 从玩家手牌中移除这些卡，不再丢弃到弃牌堆（直接销毁）
         for (Card card : cardsToRemove) {
             player.getHandCard().removeCard(card);
             playerInfoViews.get(playerIndex).removeCard(card);
-            treasureDeck.discard(card);
+            // 不再调用 treasureDeck.discard(card);
         }
 
         // 记录宝物收集
@@ -959,7 +959,7 @@ public class GameController {
         System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
         this.tilePosition = mapView.getTilePosition();
         this.mapController = new MapController(this, mapView);
-        
+
         // 每次设置地图时都重新初始化洪水牌堆
         List<Tile> allTiles = mapView.getAllTiles();
         this.floodDeck = new FloodDeck(allTiles);

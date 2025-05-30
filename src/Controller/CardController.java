@@ -307,14 +307,14 @@ public class CardController implements ActionListener {
                     discardingPlayer.getHandCard().removeCard(card);
                     removeCard(currentDiscardingPlayer, card);
                     cardsDiscarded++;
-                    System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
+                    gameController.getTreasureDeck().discard(card); // 确保特殊卡也进弃牌堆
                 }
             } else {
                 // 如果不是特殊卡，继续正常的弃牌流程
                 discardingPlayer.getHandCard().removeCard(card);
                 removeCard(currentDiscardingPlayer, card);
                 cardsDiscarded++;
-                System.out.println("成功弃掉一张卡牌，还剩 " + (cardsToDiscard - cardsDiscarded) + " 张需要弃掉"); // 调试信息
+                gameController.getTreasureDeck().discard(card); // 确保宝藏卡能进弃牌堆
             }
 
             // 检查是否完成弃牌

@@ -783,6 +783,16 @@ public class MapController implements ActionListener {
      * @param col 目标列
      */
     private void handleHelicopterMove(int row, int col) {
+        // 新增：只要所有玩家都在愚人岛码头且宝藏集齐，使用直升机卡就直接胜利
+        List<Player> allPlayers = gameController.getPlayers();
+        boolean allAtFoolsLanding = allPlayers.stream().allMatch(
+                p -> p.getCurrentTile() != null && p.getCurrentTile().getName().name().equals("FOOLS_LANDING"));
+        if (gameController.getTreasureDeck().allTreasuresCollected() && allAtFoolsLanding) {
+            int currentPlayerIndex = helicopterPlayerIndex;
+            gameController.getCardController().useHelicopterCardForWin(currentPlayerIndex);
+            exitHelicopterMode();
+            return;
+        }
         System.out.println("\n========== 处理直升机移动 ==========");
         System.out.println("目标位置: [" + row + "," + col + "]");
         System.out.println("成功接收到板块点击事件");

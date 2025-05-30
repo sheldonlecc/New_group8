@@ -10,6 +10,7 @@ import java.util.ArrayList;
 /**
  * 牌堆抽象基类
  * 提供牌堆的基本操作和状态管理
+ * 
  * @param <T> 卡牌类型，必须是Card的子类
  */
 public abstract class Deck<T extends Card> {
@@ -39,6 +40,7 @@ public abstract class Deck<T extends Card> {
      * 抽牌
      * 从抽牌堆顶部抽取一张卡牌
      * 如果抽牌堆为空，则重洗弃牌堆
+     * 
      * @return 抽到的卡牌，如果牌堆为空则返回null
      */
     public T draw() {
@@ -51,6 +53,7 @@ public abstract class Deck<T extends Card> {
     /**
      * 弃牌
      * 将卡牌放入弃牌堆
+     * 
      * @param card 要弃置的卡牌
      */
     public void discard(T card) {
@@ -64,14 +67,16 @@ public abstract class Deck<T extends Card> {
      * 将弃牌堆中的所有卡牌重新加入抽牌堆并洗牌
      */
     public void reshuffleDiscardPile() {
-        drawPile.addAll(discardPile);
-        discardPile.clear();
+        while (!discardPile.isEmpty()) {
+            drawPile.push(discardPile.pop());
+        }
         shuffle();
     }
 
     /**
      * 查看牌堆顶部卡牌
      * 不改变牌堆状态
+     * 
      * @return 牌堆顶部的卡牌，如果牌堆为空则返回null
      */
     public T peek() {
@@ -80,6 +85,7 @@ public abstract class Deck<T extends Card> {
 
     /**
      * 获取抽牌堆剩余卡牌数量
+     * 
      * @return 抽牌堆中的卡牌数量
      */
     public int getDrawPileSize() {
@@ -88,6 +94,7 @@ public abstract class Deck<T extends Card> {
 
     /**
      * 获取弃牌堆卡牌数量
+     * 
      * @return 弃牌堆中的卡牌数量
      */
     public int getDiscardPileSize() {
@@ -96,6 +103,7 @@ public abstract class Deck<T extends Card> {
 
     /**
      * 检查牌堆是否为空
+     * 
      * @return 如果抽牌堆和弃牌堆都为空则返回true
      */
     public boolean isEmpty() {
@@ -104,6 +112,7 @@ public abstract class Deck<T extends Card> {
 
     /**
      * 获取抽牌堆的不可修改视图
+     * 
      * @return 抽牌堆的只读列表
      */
     public List<T> getDrawPileView() {
@@ -112,6 +121,7 @@ public abstract class Deck<T extends Card> {
 
     /**
      * 获取弃牌堆的不可修改视图
+     * 
      * @return 弃牌堆的只读列表
      */
     public List<T> getDiscardPileView() {
@@ -130,6 +140,7 @@ public abstract class Deck<T extends Card> {
     /**
      * 检查牌堆状态是否有效
      * 子类可以重写此方法以添加特定的验证逻辑
+     * 
      * @return 如果牌堆状态有效则返回true
      */
     public boolean isValid() {
