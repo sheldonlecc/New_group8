@@ -32,10 +32,10 @@ public class Messenger extends Role {
         if (currentTile == null)
             return movableTiles;
 
-        // 获取所有相邻瓦片
+        // Get all adjacent tiles
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
 
-        // 信使只能移动到未被淹没的相邻瓦片
+        // Messenger can only move to unflooded adjacent tiles
         for (Tile tile : adjacentTiles) {
             if (tile.getState() == TileState.NORMAL) {
                 movableTiles.add(tile);

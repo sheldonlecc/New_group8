@@ -32,10 +32,10 @@ public class Explorer extends Role {
         if (currentTile == null)
             return movableTiles;
 
-        // 获取所有相邻瓦片（包括斜向）
+        // Get all adjacent tiles (including diagonal)
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
 
-        // 探险家可以移动到任何未被淹没的相邻瓦片（包括斜向）
+        // Explorer can move to any unflooded adjacent tile (including diagonal)
         for (Tile tile : adjacentTiles) {
             if (tile.getState() == TileState.NORMAL) {
                 movableTiles.add(tile);

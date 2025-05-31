@@ -5,65 +5,65 @@ import Model.Enumeration.TileState;
 import Model.Tile;
 
 /**
- * 沙袋卡
- * 用于加固一个即将被淹没的岛屿板块
- * 使用后可以防止目标板块被淹没
+ * Sandbag Card
+ * Used to reinforce a flooded island tile
+ * After use, prevents the target tile from being flooded
  */
 public class SandbagCard extends Card {
-    private Tile targetTile;  // 目标板块
+    private Tile targetTile;  // Target tile
 
     /**
-     * 创建沙袋卡
+     * Create a sandbag card
      */
     public SandbagCard() {
-        super(CardType.SAND_BAG, "SandBag", "加固一个即将被淹没的岛屿板块");
+        super(CardType.SAND_BAG, "SandBag", "Reinforce a flooded island tile");
     }
 
     /**
-     * 获取目标板块
-     * @return 目标板块
+     * Get the target tile
+     * @return Target tile
      */
     public Tile getTargetTile() {
         return targetTile;
     }
 
     /**
-     * 检查卡牌是否可以在目标板块使用
-     * @param targetTile 目标板块
-     * @return 如果卡牌可以使用则返回true
+     * Check if the card can be used on the target tile
+     * @param targetTile Target tile
+     * @return Returns true if the card can be used
      */
     public boolean canUse(Tile targetTile) {
         if (!super.canUse() || targetTile == null) {
             return false;
         }
 
-        // 检查目标板块是否被淹没但未沉没
+        // Check if target tile is flooded but not sunk
         TileState state = targetTile.getState();
         return state == TileState.FLOODED;
     }
 
     /**
-     * 使用沙袋卡加固目标板块
-     * @param targetTile 要加固的目标板块
-     * @return 是否成功使用
+     * Use sandbag card to reinforce target tile
+     * @param targetTile Target tile to reinforce
+     * @return Whether the use was successful
      */
     public boolean useCard(Tile targetTile) {
         if (!canUse(targetTile)) {
             return false;
         }
 
-        // 加固目标板块（将状态从FLOODED改为NORMAL）
+        // Reinforce target tile (change state from FLOODED to NORMAL)
         targetTile.setState(TileState.NORMAL);
         this.targetTile = targetTile;
         
-        // 使用后禁用卡牌
+        // Disable card after use
         setUsable(false);
         return true;
     }
 
     /**
-     * 重写equals方法
-     * 两张沙袋卡如果目标板块相同则视为相同
+     * Override equals method
+     * Two sandbag cards are considered equal if they target the same tile
      */
     @Override
     public boolean equals(Object obj) {
@@ -75,7 +75,7 @@ public class SandbagCard extends Card {
     }
 
     /**
-     * 重写hashCode方法
+     * Override hashCode method
      */
     @Override
     public int hashCode() {
@@ -83,22 +83,22 @@ public class SandbagCard extends Card {
     }
 
     /**
-     * 重写toString方法
+     * Override toString method
      */
     @Override
     public String toString() {
-        return String.format("%s - 目标板块: %s", super.toString(), 
-            targetTile != null ? targetTile.getName().getDisplayName() : "未指定");
+        return String.format("%s - Target Tile: %s", super.toString(), 
+            targetTile != null ? targetTile.getName().getDisplayName() : "Not specified");
     }
 
     /**
-     * 实现抽象方法use()
-     * 这个方法由GameController调用，传入目标板块
+     * Implement abstract method use()
+     * This method is called by GameController with target tile
      */
     @Override
     public void use() {
-        // 由于需要目标板块参数，这个方法应该由GameController调用useCard(Tile targetTile)
+        // Since target tile parameter is needed, this method should be called by GameController using useCard(Tile targetTile)
         throw new UnsupportedOperationException(
-            "请使用useCard(Tile targetTile)方法，该方法需要目标板块参数");
+            "Please use useCard(Tile targetTile) method, which requires a target tile parameter");
     }
 }

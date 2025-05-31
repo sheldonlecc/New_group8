@@ -34,10 +34,10 @@ public class Pilot extends Role {
         if (currentTile == null)
             return movableTiles;
 
-        // 获取所有相邻瓦片
+        // Get all adjacent tiles
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
 
-        // 飞行员可以移动到任何未被淹没的相邻瓦片
+        // Pilot can move to any unflooded adjacent tile
         for (Tile tile : adjacentTiles) {
             if (tile.getState() == TileState.NORMAL) {
                 movableTiles.add(tile);

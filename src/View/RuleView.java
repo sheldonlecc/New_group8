@@ -15,7 +15,7 @@ public class RuleView extends JFrame implements KeyListener {
     private JButton closeButton;
     private JLabel pageLabel;
     private int currentPagePair = 1;
-    private final int totalPagePairs = 4; // 8页分为4对
+    private final int totalPagePairs = 4; // 8 pages divided into 4 pairs
     private Image[] ruleImages;
     private Image backgroundImage;
     private JPanel mainPanel;
@@ -28,7 +28,7 @@ public class RuleView extends JFrame implements KeyListener {
         setupLayout();
         setupEventListeners();
         
-        // 确保窗口完全显示后再设置按钮位置
+        // Ensure window is fully displayed before setting button positions
         SwingUtilities.invokeLater(() -> {
             setVisible(true);
             updateLayout();
@@ -78,7 +78,7 @@ public class RuleView extends JFrame implements KeyListener {
                 }
             }
         };
-        mainPanel.setLayout(null); // 使用绝对布局
+        mainPanel.setLayout(null); // Use absolute layout
         
         // Image display panel
         imagePanel = new JPanel() {
@@ -120,26 +120,26 @@ public class RuleView extends JFrame implements KeyListener {
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setBackground(new Color(139, 69, 19, 200)); // 棕色
+        button.setBackground(new Color(139, 69, 19, 200)); // Brown
         button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createRaisedSoftBevelBorder(),
-            BorderFactory.createEmptyBorder(8, 20, 8, 20) // 减少左右内边距从20改为12
+            BorderFactory.createEmptyBorder(8, 20, 8, 20) // Reduce left/right padding from 20 to 12
         ));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setOpaque(true);
         
-        // Hover effect - 悬停时的棕色效果
+        // Hover effect - Brown effect on hover
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(160, 82, 45, 220)); // 悬停时的浅棕色
+                button.setBackground(new Color(160, 82, 45, 220)); // Light brown on hover
             }
             
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(139, 69, 19, 200)); // 恢复原棕色
+                button.setBackground(new Color(139, 69, 19, 200)); // Restore original brown
             }
         });
         
@@ -149,15 +149,15 @@ public class RuleView extends JFrame implements KeyListener {
     private void setupLayout() {
         setContentPane(mainPanel);
         
-        // 添加组件到主面板
+        // Add components to main panel
         mainPanel.add(imagePanel);
         mainPanel.add(controlPanel);
         
-        // 确保控制面板在最上层
+        // Ensure control panel is on top
         mainPanel.setComponentZOrder(controlPanel, 0);
         mainPanel.setComponentZOrder(imagePanel, 1);
         
-        // 响应窗口大小变化
+        // Respond to window size changes
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
@@ -166,7 +166,7 @@ public class RuleView extends JFrame implements KeyListener {
             
             @Override
             public void componentShown(java.awt.event.ComponentEvent e) {
-                // 窗口显示时也更新布局
+                // Update layout when window is shown
                 SwingUtilities.invokeLater(() -> updateLayout());
             }
         });
@@ -174,15 +174,15 @@ public class RuleView extends JFrame implements KeyListener {
     
     private void updateLayout() {
         if (imagePanel != null && controlPanel != null && getWidth() > 0 && getHeight() > 0) {
-            // 图片面板填充整个窗口
+            // Image panel fills entire window
             imagePanel.setBounds(0, 0, getWidth(), getHeight());
             
-            // 控制面板位于底部，稍微再靠下一点
+            // Control panel at bottom, slightly lower
             int controlHeight = 60;
-            int controlY = getHeight() - controlHeight - 5; // 距离底部5像素（原来是20像素）
+            int controlY = getHeight() - controlHeight - 5; // 5 pixels from bottom (was 20 pixels)
             controlPanel.setBounds(0, controlY, getWidth(), controlHeight);
             
-            // 强制重绘
+            // Force repaint
             imagePanel.repaint();
             controlPanel.repaint();
             mainPanel.repaint();

@@ -1,11 +1,11 @@
 package Model.Enumeration;
 
 /**
- * 水位状态枚举
- * 定义水位可能的状态
+ * Water Level State Enumeration
+ * Defines possible states for water level
  */
 public enum WaterLevelState {
-    NORMAL,     // 正常状态
-    DANGEROUS,  // 危险状态（水位等级 >= 7）
-    CRITICAL    // 临界状态（水位等级达到最高）
+    NORMAL,     // Normal state
+    DANGEROUS,  // Dangerous state (water level >= 7)
+    CRITICAL    // Critical state (water level at maximum)
 } 

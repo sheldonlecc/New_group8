@@ -32,10 +32,10 @@ public class Diver extends Role {
         if (currentTile == null)
             return movableTiles;
 
-        // 获取所有相邻瓦片
+        // Get all adjacent tiles
         List<Tile> adjacentTiles = currentTile.getAdjacentTiles();
 
-        // 潜水员可以移动到任何相邻的瓦片，包括被淹没的和缺失的
+        // Diver can move to any adjacent tile, including flooded and missing ones
         for (Tile tile : adjacentTiles) {
             if (tile.getState() != TileState.SUNK) { // Cannot move to sunken tiles
                 movableTiles.add(tile);
@@ -49,7 +49,7 @@ public class Diver extends Role {
     public boolean canMoveTo(Tile tile) {
         if (tile == null)
             return false;
-        return tile.getState() != TileState.SUNK; // 不能移动到已沉没的瓦片
+        return tile.getState() != TileState.SUNK; // Cannot move to sunken tiles
     }
 
     @Override

@@ -5,59 +5,59 @@ import Model.Enumeration.CardType;
 import Model.Enumeration.WaterLevel;
 
 /**
- * 水位上升卡
- * 用于提高水位等级
- * 每次使用会提高水位等级，影响抽牌数量和板块淹没速度
+ * Water Rise Card
+ * Used to increase the water level
+ * Each use increases the water level, affecting the number of cards drawn and tile flooding speed
  */
 public class WaterRiseCard extends Card {
-    private WaterLevel currentWaterLevel;  // 当前水位等级
+    private WaterLevel currentWaterLevel;  // Current water level
 
     /**
-     * 创建水位上升卡
+     * Create a water rise card
      */
     public WaterRiseCard() {
-        super(CardType.WATER_RISE, "WaterRise", "提高水位等级，增加游戏难度");
+        super(CardType.WATER_RISE, "WaterRise", "Increase water level, increasing game difficulty");
     }
 
     /**
-     * 获取当前水位等级
-     * @return 当前水位等级
+     * Get the current water level
+     * @return Current water level
      */
     public WaterLevel getCurrentWaterLevel() {
         return currentWaterLevel;
     }
 
     /**
-     * 设置当前水位等级
-     * @param waterLevel 新的水位等级
+     * Set the current water level
+     * @param waterLevel New water level
      */
     public void setCurrentWaterLevel(WaterLevel waterLevel) {
         this.currentWaterLevel = waterLevel;
     }
 
     /**
-     * 检查卡牌是否可以使用
-     * @return 如果卡牌可以使用则返回true
+     * Check if the card can be used
+     * @return Returns true if the card can be used
      */
     public boolean canUse() {
         if (!super.canUse() || currentWaterLevel == null) {
             return false;
         }
 
-        // 检查水位是否已经达到最高等级
+        // Check if water level has reached maximum
         return currentWaterLevel.getNextLevel() != null;
     }
 
     /**
-     * 使用水位上升卡
-     * @return 是否成功使用
+     * Use the water rise card
+     * @return Whether the use was successful
      */
     public boolean useCard() {
         if (!canUse()) {
             return false;
         }
 
-        // 提高水位等级
+        // Increase water level
         WaterLevel nextLevel = currentWaterLevel.getNextLevel();
         if (nextLevel == null) {
             return false;
@@ -65,14 +65,14 @@ public class WaterRiseCard extends Card {
         
         currentWaterLevel = nextLevel;
         
-        // 使用后禁用卡牌
+        // Disable card after use
         setUsable(false);
         return true;
     }
 
     /**
-     * 重写equals方法
-     * 两张水位上升卡如果当前水位等级相同则视为相同
+     * Override equals method
+     * Two water rise cards are considered equal if they have the same current water level
      */
     @Override
     public boolean equals(Object obj) {
@@ -83,7 +83,7 @@ public class WaterRiseCard extends Card {
     }
 
     /**
-     * 重写hashCode方法
+     * Override hashCode method
      */
     @Override
     public int hashCode() {
@@ -91,22 +91,22 @@ public class WaterRiseCard extends Card {
     }
 
     /**
-     * 重写toString方法
+     * Override toString method
      */
     @Override
     public String toString() {
-        return String.format("%s - 当前水位: %s", super.toString(), 
-            currentWaterLevel != null ? currentWaterLevel.getDisplayName() : "未设置");
+        return String.format("%s - Current Water Level: %s", super.toString(), 
+            currentWaterLevel != null ? currentWaterLevel.getDisplayName() : "Not set");
     }
 
     /**
-     * 实现抽象方法use()
-     * 这个方法由GameController调用
+     * Implement abstract method use()
+     * This method is called by GameController
      */
     @Override
     public void use() {
         if (!useCard()) {
-            throw new IllegalStateException("无法使用水位上升卡");
+            throw new IllegalStateException("Cannot use water rise card");
         }
     }
 }

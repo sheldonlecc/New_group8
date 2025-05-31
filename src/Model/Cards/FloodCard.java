@@ -7,36 +7,36 @@ import Model.Tile;
 import Model.Enumeration.TileState;
 
 /**
- * 洪水卡
- * 用于淹没指定的岛屿板块
- * 当板块已经被淹没时，会使其沉没
+ * Flood Card
+ * Used to flood specified island tiles
+ * When a tile is already flooded, it will sink
  */
 public class FloodCard extends Card {
-    private final Tile targetTile; // 目标地块
+    private final Tile targetTile; // Target tile
 
     /**
-     * 创建一张洪水卡
+     * Create a flood card
      * 
-     * @param targetTile 目标地块
+     * @param targetTile Target tile
      */
     public FloodCard(Tile targetTile) {
-        super(CardType.FLOOD, "Flood", "淹没指定地块，如果地块已被淹没则使其沉没");
+        super(CardType.FLOOD, "Flood", "Flood the specified tile, if the tile is already flooded it will sink");
         this.targetTile = targetTile;
     }
 
     /**
-     * 获取目标地块
+     * Get the target tile
      * 
-     * @return 目标地块
+     * @return Target tile
      */
     public Tile getTargetTile() {
         return targetTile;
     }
 
     /**
-     * 检查卡牌是否可以使用
+     * Check if the card can be used
      * 
-     * @return 如果目标地块存在且未被沉没则返回true
+     * @return Returns true if the target tile exists and is not sunk
      */
     @Override
     public boolean canUse() {
@@ -46,12 +46,12 @@ public class FloodCard extends Card {
     }
 
     /**
-     * 使用洪水卡
-     * 如果地块未被淹没，则将其淹没
-     * 如果地块已被淹没，则使其沉没，并从洪水牌堆中移除对应卡牌
+     * Use the flood card
+     * If the tile is not flooded, flood it
+     * If the tile is already flooded, sink it and remove the corresponding card from the flood deck
      * 
-     * @param floodDeck 洪水牌堆（用于移除沉没板块的卡牌）
-     * @return 使用是否成功
+     * @param floodDeck Flood deck (used to remove cards for sunk tiles)
+     * @return Whether the use was successful
      */
     public void use(Model.Deck.FloodDeck floodDeck) {
         if (!canUse()) {
@@ -63,11 +63,11 @@ public class FloodCard extends Card {
         if (before == TileState.NORMAL) {
             tile.setState(TileState.FLOODED);
             System.out.println(
-                    "[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: 正常 -> 被淹没");
+                    "[Debug] Flood card applied to " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "], State: Normal -> Flooded");
         } else if (before == TileState.FLOODED) {
             tile.setState(TileState.SUNK);
             System.out.println(
-                    "[调试] 洪水卡作用于 " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]，状态: 被淹没 -> 沉没");
+                    "[Debug] Flood card applied to " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "], State: Flooded -> Sunk");
             if (floodDeck != null) {
                 floodDeck.removeCardForSunkTile(tile);
             }
@@ -80,8 +80,8 @@ public class FloodCard extends Card {
     }
 
     /**
-     * 重写equals方法
-     * 两张洪水卡如果目标地块相同则视为相同
+     * Override equals method
+     * Two flood cards are considered equal if they target the same tile
      */
     @Override
     public boolean equals(Object obj) {
@@ -94,7 +94,7 @@ public class FloodCard extends Card {
     }
 
     /**
-     * 重写hashCode方法
+     * Override hashCode method
      */
     @Override
     public int hashCode() {
@@ -102,10 +102,10 @@ public class FloodCard extends Card {
     }
 
     /**
-     * 重写toString方法
+     * Override toString method
      */
     @Override
     public String toString() {
-        return String.format("%s - 目标地块: %s", super.toString(), targetTile.getName());
+        return String.format("%s - Target Tile: %s", super.toString(), targetTile.getName());
     }
 }

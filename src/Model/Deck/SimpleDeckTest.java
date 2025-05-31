@@ -14,7 +14,7 @@ public class SimpleDeckTest {
     public static void main(String[] args) {
         System.out.println("--- Starting Simple Deck Tests ---");
 
-        // 创建测试用的瓦片
+        // Create test tiles
         Tile helicopterTile = new Tile(TileName.FOOLS_LANDING, 0, 0);
         List<Tile> initialTiles = new ArrayList<>();
         initialTiles.add(new Tile(TileName.TEMPLE_OF_THE_SUN, 0, 0));
@@ -24,7 +24,7 @@ public class SimpleDeckTest {
         initialTiles.add(new Tile(TileName.CAVE_OF_SHADOWS, 1, 1));
         initialTiles.add(new Tile(TileName.OBSERVATORY, 1, 2));
 
-        // 初始化牌堆
+        // Initialize decks
         TreasureDeck treasureDeck = new TreasureDeck(helicopterTile);
         FloodDeck floodDeck = new FloodDeck(initialTiles);
 
@@ -76,8 +76,7 @@ public class SimpleDeckTest {
              System.out.println("TreasureDeck Discard Test Skipped. Could not draw card to discard.");
         }
 
-
-        // 您可以根据需要添加更多测试...
+        // You can add more tests as needed...
         System.out.println("\n--- Simple Deck Tests Finished ---");
     }
 } 

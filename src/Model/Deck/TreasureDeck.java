@@ -9,19 +9,19 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * 宝藏牌堆类
- * 管理游戏中的宝藏卡和特殊卡牌堆
- * 包括：宝藏卡、直升机救援卡、沙袋卡、水位上升卡
+ * Treasure Deck Class
+ * Manages treasure cards and special cards in the game
+ * Includes: Treasure Cards, Helicopter Rescue Cards, Sandbag Cards, Water Rise Cards
  */
 public class TreasureDeck extends Deck<Card> {
-    private boolean isFirstDraw; // 是否是初始发牌阶段
-    private final Tile helicopterTile; // 直升机场位置
-    private final Map<TreasureType, Integer> collectedTreasures; // 已收集的宝藏数量
+    private boolean isFirstDraw; // Whether in initial draw phase
+    private final Tile helicopterTile; // Helipad location
+    private final Map<TreasureType, Integer> collectedTreasures; // Number of collected treasures
 
     /**
-     * 构造函数
+     * Constructor
      * 
-     * @param helicopterTile 直升机场位置，用于创建直升机救援卡
+     * @param helicopterTile Helipad location, used for creating helicopter rescue cards
      */
     public TreasureDeck(Tile helicopterTile) {
         super();
@@ -33,18 +33,18 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 初始化牌堆
-     * 创建所有宝藏卡和特殊卡
+     * Initialize deck
+     * Create all treasure cards and special cards
      */
     private void initializeCards() {
-        // 添加宝藏卡（每个类型5张）
+        // Add treasure cards (5 of each type)
         Arrays.stream(TreasureType.values()).forEach(type -> {
             for (int i = 0; i < 5; i++) {
                 drawPile.push(new TreasureCard(type));
             }
         });
 
-        // 添加特殊卡
+        // Add special cards
         for (int i = 0; i < 3; i++) {
             drawPile.push(new HelicopterCard(helicopterTile));
             drawPile.push(new WaterRiseCard());
@@ -53,10 +53,10 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 抽牌
-     * 重写父类方法，添加特殊卡处理逻辑
+     * Draw a card
+     * Override parent class method, add special card handling logic
      * 
-     * @return 抽到的卡牌，如果牌堆为空则返回null
+     * @return Drawn card, returns null if deck is empty
      */
     @Override
     public Card draw() {
@@ -67,10 +67,10 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 初始发牌
-     * 特殊处理：如果抽到水位上升卡，将其移到牌堆底部
+     * Initial draw
+     * Special handling: If a water rise card is drawn, move it to the bottom of the deck
      * 
-     * @return 抽到的卡牌，如果牌堆为空则返回null
+     * @return Drawn card, returns null if deck is empty
      */
     public Card drawInitialCard() {
         if (drawPile.isEmpty()) {
@@ -89,12 +89,12 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 将卡牌移到牌堆底部
+     * Move card to bottom of deck
      * 
-     * @param card 要移动的卡牌
+     * @param card Card to move
      */
     private void moveCardToBottom(Card card) {
-        drawPile.pop(); // 移除顶部卡牌
+        drawPile.pop(); // Remove top card
         Stack<Card> tempStack = new Stack<>();
         while (!drawPile.isEmpty()) {
             tempStack.push(drawPile.pop());
@@ -106,45 +106,45 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 结束初始发牌阶段
+     * End initial draw phase
      */
     public void finishInitialDraw() {
         isFirstDraw = false;
     }
 
     /**
-     * 记录宝藏收集
+     * Record treasure collection
      * 
-     * @param type 宝藏类型
+     * @param type Treasure type
      */
     public void recordTreasureCollection(TreasureType type) {
         collectedTreasures.merge(type, 1, Integer::sum);
     }
 
     /**
-     * 检查宝藏是否已收集完成
+     * Check if treasure is collected
      * 
-     * @param type 宝藏类型
-     * @return 如果该类型宝藏已收集4个则返回true
+     * @param type Treasure type
+     * @return Returns true if 4 treasures of this type have been collected
      */
     public boolean isTreasureCollected(TreasureType type) {
         return collectedTreasures.getOrDefault(type, 0) >= 1;
     }
 
     /**
-     * 获取已收集的宝藏数量
+     * Get number of collected treasures
      * 
-     * @param type 宝藏类型
-     * @return 已收集的宝藏数量
+     * @param type Treasure type
+     * @return Number of collected treasures
      */
     public int getCollectedTreasureCount(TreasureType type) {
         return collectedTreasures.getOrDefault(type, 0);
     }
 
     /**
-     * 获取所有已收集的宝藏类型
+     * Get all collected treasure types
      * 
-     * @return 已收集完成的宝藏类型集合
+     * @return Set of completed treasure types
      */
     public Set<TreasureType> getCollectedTreasures() {
         return collectedTreasures.entrySet().stream()
@@ -154,10 +154,10 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 获取指定类型的卡牌数量
+     * Get count of cards of specified type
      * 
-     * @param cardType 卡牌类型
-     * @return 该类型卡牌的数量
+     * @param cardType Card type
+     * @return Number of cards of this type
      */
     public int getCardTypeCount(Class<? extends Card> cardType) {
         return (int) Stream.concat(drawPile.stream(), discardPile.stream())
@@ -166,9 +166,9 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 检查是否所有宝藏都已收集
+     * Check if all treasures are collected
      * 
-     * @return 如果所有宝藏类型都已收集4个则返回true
+     * @return Returns true if 4 treasures of each type have been collected
      */
     public boolean areAllTreasuresCollected() {
         return Arrays.stream(TreasureType.values())
@@ -176,9 +176,9 @@ public class TreasureDeck extends Deck<Card> {
     }
 
     /**
-     * 检查是否所有宝藏都已收集（对外接口）
+     * Check if all treasures are collected (external interface)
      * 
-     * @return 如果所有宝藏类型都已收集4个则返回true
+     * @return Returns true if 4 treasures of each type have been collected
      */
     public boolean allTreasuresCollected() {
         return areAllTreasuresCollected();

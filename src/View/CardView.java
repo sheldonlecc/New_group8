@@ -11,7 +11,7 @@ import java.awt.event.MouseEvent;
 
 public class CardView extends JButton {
     private Card card;
-    private static final int CARD_WIDTH = 65;  // 减小宽度避免超出
+    private static final int CARD_WIDTH = 65;  // Reduce width to avoid overflow
     private int cardHeight;
     private static final Font CARD_FONT = new Font("Microsoft YaHei", Font.BOLD, 10);
     private static final Font TITLE_FONT = new Font("Microsoft YaHei", Font.BOLD, 8);
@@ -26,7 +26,7 @@ public class CardView extends JButton {
     public CardView(Card card, int playerCount) {
         this.card = card;
         this.playerCount = playerCount;
-        this.cardHeight = (playerCount == 2) ? 130 : 110;  // 调整高度
+        this.cardHeight = (playerCount == 2) ? 130 : 110;  // Adjust height
         initializeUI();
     }
 
@@ -34,18 +34,18 @@ public class CardView extends JButton {
         setPreferredSize(new Dimension(CARD_WIDTH, cardHeight));
         setMargin(new Insets(0, 0, 0, 0));
         setFont(CARD_FONT);
-        setContentAreaFilled(false);  // 自定义绘制
+        setContentAreaFilled(false);  // Custom drawing
         setOpaque(false);
         setFocusPainted(false);
         setBorderPainted(false);
         
-        // 设置卡牌颜色主题
+        // Set card color theme
         setupCardColors();
         
-        // 加载卡牌图片
+        // Load card image
         loadCardImage();
         
-        // 添加鼠标事件监听器
+        // Add mouse event listeners
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -72,39 +72,39 @@ public class CardView extends JButton {
             }
         });
         
-        // 设置工具提示
+        // Set tooltip
         setToolTipText("<html><b>" + card.getName() + "</b><br>" + card.getDescription() + "</html>");
     }
     
     private void setupCardColors() {
         if (card instanceof TreasureCard) {
-            // 宝藏卡也使用灰色主题
-            baseColor = new Color(156, 163, 175);  // 灰色
+            // Treasure cards also use gray theme
+            baseColor = new Color(156, 163, 175);  // Gray
             borderColor = new Color(75, 85, 99);
         } else {
             switch (card.getType()) {
                 case FLOOD:
-                    // 普通洪水卡使用灰色边框
-                    baseColor = new Color(156, 163, 175);  // 灰色
+                    // Regular flood cards use gray border
+                    baseColor = new Color(156, 163, 175);  // Gray
                     borderColor = new Color(75, 85, 99);
                     break;
                 case HELICOPTER:
-                    // Helicopter使用蓝色
-                    baseColor = new Color(59, 130, 246);   // 蓝色
+                    // Helicopter uses blue
+                    baseColor = new Color(59, 130, 246);   // Blue
                     borderColor = new Color(29, 78, 216);
                     break;
                 case SAND_BAG:
-                    // Sandbag使用黄色
-                    baseColor = new Color(251, 191, 36);   // 黄色
+                    // Sandbag uses yellow
+                    baseColor = new Color(251, 191, 36);   // Yellow
                     borderColor = new Color(217, 119, 6);
                     break;
                 case WATER_RISE:
-                    baseColor = new Color(239, 68, 68);    // 红色
+                    baseColor = new Color(239, 68, 68);    // Red
                     borderColor = new Color(185, 28, 28);
                     break;
                 default:
-                    // 其他卡牌使用灰色边框
-                    baseColor = new Color(156, 163, 175);  // 灰色
+                    // Other cards use gray border
+                    baseColor = new Color(156, 163, 175);  // Gray
                     borderColor = new Color(75, 85, 99);
                     break;
             }
@@ -120,7 +120,7 @@ public class CardView extends JButton {
             setIcon(new ImageIcon(image));
             setText("");
         } catch (Exception e) {
-            System.err.println("无法加载图片: " + imagePath);
+            System.err.println("Unable to load image: " + imagePath);
             setIcon(null);
             setText(card.getName());
         }
@@ -135,12 +135,12 @@ public class CardView extends JButton {
         int width = getWidth();
         int height = getHeight();
         
-        // 修改缩放逻辑：3-4人游戏时进一步减少悬停效果
+        // Modify scaling logic: further reduce hover effect for 3-4 player games
         float hoverScale;
         if (playerCount == 2) {
-            hoverScale = 1.02f;  // 2人时保持1.02倍
+            hoverScale = 1.02f;  // Keep 1.02x for 2 players
         } else {
-            hoverScale = 1.01f;  // 3-4人时减少到1.01倍
+            hoverScale = 1.01f;  // Reduce to 1.01x for 3-4 players
         }
         
         float scale = isPressed ? 0.95f : (isHovered ? hoverScale : 1.0f);
@@ -150,14 +150,14 @@ public class CardView extends JButton {
         g2d.translate(offsetX, offsetY);
         g2d.scale(scale, scale);
         
-        // 绘制阴影（3-4人时进一步减少阴影效果）
+        // Draw shadow (further reduce shadow effect for 3-4 players)
         if (!isPressed) {
             int shadowAlpha = (playerCount == 2) ? (isHovered ? 40 : 20) : (isHovered ? 25 : 15);
             g2d.setColor(new Color(0, 0, 0, shadowAlpha));
             g2d.fillRoundRect(2, 2, width - 4, height - 4, 10, 10);
         }
         
-        // 绘制卡牌背景渐变
+        // Draw card background gradient
         Color startColor = isPressed ? baseColor.darker() : baseColor;
         Color endColor = isPressed ? baseColor.darker().darker() : baseColor.darker();
         
@@ -168,12 +168,12 @@ public class CardView extends JButton {
         g2d.setPaint(gradient);
         g2d.fillRoundRect(0, 0, width - 2, height - 2, 8, 8);
         
-        // 绘制边框
+        // Draw border
         g2d.setColor(borderColor);
         g2d.setStroke(new BasicStroke(1.5f));
         g2d.drawRoundRect(1, 1, width - 4, height - 4, 8, 8);
         
-        // 绘制内部高光（3-4人时减少高光效果）
+        // Draw inner highlight (reduce highlight effect for 3-4 players)
         int highlightAlpha = (playerCount == 2) ? (isHovered ? 60 : 30) : (isHovered ? 40 : 20);
         g2d.setColor(new Color(255, 255, 255, highlightAlpha));
         g2d.setStroke(new BasicStroke(0.5f));
@@ -181,10 +181,10 @@ public class CardView extends JButton {
         
         g2d.dispose();
         
-        // 绘制图标和文本
+        // Draw icon and text
         super.paintComponent(g);
         
-        // 绘制卡牌名称
+        // Draw card name
         if (getIcon() != null) {
             Graphics2D textG2d = (Graphics2D) g.create();
             textG2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -196,11 +196,11 @@ public class CardView extends JButton {
             int x = (getWidth() - textWidth) / 2;
             int y = getHeight() - 6;
             
-            // 绘制文本阴影
+            // Draw text shadow
             textG2d.setColor(new Color(0, 0, 0, 100));
             textG2d.drawString(name, x + 1, y + 1);
             
-            // 绘制文本
+            // Draw text
             textG2d.setColor(Color.WHITE);
             textG2d.drawString(name, x, y);
             

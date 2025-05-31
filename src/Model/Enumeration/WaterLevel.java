@@ -1,19 +1,19 @@
 package Model.Enumeration;
 
 /**
- * 水位等级枚举
- * 定义了游戏中的水位等级
- * 水位等级会影响抽牌数量和板块淹没速度
+ * Water Level Enumeration
+ * Defines water levels in the game
+ * Water level affects the number of cards drawn and tile flooding speed
  */
 public enum WaterLevel {
-    LEVEL_1("1", 2),  // 初始水位，每回合抽2张洪水卡
-    LEVEL_2("2", 3),  // 每回合抽3张洪水卡
-    LEVEL_3("3", 4),  // 每回合抽4张洪水卡
-    LEVEL_4("4", 5),  // 每回合抽5张洪水卡
-    LEVEL_5("5", 6);  // 最高水位，每回合抽6张洪水卡
+    LEVEL_1("1", 2),  // Initial water level, draw 2 flood cards per turn
+    LEVEL_2("2", 3),  // Draw 3 flood cards per turn
+    LEVEL_3("3", 4),  // Draw 4 flood cards per turn
+    LEVEL_4("4", 5),  // Draw 5 flood cards per turn
+    LEVEL_5("5", 6);  // Highest water level, draw 6 flood cards per turn
 
-    private final String displayName;  // 显示名称
-    private final int floodCardCount;  // 每回合抽牌数量
+    private final String displayName;  // Display name
+    private final int floodCardCount;  // Number of cards drawn per turn
 
     WaterLevel(String displayName, int floodCardCount) {
         this.displayName = displayName;
@@ -21,24 +21,24 @@ public enum WaterLevel {
     }
 
     /**
-     * 获取显示名称
-     * @return 显示名称
+     * Get display name
+     * @return Display name
      */
     public String getDisplayName() {
         return displayName;
     }
 
     /**
-     * 获取每回合抽牌数量
-     * @return 每回合抽牌数量
+     * Get number of cards drawn per turn
+     * @return Number of cards drawn per turn
      */
     public int getFloodCardCount() {
         return floodCardCount;
     }
 
     /**
-     * 获取下一个水位等级
-     * @return 下一个水位等级，如果已经是最高等级则返回null
+     * Get next water level
+     * @return Next water level, returns null if already at highest level
      */
     public WaterLevel getNextLevel() {
         switch (this) {
@@ -54,5 +54,5 @@ public enum WaterLevel {
                 return null;
         }
     }
-    // 示例使用
+    // Example usage
 } 

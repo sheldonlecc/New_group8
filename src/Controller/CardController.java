@@ -34,7 +34,7 @@ public class CardController implements ActionListener {
     private int cardsToDiscard = 0;
     private int cardsDiscarded = 0;
     private PlayerInfoView currentDiscardingPlayer = null;
-    public Integer pendingGiveCardPlayerIndex = null; // 记录给牌发起者
+    public Integer pendingGiveCardPlayerIndex = null; // Record the card giver
 
     public CardController(GameController gameController) {
         this.gameController = gameController;
@@ -45,18 +45,18 @@ public class CardController implements ActionListener {
         Object source = e.getSource();
         if (source instanceof CardView) {
             CardView cardView = (CardView) source;
-            System.out.println("卡牌被点击 - 是否在弃牌模式: " + isDiscardMode); // 调试信息
+            System.out.println("Card clicked - Is in discard mode: " + isDiscardMode); // Debug info
             if (isDiscardMode) {
-                System.out.println("当前正在弃牌模式，处理卡牌点击"); // 调试信息
+                System.out.println("Currently in discard mode, handling card click"); // Debug info
                 handleCardClick(cardView.getCard());
             } else {
-                System.out.println("不在弃牌模式，忽略卡牌点击"); // 调试信息
+                System.out.println("Not in discard mode, ignoring card click"); // Debug info
             }
         }
     }
 
     private void handleCardClick(Card card) {
-        System.out.println("处理卡牌点击 - 卡牌类型: " + (card != null ? card.getClass().getSimpleName() : "null")); // 调试信息
+        System.out.println("Handling card click - Card type: " + (card != null ? card.getClass().getSimpleName() : "null")); // Debug info
         if (isDiscardMode && currentDiscardingPlayer != null) {
             if (card != null) {
                 handleDiscardCard(card);
@@ -71,37 +71,37 @@ public class CardController implements ActionListener {
     }
 
     private void handleSandbagCard(SandbagCard card) {
-        // 处理沙袋卡点击逻辑
+        // Handle sandbag card click logic
         gameController.handleShoreUp(gameController.getCurrentPlayerIndex());
     }
 
     private void handleHelicopterCard(HelicopterCard card) {
-        // 获取当前玩家
+        // Get current player
         int currentPlayerIndex = gameController.getCurrentPlayerIndex();
         Player currentPlayer = gameController.getPlayers().get(currentPlayerIndex);
 
-        // 检查是否满足胜利条件
+        // Check if victory conditions are met
         if (card.canUseForVictory(gameController.getPlayers())) {
             if (useHelicopterCardForWin(currentPlayerIndex)) {
                 return;
             }
         }
 
-        // 如果不满足胜利条件，则使用移动功能
-        // 获取所有玩家
+        // If victory conditions are not met, use movement function
+        // Get all players
         List<Player> players = gameController.getPlayers();
 
-        // 创建玩家选择对话框
+        // Create player selection dialog
         String[] playerOptions = new String[players.size()];
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
-            playerOptions[i] = "玩家 " + (i + 1) + " (" + p.getRole().getClass().getSimpleName() + ")";
+            playerOptions[i] = "Player " + (i + 1) + " (" + p.getRole().getClass().getSimpleName() + ")";
         }
 
-        // 显示玩家选择对话框（多选）
+        // Show player selection dialog (multiple choice)
         List<Integer> selectedPlayers = new ArrayList<>();
         while (true) {
-            // 更新选项显示，添加已选择次数的信息
+            // Update options display, add selection count information
             String[] currentOptions = new String[playerOptions.length];
             for (int i = 0; i < playerOptions.length; i++) {
                 int selectedCount = 0;
@@ -110,10 +110,10 @@ public class CardController implements ActionListener {
                         selectedCount++;
                 }
                 currentOptions[i] = playerOptions[i]
-                        + (selectedCount > 0 ? String.format(" (已选择%d次)", selectedCount) : "");
+                        + (selectedCount > 0 ? String.format(" (Selected %d times)", selectedCount) : "");
             }
 
-            // 创建玩家选择面板
+            // Create player selection panel
             JPanel playerPanel = new JPanel(new GridLayout(0, 1, 5, 5));
             JButton[] playerButtons = new JButton[currentOptions.length];
             for (int i = 0; i < currentOptions.length; i++) {
@@ -121,30 +121,30 @@ public class CardController implements ActionListener {
                 playerButtons[i] = new JButton(currentOptions[i]);
                 playerButtons[i].addActionListener(e -> {
                     selectedPlayers.add(index);
-                    System.out.println(String.format("[日志] 选择了玩家: %s", playerOptions[index]));
-                    // 更新按钮文本
+                    System.out.println(String.format("[Log] Selected player: %s", playerOptions[index]));
+                    // Update button text
                     int selectedCount = 0;
                     for (int selected : selectedPlayers) {
                         if (selected == index)
                             selectedCount++;
                     }
-                    playerButtons[index].setText(playerOptions[index] + String.format(" (已选择%d次)", selectedCount));
+                    playerButtons[index].setText(playerOptions[index] + String.format(" (Selected %d times)", selectedCount));
                 });
                 playerPanel.add(playerButtons[i]);
             }
 
-            // 创建操作按钮面板
+            // Create operation button panel
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            JButton confirmButton = new JButton("确定");
-            JButton cancelButton = new JButton("取消");
+            JButton confirmButton = new JButton("Confirm");
+            JButton cancelButton = new JButton("Cancel");
 
-            // 创建一个标志来跟踪对话框是否被确认
+            // Create a flag to track if dialog is confirmed
             final boolean[] confirmed = { false };
 
             confirmButton.addActionListener(e -> {
                 if (selectedPlayers.isEmpty()) {
-                    System.out.println("[日志] 玩家未选择任何玩家。");
-                    JOptionPane.showMessageDialog(null, "请至少选择一个玩家！");
+                    System.out.println("[Log] Player did not select any players.");
+                    JOptionPane.showMessageDialog(null, "Please select at least one player!");
                 } else {
                     confirmed[0] = true;
                     Window window = SwingUtilities.getWindowAncestor(buttonPanel);
@@ -164,16 +164,16 @@ public class CardController implements ActionListener {
             buttonPanel.add(confirmButton);
             buttonPanel.add(cancelButton);
 
-            // 创建主面板
+            // Create main panel
             JPanel mainPanel = new JPanel(new BorderLayout());
             mainPanel.add(playerPanel, BorderLayout.CENTER);
             mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-            // 显示对话框
+            // Show dialog
             JOptionPane.showOptionDialog(
                     null,
                     mainPanel,
-                    "选择要移动的玩家",
+                    "Select players to move",
                     JOptionPane.DEFAULT_OPTION,
                     JOptionPane.PLAIN_MESSAGE,
                     null,
@@ -181,22 +181,22 @@ public class CardController implements ActionListener {
                     null);
 
             if (!confirmed[0]) {
-                return; // 用户取消选择
+                return; // User cancelled selection
             }
 
-            // 获取选中的玩家
+            // Get selected players
             List<Player> selectedPlayersList = new ArrayList<>();
             for (int index : selectedPlayers) {
                 selectedPlayersList.add(players.get(index));
             }
 
-            // 检查所有选中的玩家是否在同一个板块
+            // Check if all selected players are on the same tile
             if (!card.canUseForMovement(selectedPlayersList)) {
-                JOptionPane.showMessageDialog(null, "所有选中的玩家必须在同一个板块上！");
+                JOptionPane.showMessageDialog(null, "All selected players must be on the same tile!");
                 return;
             }
 
-            // 进入移动模式，等待玩家选择目标位置
+            // Enter movement mode, wait for player to select target location
             gameController.getMapController().enterHelicopterMoveMode(currentPlayerIndex, selectedPlayersList, card);
             break;
         }
@@ -207,7 +207,7 @@ public class CardController implements ActionListener {
         if (cardsPanel.getComponentCount() < MAX_CARDS) {
             int playerCount = gameController.getPlayerInfoViews().size();
             CardView cardView = new CardView(card, playerCount);
-            cardView.addActionListener(this); // 添加点击事件监听器
+            cardView.addActionListener(this); // Add click event listener
             cardsPanel.add(cardView);
             cardsPanel.revalidate();
             cardsPanel.repaint();
@@ -238,94 +238,94 @@ public class CardController implements ActionListener {
     }
 
     public void enableDiscardMode(PlayerInfoView playerInfoView, int numCardsToDiscard) {
-        // 如果不需要弃牌，直接返回
+        // If no need to discard, return directly
         if (numCardsToDiscard <= 0) {
-            System.out.println("不需要弃牌，跳过弃牌模式"); // 调试信息
+            System.out.println("No need to discard, skipping discard mode"); // Debug info
             return;
         }
 
-        System.out.println("进入弃牌模式 - 需要弃掉 " + numCardsToDiscard + " 张卡牌"); // 调试信息
+        System.out.println("Entering discard mode - Need to discard " + numCardsToDiscard + " cards"); // Debug info
         isDiscardMode = true;
         cardsToDiscard = numCardsToDiscard;
         cardsDiscarded = 0;
         currentDiscardingPlayer = playerInfoView;
 
-        // 启用所有卡牌的点击事件
+        // Enable click events for all cards
         JPanel cardsPanel = playerInfoView.getCardsPanel();
-        System.out.println("当前卡牌面板中的组件数量: " + cardsPanel.getComponentCount()); // 调试信息
+        System.out.println("Current number of components in card panel: " + cardsPanel.getComponentCount()); // Debug info
 
         for (Component component : cardsPanel.getComponents()) {
             if (component instanceof CardView) {
                 CardView cardView = (CardView) component;
                 cardView.setEnabled(true);
-                cardView.setToolTipText("点击弃掉此卡牌");
-                System.out.println("启用卡牌点击事件: " + cardView.getCard().getClass().getSimpleName()); // 调试信息
+                cardView.setToolTipText("Click to discard this card");
+                System.out.println("Enabling card click event: " + cardView.getCard().getClass().getSimpleName()); // Debug info
             }
         }
 
-        // 显示弃牌提示
+        // Show discard prompt
         JOptionPane.showMessageDialog(null,
-                "您的手牌超过了5张，请选择" + cardsToDiscard + "张卡牌弃掉",
-                "弃牌阶段",
+                "Your hand exceeds 5 cards, please select " + cardsToDiscard + " cards to discard",
+                "Discard Phase",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void handleDiscardCard(Card card) {
-        System.out.println("处理弃牌 - 当前已弃掉 " + cardsDiscarded + "/" + cardsToDiscard + " 张卡牌"); // 调试信息
+        System.out.println("Handling discard - Currently discarded " + cardsDiscarded + "/" + cardsToDiscard + " cards"); // Debug info
         if (cardsDiscarded < cardsToDiscard) {
-            // 获取正在弃牌的玩家
+            // Get the player who is discarding
             int discardingPlayerIndex = gameController.getPlayerInfoViews().indexOf(currentDiscardingPlayer);
             Player discardingPlayer = gameController.getPlayers().get(discardingPlayerIndex);
 
-            // 检查是否是特殊卡
+            // Check if it's a special card
             if (card instanceof SandbagCard || card instanceof HelicopterCard) {
-                // 创建选择窗口
-                String cardType = card instanceof SandbagCard ? "沙袋卡" : "直升机卡";
+                // Create selection window
+                String cardType = card instanceof SandbagCard ? "Sandbag Card" : "Helicopter Card";
                 int choice = JOptionPane.showOptionDialog(
                         null,
-                        "您选择弃掉一张" + cardType + "，是否要使用它的功能？",
-                        "特殊卡选择",
+                        "You selected to discard a " + cardType + ", do you want to use its function?",
+                        "Special Card Selection",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE,
                         null,
-                        new String[] { "使用功能", "直接弃掉" },
-                        "使用功能");
+                        new String[] { "Use Function", "Discard Directly" },
+                        "Use Function");
 
-                if (choice == 0) { // 选择使用功能
-                    // 记录这张卡被弃掉
+                if (choice == 0) { // Choose to use function
+                    // Record this card as discarded
                     cardsDiscarded++;
                     if (card instanceof SandbagCard) {
-                        // 如果是沙袋卡，进入沙袋模式
+                        // If it's a sandbag card, enter sandbag mode
                         gameController.getMapController().enterSandbagMode(discardingPlayerIndex);
                     } else {
-                        // 如果是直升机卡，进入直升机模式
+                        // If it's a helicopter card, enter helicopter mode
                         gameController.getMapController().enterHelicopterMode(discardingPlayerIndex);
                     }
-                    return; // 等待玩家使用特殊卡后再继续弃牌
-                } else { // 选择直接弃掉
-                    // 直接执行弃牌操作
+                    return; // Wait for player to use special card before continuing discard
+                } else { // Choose to discard directly
+                    // Execute discard operation directly
                     discardingPlayer.getHandCard().removeCard(card);
                     removeCard(currentDiscardingPlayer, card);
                     cardsDiscarded++;
-                    gameController.getTreasureDeck().discard(card); // 确保特殊卡也进弃牌堆
+                    gameController.getTreasureDeck().discard(card); // Ensure special card goes to discard pile
                 }
             } else {
-                // 如果不是特殊卡，继续正常的弃牌流程
+                // If not a special card, continue normal discard process
                 discardingPlayer.getHandCard().removeCard(card);
                 removeCard(currentDiscardingPlayer, card);
                 cardsDiscarded++;
-                gameController.getTreasureDeck().discard(card); // 确保宝藏卡能进弃牌堆
+                gameController.getTreasureDeck().discard(card); // Ensure treasure card goes to discard pile
             }
 
-            // 检查是否完成弃牌
+            // Check if discard is complete
             if (cardsDiscarded == cardsToDiscard) {
-                System.out.println("弃牌完成，退出弃牌模式"); // 调试信息
+                System.out.println("Discard complete, exiting discard mode"); // Debug info
                 isDiscardMode = false;
                 gameController.updatePlayerView(discardingPlayerIndex);
-                // 恢复当前弃牌玩家的按钮
+                // Restore current discarding player's buttons
                 currentDiscardingPlayer.setButtonsEnabled(true);
                 currentDiscardingPlayer = null;
-                // 判断是否是给牌导致的弃牌
+                // Check if discard was caused by giving card
                 if (pendingGiveCardPlayerIndex != null) {
                     int aIndex = pendingGiveCardPlayerIndex;
                     PlayerInfoView aView = gameController.getPlayerInfoView(aIndex);
@@ -340,58 +340,58 @@ public class CardController implements ActionListener {
                     }
                     pendingGiveCardPlayerIndex = null;
                 } else {
-                    // 正常弃牌，才切换新回合
+                    // Normal discard, switch to new turn
                     gameController.startNewTurn();
                 }
             } else {
                 JOptionPane.showMessageDialog(null,
-                        "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
-                        "弃牌阶段",
+                        "Still need to discard " + (cardsToDiscard - cardsDiscarded) + " cards",
+                        "Discard Phase",
                         JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
 
     /**
-     * 实际执行给牌操作
+     * Actually execute the card giving operation
      */
     public boolean giveCard(int fromPlayerIndex, int toPlayerIndex, Card card) {
         GameController gc = this.gameController;
         Player fromPlayer = gc.getPlayers().get(fromPlayerIndex);
         Player toPlayer = gc.getPlayers().get(toPlayerIndex);
 
-        // 检查条件
+        // Check conditions
         boolean isMessenger = fromPlayer.getRole() instanceof Model.Role.Messenger;
         boolean sameLocation = fromPlayer.getCurrentTile().equals(toPlayer.getCurrentTile());
 
         if (!sameLocation && !isMessenger) {
-            System.out.println("[日志] 两个玩家不在同一位置，且不是信使，不能给牌。");
+            System.out.println("[Log] Players are not in the same location and not a messenger, cannot give card.");
             return false;
         }
 
         if (!fromPlayer.getHandCard().getCards().contains(card)) {
-            System.out.println("[日志] 给牌玩家没有这张卡。");
+            System.out.println("[Log] Giving player does not have this card.");
             return false;
         }
 
-        // 执行转移
+        // Execute transfer
         fromPlayer.removeCard(card);
         toPlayer.getHandCard().addCardWithoutCheck(card);
-        // 更新视图
+        // Update view
         gc.updatePlayerView(fromPlayerIndex);
         gc.updatePlayerView(toPlayerIndex);
 
-        // 检查对方是否超限，超限则进入弃牌模式
+        // Check if receiver exceeds limit, if so enter discard mode
         int cardCount = toPlayer.getHandCard().getCards().size();
         if (cardCount > 5) {
             int cardsToDiscard = cardCount - 5;
-            System.out.println("[日志] 收牌玩家手牌超限，需弃掉 " + cardsToDiscard + " 张卡牌");
+            System.out.println("[Log] Receiver's hand exceeds limit, need to discard " + cardsToDiscard + " cards");
             PlayerInfoView playerView = gc.getPlayerInfoView(toPlayerIndex);
             playerView.setButtonsEnabled(false);
-            this.pendingGiveCardPlayerIndex = fromPlayerIndex; // 记录A
+            this.pendingGiveCardPlayerIndex = fromPlayerIndex; // Record A
             this.enableDiscardMode(playerView, cardsToDiscard);
         } else {
-            // 不超限时也要消耗A的行动点
+            // When not exceeding limit, still consume A's action points
             if (pendingGiveCardPlayerIndex != null) {
                 int aIndex = pendingGiveCardPlayerIndex;
                 PlayerInfoView aView = gameController.getPlayerInfoView(aIndex);
@@ -411,11 +411,11 @@ public class CardController implements ActionListener {
     }
 
     /**
-     * 使用沙袋卡加固指定瓦片
+     * Use sandbag card to shore up specified tile
      * 
-     * @param playerIndex 玩家索引
-     * @param targetTile  目标瓦片
-     * @return 是否加固成功
+     * @param playerIndex Player index
+     * @param targetTile Target tile
+     * @return Whether shoring up was successful
      */
     public boolean useSandbagCard(int playerIndex, Tile targetTile) {
         Player player = gameController.getPlayers().get(playerIndex);
@@ -427,45 +427,45 @@ public class CardController implements ActionListener {
             }
         }
         if (sandbagCard == null) {
-            System.out.println("[日志] 玩家没有沙袋卡，无法加固");
+            System.out.println("[Log] Player does not have a sandbag card, cannot shore up");
             return false;
         }
         if (((SandbagCard) sandbagCard).useCard(targetTile)) {
             player.getHandCard().removeCard(sandbagCard);
             gameController.getPlayerInfoView(playerIndex).removeCard(sandbagCard);
             gameController.getTreasureDeck().discard(sandbagCard);
-            System.out.println("[日志] 成功用沙袋卡加固瓦片：" + targetTile.getName() + " [坐标: " + targetTile.getRow() + ","
+            System.out.println("[Log] Successfully used sandbag card to shore up tile: " + targetTile.getName() + " [Coordinates: " + targetTile.getRow() + ","
                     + targetTile.getCol() + "]");
             return true;
         } else {
-            System.out.println("[日志] 沙袋卡加固失败");
+            System.out.println("[Log] Failed to shore up with sandbag card");
             return false;
         }
     }
 
     /**
-     * 使用直升机救援卡尝试获胜
+     * Use helicopter rescue card to try to win
      * 
-     * @param playerIndex 玩家索引
-     * @return 是否胜利
+     * @param playerIndex Player index
+     * @return Whether victory was achieved
      */
     public boolean useHelicopterCardForWin(int playerIndex) {
-        // 1. 检查是否集齐四个宝物
+        // 1. Check if all four treasures are collected
         if (!gameController.getTreasureDeck().allTreasuresCollected()) {
-            System.out.println("[日志] 宝物未集齐，不能使用直升机卡获胜。");
-            JOptionPane.showMessageDialog(null, "还没有集齐所有宝物，不能逃脱！");
+            System.out.println("[Log] Treasures not all collected, cannot use helicopter card to win.");
+            JOptionPane.showMessageDialog(null, "All treasures must be collected before escaping!");
             return false;
         }
-        // 2. 检查所有玩家是否都在愚人码头
+        // 2. Check if all players are at Fool's Landing
         List<Player> players = gameController.getPlayers();
         boolean allAtFoolsLanding = players.stream().allMatch(
                 p -> p.getCurrentTile() != null && p.getCurrentTile().getName().name().equals("FOOLS_LANDING"));
         if (!allAtFoolsLanding) {
-            System.out.println("[日志] 并非所有玩家都在愚人码头，不能使用直升机卡获胜。");
-            JOptionPane.showMessageDialog(null, "所有玩家必须都在愚人码头才能逃脱！");
+            System.out.println("[Log] Not all players are at Fool's Landing, cannot use helicopter card to win.");
+            JOptionPane.showMessageDialog(null, "All players must be at Fool's Landing to escape!");
             return false;
         }
-        // 3. 检查玩家是否有直升机卡
+        // 3. Check if player has helicopter card
         Player player = players.get(playerIndex);
         Card heliCard = null;
         for (Card card : player.getHandCard().getCards()) {
@@ -475,54 +475,54 @@ public class CardController implements ActionListener {
             }
         }
         if (heliCard == null) {
-            System.out.println("[日志] 没有直升机卡，不能获胜。");
-            JOptionPane.showMessageDialog(null, "你没有直升机救援卡！");
+            System.out.println("[Log] No helicopter card, cannot win.");
+            JOptionPane.showMessageDialog(null, "You don't have a helicopter rescue card!");
             return false;
         }
-        // 4. 弃掉直升机卡
+        // 4. Discard helicopter card
         player.getHandCard().removeCard(heliCard);
         gameController.getPlayerInfoView(playerIndex).removeCard(heliCard);
         gameController.getTreasureDeck().discard(heliCard);
 
-        // 5. 游戏胜利
-        System.out.println("[日志] 使用直升机救援卡，所有玩家逃脱，游戏胜利！");
-        JOptionPane.showMessageDialog(null, "所有玩家乘坐直升机逃脱，游戏胜利！");
+        // 5. Game victory
+        System.out.println("[Log] Used helicopter rescue card, all players escaped, game victory!");
+        JOptionPane.showMessageDialog(null, "All players escaped by helicopter, game victory!");
         gameController.endGameWithWin();
         return true;
     }
 
     /**
-     * 检查是否在弃牌模式中
+     * Check if in discard mode
      * 
-     * @return 如果在弃牌模式中则返回true
+     * @return true if in discard mode
      */
     public boolean isInDiscardMode() {
         return isDiscardMode;
     }
 
     /**
-     * 继续弃牌流程
-     * 在特殊卡使用完成后调用此方法继续弃牌
+     * Continue discard process
+     * Call this method after special card use is complete to continue discarding
      */
     public void continueDiscardMode() {
         if (isDiscardMode && currentDiscardingPlayer != null) {
-            // 获取正在弃牌的玩家
+            // Get the player who is discarding
             int discardingPlayerIndex = gameController.getPlayerInfoViews().indexOf(currentDiscardingPlayer);
             Player discardingPlayer = gameController.getPlayers().get(discardingPlayerIndex);
 
-            // 检查是否还需要继续弃牌
+            // Check if need to continue discarding
             if (cardsDiscarded < cardsToDiscard) {
                 JOptionPane.showMessageDialog(null,
-                        "还需要弃掉" + (cardsToDiscard - cardsDiscarded) + "张卡牌",
-                        "弃牌阶段",
+                        "Still need to discard " + (cardsToDiscard - cardsDiscarded) + " cards",
+                        "Discard Phase",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                // 如果不需要继续弃牌，结束弃牌模式
+                // If no need to continue discarding, end discard mode
                 isDiscardMode = false;
                 gameController.updatePlayerView(discardingPlayerIndex);
                 currentDiscardingPlayer.setButtonsEnabled(true);
                 currentDiscardingPlayer = null;
-                // 修复：如有pendingGiveCardPlayerIndex，消耗A行动点并判断是否回到A或切换回合
+                // Fix: If there is pendingGiveCardPlayerIndex, consume A's action points and determine whether to return to A or switch turns
                 if (pendingGiveCardPlayerIndex != null) {
                     int aIndex = pendingGiveCardPlayerIndex;
                     PlayerInfoView aView = gameController.getPlayerInfoView(aIndex);

@@ -29,7 +29,7 @@ public class MapController implements ActionListener {
     private boolean isInShoreUpMode = false;
     private boolean isNavigatorMoveMode = false;
     private int currentPlayerIndex = -1;
-    private int targetPlayerIndex = -1; // 领航员移动模式下的目标玩家索引
+    private int targetPlayerIndex = -1; // Target player index in navigator move mode
     private boolean isSandbagMode = false;
     private int sandbagPlayerIndex = -1;
     private boolean isHelicopterMoveMode = false;
@@ -49,7 +49,7 @@ public class MapController implements ActionListener {
     }
 
     private void initializeListeners() {
-        // 为地图上的所有按钮添加监听器
+        // Add listeners to all buttons on the map
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
                 mapView.getButton(i, j).addActionListener(this);
@@ -64,32 +64,32 @@ public class MapController implements ActionListener {
             return;
         }
 
-        // 获取被点击的按钮位置
+        // Get clicked button position
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
                 if (e.getSource() == mapView.getButton(i, j)) {
                     if (isSandbagMode) {
-                        // 沙袋卡加固逻辑
+                        // Sandbag card shore up logic
                         gameController.sandbagShoreUpTile(sandbagPlayerIndex, i, j);
                         exitSandbagMode();
                         return;
                     } else if (isHelicopterMode) {
-                        // 直升机移动逻辑
-                        System.out.println("\n========== 直升机模式板块点击 ==========");
-                        System.out.println("点击位置: [" + i + "," + j + "]");
+                        // Helicopter movement logic
+                        System.out.println("\n========== Helicopter Mode Tile Click ==========");
+                        System.out.println("Click position: [" + i + "," + j + "]");
                         handleHelicopterMove(i, j);
                         return;
                     } else if (isInEmergencyMoveMode) {
-                        // 紧急移动逻辑
-                        System.out.println("\n========== 紧急移动模式板块点击 ==========");
-                        System.out.println("点击位置: [" + i + "," + j + "]");
+                        // Emergency movement logic
+                        System.out.println("\n========== Emergency Move Mode Tile Click ==========");
+                        System.out.println("Click position: [" + i + "," + j + "]");
                         Tile clickedTile = mapView.getTile(i, j);
                         if (clickedTile != null && emergencyMoveAvailableTiles.contains(clickedTile)) {
                             if (gameController.performEmergencyMove(emergencyMovePlayerIndex, clickedTile)) {
                                 exitEmergencyMoveMode();
                             }
                         } else {
-                            JOptionPane.showMessageDialog(null, "请选择一个可用的板块！");
+                            JOptionPane.showMessageDialog(null, "Please select an available tile!");
                         }
                         return;
                     }
@@ -108,121 +108,121 @@ public class MapController implements ActionListener {
                     exitEmergencyMoveMode();
                 }
             } else {
-                JOptionPane.showMessageDialog(null, "请选择一个可用的板块！");
+                JOptionPane.showMessageDialog(null, "Please select an available tile!");
             }
             return;
         }
 
-        System.out.println("\n========== 处理板块点击 ==========");
-        System.out.printf("点击位置: [%d, %d]\n", row, col);
+        System.out.println("\n========== Handling Tile Click ==========");
+        System.out.printf("Click position: [%d, %d]\n", row, col);
 
         if (isNavigatorMoveMode) {
             handleNavigatorMoveModeClick(row, col);
             return;
         }
 
-        // 获取当前玩家
+        // Get current player
         Player currentPlayer = gameController.getCurrentPlayer();
         if (currentPlayer == null) {
-            System.out.println("错误：无法获取当前玩家");
+            System.out.println("Error: Cannot get current player");
             exitMoveMode();
             return;
         }
 
-        // 获取目标板块
+        // Get target tile
         Tile targetTile = mapView.getTile(row, col);
         if (targetTile == null) {
-            System.out.println("错误：目标板块不存在");
+            System.out.println("Error: Target tile does not exist");
             JOptionPane.showMessageDialog(mapView,
-                    "您点击了海洋区域，请选择有效的陆地板块进行移动",
-                    "无效移动",
+                    "You clicked on the ocean area, please select a valid land tile to move to",
+                    "Invalid Move",
                     JOptionPane.WARNING_MESSAGE);
             exitMoveMode();
             return;
         }
 
-        // 根据当前模式执行相应的操作
+        // Execute corresponding operation based on current mode
         if (isMoveMode) {
-            // 检查移动是否合法
+            // Check if move is legal
             if (!isValidMove(currentPlayer, targetTile)) {
-                System.out.println("非法移动：目标板块不可到达");
-                JOptionPane.showMessageDialog(mapView, "非法移动：目标板块不可到达", "移动错误", JOptionPane.ERROR_MESSAGE);
+                System.out.println("Illegal move: Target tile is not reachable");
+                JOptionPane.showMessageDialog(mapView, "Illegal move: Target tile is not reachable", "Move Error", JOptionPane.ERROR_MESSAGE);
                 exitMoveMode();
                 return;
             }
-            // 执行移动
+            // Execute move
             gameController.movePlayer(currentPlayerIndex, row, col);
             exitMoveMode();
         } else if (isInShoreUpMode) {
-            // 检查加固是否合法
+            // Check if shore up is legal
             if (!gameController.canShoreUpTile(currentPlayerIndex, targetTile)) {
-                System.out.println("非法加固：目标板块不可加固");
-                JOptionPane.showMessageDialog(mapView, "非法加固：目标板块不可加固", "加固错误", JOptionPane.ERROR_MESSAGE);
+                System.out.println("Illegal shore up: Target tile cannot be shored up");
+                JOptionPane.showMessageDialog(mapView, "Illegal shore up: Target tile cannot be shored up", "Shore Up Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            // 执行加固
+            // Execute shore up
             gameController.shoreUpTile(currentPlayerIndex, row, col);
         }
 
-        System.out.println("========== 板块点击处理完成 ==========\n");
+        System.out.println("========== Tile Click Handling Complete ==========\n");
     }
 
     private boolean isValidMove(Player player, Tile targetTile) {
-        // 检查目标板块是否被沉没
+        // Check if target tile is sunk
         if (targetTile.getState() == TileState.SUNK) {
-            System.out.println("目标板块已沉没，无法移动");
+            System.out.println("Target tile is sunk, cannot move");
             return false;
         }
 
-        // 获取当前板块
+        // Get current tile
         Tile currentTile = player.getCurrentTile();
         if (currentTile == null) {
-            System.out.println("无法获取当前板块");
+            System.out.println("Cannot get current tile");
             return false;
         }
 
-        // 获取角色
+        // Get role
         Role role = player.getRole();
         if (role == null) {
-            System.out.println("玩家没有角色，无法移动");
+            System.out.println("Player has no role, cannot move");
             return false;
         }
 
-        // Diver特殊处理
+        // Special handling for Diver
         if (role.getClass().getSimpleName().equals("Diver")) {
             return isDiverReachable(currentTile, targetTile);
         }
 
-        // 检查角色是否可以移动到该瓦片
+        // Check if role can move to this tile
         if (!role.canMoveTo(targetTile)) {
-            System.out.println("当前角色无法移动到该板块");
+            System.out.println("Current role cannot move to this tile");
             return false;
         }
 
-        // 检查是否相邻（考虑探险家的斜向移动）
+        // Check if adjacent (considering Explorer's diagonal movement)
         int currentRow = currentTile.getRow();
         int currentCol = currentTile.getCol();
         int targetRow = targetTile.getRow();
         int targetCol = targetTile.getCol();
 
-        // 计算曼哈顿距离
+        // Calculate Manhattan distance
         int distance = Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
 
-        // 如果是探险家，允许斜向移动（距离为2）
+        // If Explorer, allow diagonal movement (distance of 2)
         if (role instanceof Model.Role.Explorer) {
             return distance <= 2;
         }
 
-        // 如果是飞行员且能力可用，可以移动到任何位置
+        // If Pilot and ability available, can move to any position
         if (role instanceof Model.Role.Pilot && role.canUseAbility()) {
             return true;
         }
 
-        // 其他角色只能移动到相邻位置
+        // Other roles can only move to adjacent positions
         return distance == 1;
     }
 
-    // Diver特殊移动能力：BFS遍历所有连通的FLOODED/SUNK区域，最终停在NORMAL或FLOODED
+    // Diver special movement ability: BFS traverse all connected FLOODED/SUNK areas, finally stop at NORMAL or FLOODED
     public boolean isDiverReachable(Tile start, Tile target) {
         if (start == null || target == null)
             return false;
@@ -239,12 +239,12 @@ public class MapController implements ActionListener {
             }
             for (Tile adj : curr.getAdjacentTiles()) {
                 if (!visited.contains(adj)) {
-                    // 可以穿越FLOODED和SUNK，最终只能停在NORMAL或FLOODED
+                    // Can traverse FLOODED and SUNK, can only stop at NORMAL or FLOODED
                     if (adj.getState() == TileState.FLOODED || adj.getState() == TileState.SUNK) {
                         queue.add(adj);
                         visited.add(adj);
                     } else if (adj.getState() == TileState.NORMAL) {
-                        // 也要把NORMAL加入visited，防止环路
+                        // Also add NORMAL to visited to prevent cycles
                         visited.add(adj);
                         if (adj == target)
                             return true;
@@ -256,15 +256,15 @@ public class MapController implements ActionListener {
     }
 
     public void enterMoveMode(int playerIndex) {
-        System.out.println("\n========== 进入移动模式 ==========");
-        System.out.println("当前玩家: " + (playerIndex + 1));
+        System.out.println("\n========== Entering Move Mode ==========");
+        System.out.println("Current player: " + (playerIndex + 1));
 
-        // 获取当前玩家并输出其位置信息
+        // Get current player and output position information
         Player currentPlayer = gameController.getCurrentPlayer();
         if (currentPlayer != null) {
             Tile currentTile = currentPlayer.getCurrentTile();
             if (currentTile != null) {
-                System.out.printf("当前位置: %s [%d, %d]\n",
+                System.out.printf("Current position: %s [%d, %d]\n",
                         currentTile.getName(),
                         currentTile.getRow(),
                         currentTile.getCol());
@@ -273,14 +273,14 @@ public class MapController implements ActionListener {
 
         isMoveMode = true;
         currentPlayerIndex = playerIndex;
-        System.out.println("========== 移动模式已进入 ==========\n");
+        System.out.println("========== Move Mode Entered ==========\n");
     }
 
     private void exitMoveMode() {
-        System.out.println("\n========== 退出移动模式 ==========");
+        System.out.println("\n========== Exiting Move Mode ==========");
         isMoveMode = false;
         currentPlayerIndex = -1;
-        System.out.println("========== 移动模式已退出 ==========\n");
+        System.out.println("========== Move Mode Exited ==========\n");
     }
 
     public MapView getMapView() {
@@ -288,53 +288,53 @@ public class MapController implements ActionListener {
     }
 
     /**
-     * 进入加固模式
+     * Enter shore up mode
      * 
-     * @param playerIndex 当前玩家索引
+     * @param playerIndex Current player index
      */
     public void enterShoreUpMode(int playerIndex) {
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
 
-        // 检查是否是探险家
+        // Check if Explorer
         boolean isExplorer = player.getRole().getClass().getSimpleName().equals("Explorer");
 
-        // 获取可加固的板块列表
+        // Get list of shoreable tiles
         List<Tile> shoreableTiles = new ArrayList<>();
 
-        // 添加当前板块
+        // Add current tile
         shoreableTiles.add(currentTile);
 
-        // 添加相邻板块
+        // Add adjacent tiles
         shoreableTiles.addAll(currentTile.getAdjacentTiles());
 
-        // 如果是探险家，添加斜向板块
+        // If Explorer, add diagonal tiles
         if (isExplorer) {
             int currentRow = currentTile.getRow();
             int currentCol = currentTile.getCol();
 
-            // 左上
+            // Upper left
             if (currentRow > 0 && currentCol > 0) {
                 Tile upLeftTile = mapView.getTile(currentRow - 1, currentCol - 1);
                 if (upLeftTile != null) {
                     shoreableTiles.add(upLeftTile);
                 }
             }
-            // 右上
+            // Upper right
             if (currentRow > 0 && currentCol < 5) {
                 Tile upRightTile = mapView.getTile(currentRow - 1, currentCol + 1);
                 if (upRightTile != null) {
                     shoreableTiles.add(upRightTile);
                 }
             }
-            // 左下
+            // Lower left
             if (currentRow < 5 && currentCol > 0) {
                 Tile downLeftTile = mapView.getTile(currentRow + 1, currentCol - 1);
                 if (downLeftTile != null) {
                     shoreableTiles.add(downLeftTile);
                 }
             }
-            // 右下
+            // Lower right
             if (currentRow < 5 && currentCol < 5) {
                 Tile downRightTile = mapView.getTile(currentRow + 1, currentCol + 1);
                 if (downRightTile != null) {
@@ -343,7 +343,7 @@ public class MapController implements ActionListener {
             }
         }
 
-        // 检查是否有可加固的板块
+        // Check if there are any shoreable tiles
         boolean hasShoreable = false;
         for (Tile tile : shoreableTiles) {
             if (tile != null && tile.getState() == TileState.FLOODED) {
@@ -353,32 +353,32 @@ public class MapController implements ActionListener {
         }
 
         if (!hasShoreable) {
-            JOptionPane.showMessageDialog(mapView, "周围没有可加固的瓦片！", "提示", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(mapView, "No shoreable tiles around!", "Hint", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
         isInShoreUpMode = true;
         isMoveMode = false;
         currentPlayerIndex = playerIndex;
-        System.out.println("[日志] 进入加固模式，玩家" + (playerIndex + 1) + "可以选择要加固的瓦片");
+        System.out.println("[Log] Entering shore up mode, player " + (playerIndex + 1) + " can select tiles to shore up");
         highlightShoreableTiles(playerIndex);
     }
 
     /**
-     * 高亮显示可加固的瓦片
+     * Highlight shoreable tiles
      * 
-     * @param playerIndex 当前玩家索引
+     * @param playerIndex Current player index
      */
     private void highlightShoreableTiles(int playerIndex) {
-        System.out.println("\n========== 开始高亮可加固板块 ==========");
+        System.out.println("\n========== Starting to Highlight Shoreable Tiles ==========");
         Player player = gameController.getPlayers().get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        System.out.println("当前玩家: " + (playerIndex + 1));
-        System.out.println("玩家角色: " + player.getRole().getClass().getSimpleName());
+        System.out.println("Current player: " + (playerIndex + 1));
+        System.out.println("Player role: " + player.getRole().getClass().getSimpleName());
         System.out.println(
-                "当前位置: " + currentTile.getName() + " [" + currentTile.getRow() + "," + currentTile.getCol() + "]");
+                "Current position: " + currentTile.getName() + " [" + currentTile.getRow() + "," + currentTile.getCol() + "]");
 
-        // 检查是否有沙袋卡
+        // Check if has sandbag card
         boolean hasSandbag = false;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
@@ -386,51 +386,51 @@ public class MapController implements ActionListener {
                 break;
             }
         }
-        System.out.println("是否有沙袋卡: " + hasSandbag);
+        System.out.println("Has sandbag card: " + hasSandbag);
 
-        // 重置所有按钮状态
+        // Reset all button states
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null) {
-                button.setEnabled(true); // 保持所有按钮可见
-                button.setBackground(null); // 重置背景色
+                button.setEnabled(true); // Keep all buttons visible
+                button.setBackground(null); // Reset background color
             }
         }
 
         if (hasSandbag) {
-            // 如果有沙袋卡，高亮所有被淹没的板块
-            System.out.println("使用沙袋卡模式，高亮所有被淹没的板块");
+            // If has sandbag card, highlight all flooded tiles
+            System.out.println("Using sandbag card mode, highlighting all flooded tiles");
             for (int i = 0; i < 6; i++) {
                 for (int j = 0; j < 6; j++) {
                     Tile tile = mapView.getTile(i, j);
                     if (tile != null && tile.getState() == TileState.FLOODED) {
                         JButton button = mapView.getButton(i, j);
                         if (button != null) {
-                            button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
-                            System.out.println("高亮被淹没板块: " + tile.getName() + " [" + i + "," + j + "]");
+                            button.setBackground(new Color(255, 255, 200)); // Light yellow highlight
+                            System.out.println("Highlighting flooded tile: " + tile.getName() + " [" + i + "," + j + "]");
                         }
                     }
                 }
             }
         } else {
-            // 如果没有沙袋卡，根据角色类型高亮可加固的瓦片
+            // If no sandbag card, highlight shoreable tiles based on role type
             List<Tile> adjacentTiles = new ArrayList<>();
 
-            // 获取当前瓦片的相邻瓦片
+            // Get adjacent tiles of current tile
             int currentRow = currentTile.getRow();
             int currentCol = currentTile.getCol();
 
-            // 检查是否是探险家
+            // Check if Explorer
             boolean isExplorer = player.getRole().getClass().getSimpleName().equals("Explorer");
-            System.out.println("是否是探险家: " + isExplorer);
+            System.out.println("Is Explorer: " + isExplorer);
 
-            // 添加上下左右四个方向的瓦片
+            // Add tiles in four directions
             if (currentRow > 0) {
                 Tile upTile = mapView.getTile(currentRow - 1, currentCol);
                 if (upTile != null) {
                     adjacentTiles.add(upTile);
                     System.out
-                            .println("添加上方板块: " + upTile.getName() + " [" + (currentRow - 1) + "," + currentCol + "]");
+                            .println("Adding upper tile: " + upTile.getName() + " [" + (currentRow - 1) + "," + currentCol + "]");
                 }
             }
             if (currentRow < 5) {
@@ -438,7 +438,7 @@ public class MapController implements ActionListener {
                 if (downTile != null) {
                     adjacentTiles.add(downTile);
                     System.out.println(
-                            "添加下方板块: " + downTile.getName() + " [" + (currentRow + 1) + "," + currentCol + "]");
+                            "Adding lower tile: " + downTile.getName() + " [" + (currentRow + 1) + "," + currentCol + "]");
                 }
             }
             if (currentCol > 0) {
@@ -446,7 +446,7 @@ public class MapController implements ActionListener {
                 if (leftTile != null) {
                     adjacentTiles.add(leftTile);
                     System.out.println(
-                            "添加左方板块: " + leftTile.getName() + " [" + currentRow + "," + (currentCol - 1) + "]");
+                            "Adding left tile: " + leftTile.getName() + " [" + currentRow + "," + (currentCol - 1) + "]");
                 }
             }
             if (currentCol < 5) {
@@ -454,120 +454,120 @@ public class MapController implements ActionListener {
                 if (rightTile != null) {
                     adjacentTiles.add(rightTile);
                     System.out.println(
-                            "添加右方板块: " + rightTile.getName() + " [" + currentRow + "," + (currentCol + 1) + "]");
+                            "Adding right tile: " + rightTile.getName() + " [" + currentRow + "," + (currentCol + 1) + "]");
                 }
             }
 
-            // 如果是探险家，添加斜向的瓦片
+            // If Explorer, add diagonal tiles
             if (isExplorer) {
-                System.out.println("探险家模式，添加斜向板块");
-                // 左上
+                System.out.println("Explorer mode, adding diagonal tiles");
+                // Upper left
                 if (currentRow > 0 && currentCol > 0) {
                     Tile upLeftTile = mapView.getTile(currentRow - 1, currentCol - 1);
                     if (upLeftTile != null) {
                         adjacentTiles.add(upLeftTile);
-                        System.out.println("添加左上板块: " + upLeftTile.getName() + " [" + (currentRow - 1) + ","
+                        System.out.println("Adding upper left tile: " + upLeftTile.getName() + " [" + (currentRow - 1) + ","
                                 + (currentCol - 1) + "]");
                     }
                 }
-                // 右上
+                // Upper right
                 if (currentRow > 0 && currentCol < 5) {
                     Tile upRightTile = mapView.getTile(currentRow - 1, currentCol + 1);
                     if (upRightTile != null) {
                         adjacentTiles.add(upRightTile);
-                        System.out.println("添加右上板块: " + upRightTile.getName() + " [" + (currentRow - 1) + ","
+                        System.out.println("Adding upper right tile: " + upRightTile.getName() + " [" + (currentRow - 1) + ","
                                 + (currentCol + 1) + "]");
                     }
                 }
-                // 左下
+                // Lower left
                 if (currentRow < 5 && currentCol > 0) {
                     Tile downLeftTile = mapView.getTile(currentRow + 1, currentCol - 1);
                     if (downLeftTile != null) {
                         adjacentTiles.add(downLeftTile);
-                        System.out.println("添加左下板块: " + downLeftTile.getName() + " [" + (currentRow + 1) + ","
+                        System.out.println("Adding lower left tile: " + downLeftTile.getName() + " [" + (currentRow + 1) + ","
                                 + (currentCol - 1) + "]");
                     }
                 }
-                // 右下
+                // Lower right
                 if (currentRow < 5 && currentCol < 5) {
                     Tile downRightTile = mapView.getTile(currentRow + 1, currentCol + 1);
                     if (downRightTile != null) {
                         adjacentTiles.add(downRightTile);
-                        System.out.println("添加右下板块: " + downRightTile.getName() + " [" + (currentRow + 1) + ","
+                        System.out.println("Adding lower right tile: " + downRightTile.getName() + " [" + (currentRow + 1) + ","
                                 + (currentCol + 1) + "]");
                     }
                 }
             }
 
-            // 添加当前瓦片
+            // Add current tile
             adjacentTiles.add(currentTile);
-            System.out.println("添加当前板块: " + currentTile.getName() + " [" + currentRow + "," + currentCol + "]");
+            System.out.println("Adding current tile: " + currentTile.getName() + " [" + currentRow + "," + currentCol + "]");
 
-            // 高亮可加固的瓦片
-            System.out.println("\n开始高亮可加固板块:");
+            // Highlight shoreable tiles
+            System.out.println("\nStarting to highlight shoreable tiles:");
             boolean hasShoreableTile = false;
             for (Tile tile : adjacentTiles) {
                 if (tile != null && tile.getState() == TileState.FLOODED) {
                     JButton button = mapView.getButton(tile.getRow(), tile.getCol());
                     if (button != null) {
-                        button.setBackground(new Color(255, 255, 200)); // 浅黄色高亮
+                        button.setBackground(new Color(255, 255, 200)); // Light yellow highlight
                         hasShoreableTile = true;
-                        System.out.println("高亮可加固板块: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol()
-                                + "] 状态: " + tile.getState());
+                        System.out.println("Highlighting shoreable tile: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol()
+                                + "] State: " + tile.getState());
                     }
                 } else {
-                    System.out.println("板块不可加固: " + (tile != null ? tile.getName() : "null") +
+                    System.out.println("Tile not shoreable: " + (tile != null ? tile.getName() : "null") +
                             " [" + (tile != null ? tile.getRow() : "N/A") + "," + (tile != null ? tile.getCol() : "N/A")
                             + "]" +
-                            " 状态: " + (tile != null ? tile.getState() : "null"));
+                            " State: " + (tile != null ? tile.getState() : "null"));
                 }
             }
 
             if (!hasShoreableTile) {
-                System.out.println("没有可加固的板块");
-                JOptionPane.showMessageDialog(mapView, "周围没有可加固的瓦片！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                System.out.println("No shoreable tiles");
+                JOptionPane.showMessageDialog(mapView, "No shoreable tiles around!", "Hint", JOptionPane.INFORMATION_MESSAGE);
                 exitShoreUpMode();
                 return;
             }
         }
 
-        // 禁用不可加固的瓦片
+        // Disable unshoreable tiles
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null && button.getBackground() == null) {
                 button.setEnabled(false);
             }
         }
-        System.out.println("========== 高亮可加固板块完成 ==========\n");
+        System.out.println("========== Highlighting Shoreable Tiles Complete ==========\n");
     }
 
     /**
-     * 退出加固模式
+     * Exit shore up mode
      */
     public void exitShoreUpMode() {
         isInShoreUpMode = false;
         currentPlayerIndex = -1;
 
-        // 重置所有按钮状态
+        // Reset all button states
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             button.setEnabled(true);
-            button.setBackground(null); // 恢复默认背景色
+            button.setBackground(null); // Restore default background color
         }
     }
 
     /**
-     * 进入领航员移动模式
+     * Enter navigator move mode
      * 
-     * @param navigatorIndex    领航员玩家索引
-     * @param targetPlayerIndex 目标玩家索引
+     * @param navigatorIndex    Navigator player index
+     * @param targetPlayerIndex Target player index
      */
     public void enterNavigatorMoveMode(int navigatorIndex, int targetPlayerIndex) {
         this.navigatorIndex = navigatorIndex;
         this.targetPlayerIndex = targetPlayerIndex;
         this.isNavigatorMoveMode = true;
-        System.out.println("[日志] 进入领航员移动模式，领航员: " + (navigatorIndex + 1) + ", 目标玩家: " + (targetPlayerIndex + 1));
-        // 不做BFS高亮，仅重置所有按钮状态
+        System.out.println("[Log] Entering navigator move mode, Navigator: " + (navigatorIndex + 1) + ", Target player: " + (targetPlayerIndex + 1));
+        // Don't do BFS highlighting, just reset all button states
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null) {
@@ -578,40 +578,40 @@ public class MapController implements ActionListener {
     }
 
     /**
-     * 退出领航员移动模式
+     * Exit navigator move mode
      */
     public void exitNavigatorMoveMode() {
         this.isNavigatorMoveMode = false;
         this.navigatorIndex = -1;
         this.targetPlayerIndex = -1;
-        System.out.println("[日志] 退出领航员移动模式");
+        System.out.println("[Log] Exiting navigator move mode");
     }
 
     /**
-     * 处理领航员移动模式下的点击事件
+     * Handle click event in navigator move mode
      * 
-     * @param row 点击的行
-     * @param col 点击的列
+     * @param row Clicked row
+     * @param col Clicked column
      */
     private void handleNavigatorMoveModeClick(int row, int col) {
         if (!isNavigatorMoveMode || navigatorIndex == -1 || targetPlayerIndex == -1) {
             return;
         }
 
-        // 获取目标玩家
+        // Get target player
         Player targetPlayer = gameController.getPlayers().get(targetPlayerIndex);
         if (targetPlayer == null) {
             return;
         }
 
-        // 检查目标玩家是否是飞行员
+        // Check if target player is Pilot
         boolean isPilot = targetPlayer.getRole() instanceof Model.Role.Pilot;
         if (isPilot) {
             gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
             return;
         }
 
-        // 检查目标玩家是否是潜水员
+        // Check if target player is Diver
         boolean isDiver = targetPlayer.getRole().getClass().getSimpleName().equals("Diver");
         Tile currentTile = targetPlayer.getCurrentTile();
         if (currentTile == null) {
@@ -619,16 +619,16 @@ public class MapController implements ActionListener {
         }
         Tile targetTile = mapView.getTile(row, col);
         if (isDiver) {
-            // 允许点击所有BFS可达的格子
+            // Allow clicking all BFS reachable tiles
             if (isDiverReachable(currentTile, targetTile)) {
                 gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
             } else {
-                JOptionPane.showMessageDialog(null, "潜水员只能移动到连通的可达板块！", "移动错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Diver can only move to connected reachable tiles!", "Move Error", JOptionPane.ERROR_MESSAGE);
             }
             return;
         }
 
-        // 检查目标玩家是否是探险家
+        // Check if target player is Explorer
         boolean isExplorer = targetPlayer.getRole() instanceof Model.Role.Explorer;
         int rowDistance = Math.abs(currentTile.getRow() - row);
         int colDistance = Math.abs(currentTile.getCol() - col);
@@ -636,18 +636,18 @@ public class MapController implements ActionListener {
             if (rowDistance <= 1 && colDistance <= 1) {
                 gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
             } else {
-                System.out.println("[日志] 非法移动：探险家只能移动到八方向相邻格子");
-                JOptionPane.showMessageDialog(null, "非法移动：探险家只能移动到八方向相邻格子", "移动错误", JOptionPane.ERROR_MESSAGE);
+                System.out.println("[Log] Illegal move: Explorer can only move to eight adjacent tiles");
+                JOptionPane.showMessageDialog(null, "Illegal move: Explorer can only move to eight adjacent tiles", "Move Error", JOptionPane.ERROR_MESSAGE);
             }
             return;
         }
 
-        // 其他玩家只能移动到相邻格子
+        // Other players can only move to adjacent tiles
         if ((rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1)) {
             gameController.moveOtherPlayer(navigatorIndex, targetPlayerIndex, row, col);
         } else {
-            System.out.println("[日志] 非法移动：只能移动到相邻格子");
-            JOptionPane.showMessageDialog(null, "非法移动：只能移动到相邻格子", "移动错误", JOptionPane.ERROR_MESSAGE);
+            System.out.println("[Log] Illegal move: Can only move to adjacent tiles");
+            JOptionPane.showMessageDialog(null, "Illegal move: Can only move to adjacent tiles", "Move Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -657,8 +657,8 @@ public class MapController implements ActionListener {
         isMoveMode = false;
         isInShoreUpMode = false;
         currentPlayerIndex = playerIndex;
-        System.out.println("[日志] 进入沙袋卡加固模式，玩家" + (playerIndex + 1) + "可以选择任意被淹没的板块");
-        // 高亮所有被淹没的板块
+        System.out.println("[Log] Entering sandbag card shore up mode, player " + (playerIndex + 1) + " can select any flooded tile");
+        // Highlight all flooded tiles
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null) {
@@ -677,7 +677,7 @@ public class MapController implements ActionListener {
                 }
             }
         }
-        // 禁用不可加固的板块
+        // Disable unshoreable tiles
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null && button.getBackground() == null) {
@@ -689,7 +689,7 @@ public class MapController implements ActionListener {
     public void exitSandbagMode() {
         isSandbagMode = false;
         sandbagPlayerIndex = -1;
-        // 重置所有按钮状态
+        // Reset all button states
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null) {
@@ -697,23 +697,23 @@ public class MapController implements ActionListener {
                 button.setBackground(null);
             }
         }
-        // 继续弃牌流程
+        // Continue discard process
         if (gameController.getCardController().isInDiscardMode()) {
             gameController.getCardController().continueDiscardMode();
         }
     }
 
     /**
-     * 进入直升机移动模式
+     * Enter helicopter move mode
      * 
-     * @param currentPlayerIndex 当前玩家索引
-     * @param selectedPlayers    选中的玩家列表
-     * @param card               直升机卡
+     * @param currentPlayerIndex Current player index
+     * @param selectedPlayers    Selected players list
+     * @param card               Helicopter card
      */
     public void enterHelicopterMoveMode(int currentPlayerIndex, List<Player> selectedPlayers, HelicopterCard card) {
-        System.out.println("\n========== 进入直升机移动模式 ==========");
-        System.out.println("当前玩家: " + (currentPlayerIndex + 1));
-        System.out.println("选中的玩家数量: " + selectedPlayers.size());
+        System.out.println("\n========== Entering Helicopter Move Mode ==========");
+        System.out.println("Current player: " + (currentPlayerIndex + 1));
+        System.out.println("Number of selected players: " + selectedPlayers.size());
 
         isHelicopterMoveMode = true;
         isMoveMode = false;
@@ -724,16 +724,16 @@ public class MapController implements ActionListener {
         this.selectedPlayers = selectedPlayers;
         this.helicopterCard = card;
 
-        // 高亮显示可移动的区域（所有未被沉没的板块）
+        // Highlight movable areas (all unsunk tiles)
         highlightHelicopterMovableTiles();
-        System.out.println("========== 直升机移动模式已进入 ==========\n");
+        System.out.println("========== Helicopter Move Mode Entered ==========\n");
     }
 
     /**
-     * 高亮显示直升机可移动的区域
+     * Highlight helicopter movable areas
      */
     private void highlightHelicopterMovableTiles() {
-        // 重置所有按钮状态
+        // Reset all button states
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null) {
@@ -742,20 +742,20 @@ public class MapController implements ActionListener {
             }
         }
 
-        // 高亮显示所有未被沉没的板块
+        // Highlight all unsunk tiles
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
                 Tile tile = mapView.getTile(i, j);
                 if (tile != null && tile.getState() != TileState.SUNK) {
                     JButton button = mapView.getButton(i, j);
                     if (button != null) {
-                        button.setBackground(new Color(200, 255, 200)); // 浅绿色高亮
+                        button.setBackground(new Color(200, 255, 200)); // Light green highlight
                     }
                 }
             }
         }
 
-        // 禁用不可移动的区域
+        // Disable unmovable areas
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null && button.getBackground() == null) {
@@ -765,25 +765,25 @@ public class MapController implements ActionListener {
     }
 
     /**
-     * 退出直升机移动模式
+     * Exit helicopter move mode
      */
     private void exitHelicopterMoveMode() {
-        System.out.println("\n========== 退出直升机移动模式 ==========");
+        System.out.println("\n========== Exiting Helicopter Move Mode ==========");
         isHelicopterMoveMode = false;
         currentPlayerIndex = -1;
         selectedPlayers = null;
         helicopterCard = null;
-        System.out.println("========== 直升机移动模式已退出 ==========\n");
+        System.out.println("========== Helicopter Move Mode Exited ==========\n");
     }
 
     /**
-     * 处理直升机移动
+     * Handle helicopter movement
      * 
-     * @param row 目标行
-     * @param col 目标列
+     * @param row Target row
+     * @param col Target column
      */
     private void handleHelicopterMove(int row, int col) {
-        // 新增：只要所有玩家都在愚人岛码头且宝藏集齐，使用直升机卡就直接胜利
+        // New: If all players are at Fool's Landing and treasures are collected, using helicopter card means immediate victory
         List<Player> allPlayers = gameController.getPlayers();
         boolean allAtFoolsLanding = allPlayers.stream().allMatch(
                 p -> p.getCurrentTile() != null && p.getCurrentTile().getName().name().equals("FOOLS_LANDING"));
@@ -793,25 +793,25 @@ public class MapController implements ActionListener {
             exitHelicopterMode();
             return;
         }
-        System.out.println("\n========== 处理直升机移动 ==========");
-        System.out.println("目标位置: [" + row + "," + col + "]");
-        System.out.println("成功接收到板块点击事件");
+        System.out.println("\n========== Handling Helicopter Movement ==========");
+        System.out.println("Target position: [" + row + "," + col + "]");
+        System.out.println("Successfully received tile click event");
 
         Tile targetTile = mapView.getTile(row, col);
         if (targetTile == null || targetTile.getState() == TileState.SUNK) {
-            System.out.println("目标板块无效或已沉没");
-            JOptionPane.showMessageDialog(null, "无法移动到已沉没的板块！");
+            System.out.println("Target tile invalid or sunk");
+            JOptionPane.showMessageDialog(null, "Cannot move to sunk tile!");
             return;
         }
 
-        // 获取当前玩家
+        // Get current player
         Player currentPlayer = gameController.getPlayers().get(helicopterPlayerIndex);
         if (currentPlayer == null) {
-            System.out.println("无法获取当前玩家");
+            System.out.println("Cannot get current player");
             return;
         }
 
-        // 查找玩家的直升机卡
+        // Find player's helicopter card
         HelicopterCard helicopterCard = null;
         for (Card card : currentPlayer.getHandCard().getCards()) {
             if (card instanceof HelicopterCard) {
@@ -821,12 +821,12 @@ public class MapController implements ActionListener {
         }
 
         if (helicopterCard == null) {
-            System.out.println("玩家没有直升机卡");
-            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
+            System.out.println("Player has no helicopter card");
+            JOptionPane.showMessageDialog(null, "You don't have a helicopter card!");
             return;
         }
 
-        // 检查当前板块上是否有其他玩家
+        // Check if there are other players on current tile
         List<Player> playersOnCurrentTile = new ArrayList<>();
         Tile currentTile = currentPlayer.getCurrentTile();
         for (Player player : gameController.getPlayers()) {
@@ -835,47 +835,47 @@ public class MapController implements ActionListener {
             }
         }
 
-        // 如果当前板块上有其他玩家，让玩家选择要带哪些人一起移动
+        // If there are other players on current tile, let player choose who to move with
         if (!playersOnCurrentTile.isEmpty()) {
-            // 创建选项数组
+            // Create options array
             String[] options = new String[playersOnCurrentTile.size()];
             for (int i = 0; i < playersOnCurrentTile.size(); i++) {
                 Player player = playersOnCurrentTile.get(i);
                 options[i] = player.getRole().getClass().getSimpleName();
             }
 
-            // 创建多选列表
+            // Create multi-select list
             JList<String> list = new JList<>(options);
             list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-            // 创建滚动面板
+            // Create scroll pane
             JScrollPane scrollPane = new JScrollPane(list);
             scrollPane.setPreferredSize(new Dimension(200, 100));
 
-            // 显示对话框
+            // Show dialog
             int result = JOptionPane.showConfirmDialog(null,
                     scrollPane,
-                    "选择要一起移动的玩家",
+                    "Select players to move with",
                     JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.QUESTION_MESSAGE);
 
             if (result == JOptionPane.OK_OPTION) {
-                // 获取选中的玩家
+                // Get selected players
                 List<Player> selectedPlayers = new ArrayList<>();
                 for (int index : list.getSelectedIndices()) {
                     selectedPlayers.add(playersOnCurrentTile.get(index));
                 }
 
-                // 将选中的玩家移动到目标位置
+                // Move selected players to target position
                 for (Player player : selectedPlayers) {
-                    // 从原位置移除玩家图像
+                    // Remove player image from original position
                     mapView.hidePlayerImage(currentTile.getRow(), currentTile.getCol(),
                             gameController.getPlayers().indexOf(player));
 
-                    // 更新玩家位置
+                    // Update player position
                     player.setCurrentTile(targetTile);
 
-                    // 在新位置显示玩家
+                    // Show player at new position
                     String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
                     String playerImagePath = "src/resources/Player/" + roleName + "2.png";
                     mapView.showPlayerImage(targetTile.getRow(), targetTile.getCol(),
@@ -884,38 +884,38 @@ public class MapController implements ActionListener {
             }
         }
 
-        System.out.println("开始移动玩家...");
-        // 获取玩家当前位置
+        System.out.println("Starting to move player...");
+        // Get player's current position
         if (currentTile != null) {
-            System.out.println("玩家当前位置: " + currentTile.getName() + " [" + currentTile.getRow() + ","
+            System.out.println("Player's current position: " + currentTile.getName() + " [" + currentTile.getRow() + ","
                     + currentTile.getCol() + "]");
-            // 从当前位置移除玩家
+            // Remove player from current position
             mapView.hidePlayerImage(currentTile.getRow(), currentTile.getCol(), helicopterPlayerIndex);
-            System.out.println("已移除玩家在原位置的图像");
+            System.out.println("Removed player image from original position");
         }
 
-        // 更新玩家位置
+        // Update player position
         currentPlayer.setCurrentTile(targetTile);
         System.out.println(
-                "玩家新位置: " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol() + "]");
+                "Player's new position: " + targetTile.getName() + " [" + targetTile.getRow() + "," + targetTile.getCol() + "]");
 
-        // 在新位置显示玩家
+        // Show player at new position
         String roleName = currentPlayer.getRole().getClass().getSimpleName().toLowerCase();
         String playerImagePath = "src/resources/Player/" + roleName + "2.png";
         mapView.showPlayerImage(targetTile.getRow(), targetTile.getCol(), playerImagePath, helicopterPlayerIndex);
-        System.out.println("已在新位置显示玩家图像");
+        System.out.println("Showed player image at new position");
 
-        // 使用直升机卡
-        System.out.println("开始消耗直升机卡...");
+        // Use helicopter card
+        System.out.println("Starting to consume helicopter card...");
         currentPlayer.getHandCard().removeCard(helicopterCard);
         gameController.getPlayerInfoView(helicopterPlayerIndex).removeCard(helicopterCard);
         gameController.getTreasureDeck().discard(helicopterCard);
-        System.out.println("直升机卡已消耗");
+        System.out.println("Helicopter card consumed");
 
-        // 退出直升机模式
+        // Exit helicopter mode
         exitHelicopterMode();
 
-        // 重置所有按钮状态
+        // Reset all button states
         for (int i = 0; i < mapView.getButtonCount(); i++) {
             JButton button = mapView.getButton(i);
             if (button != null) {
@@ -924,22 +924,22 @@ public class MapController implements ActionListener {
             }
         }
 
-        // 显示移动成功的提示
+        // Show movement success message
         JOptionPane.showMessageDialog(null,
-                "直升机移动成功！",
-                "移动完成",
+                "Helicopter movement successful!",
+                "Movement Complete",
                 JOptionPane.INFORMATION_MESSAGE);
 
-        System.out.println("直升机移动完成");
-        System.out.println("========== 直升机移动处理结束 ==========\n");
+        System.out.println("Helicopter movement complete");
+        System.out.println("========== Helicopter Movement Handling Complete ==========\n");
     }
 
     public void enterHelicopterMode(int playerIndex) {
-        System.out.println("\n========== 进入直升机模式 ==========");
-        System.out.println("玩家索引: " + playerIndex);
-        System.out.println("MapView状态: " + (mapView != null ? "已初始化" : "未初始化"));
+        System.out.println("\n========== Entering Helicopter Mode ==========");
+        System.out.println("Player index: " + playerIndex);
+        System.out.println("MapView status: " + (mapView != null ? "Initialized" : "Not initialized"));
 
-        // 检查玩家是否有直升机卡
+        // Check if player has helicopter card
         Player player = gameController.getPlayers().get(playerIndex);
         boolean hasHelicopterCard = false;
         HelicopterCard helicopterCard = null;
@@ -952,66 +952,66 @@ public class MapController implements ActionListener {
         }
 
         if (hasHelicopterCard) {
-            System.out.println("玩家拥有直升机卡，成功进入直升机模式");
+            System.out.println("Player has helicopter card, successfully entered helicopter mode");
             isHelicopterMode = true;
             helicopterPlayerIndex = playerIndex;
             mapView.setHelicopterMode(true);
 
-            // 显示进入直升机模式的提示
+            // Show helicopter mode entry message
             JOptionPane.showMessageDialog(null,
-                    "已进入直升机模式，请选择目标板块。\n如果目标板块上有其他玩家，您可以选择是否带他们一起移动。",
-                    "直升机模式",
+                    "Entered helicopter mode, please select target tile.\nIf there are other players on the target tile, you can choose whether to move them together.",
+                    "Helicopter Mode",
                     JOptionPane.INFORMATION_MESSAGE);
 
-            System.out.println("等待玩家选择目标板块...");
+            System.out.println("Waiting for player to select target tile...");
         } else {
-            System.out.println("玩家没有直升机卡，无法进入直升机模式");
-            JOptionPane.showMessageDialog(null, "您没有直升机卡！");
+            System.out.println("Player has no helicopter card, cannot enter helicopter mode");
+            JOptionPane.showMessageDialog(null, "You don't have a helicopter card!");
             return;
         }
 
-        System.out.println("直升机模式状态: " + isHelicopterMode);
-        System.out.println("直升机玩家索引: " + helicopterPlayerIndex);
-        System.out.println("========== 直升机模式进入完成 ==========\n");
+        System.out.println("Helicopter mode status: " + isHelicopterMode);
+        System.out.println("Helicopter player index: " + helicopterPlayerIndex);
+        System.out.println("========== Helicopter Mode Entry Complete ==========\n");
     }
 
     public void exitHelicopterMode() {
         isHelicopterMode = false;
         helicopterPlayerIndex = -1;
         mapView.setHelicopterMode(false);
-        // 继续弃牌流程
+        // Continue discard process
         if (gameController.getCardController().isInDiscardMode()) {
             gameController.getCardController().continueDiscardMode();
         }
     }
 
     /**
-     * 进入紧急移动模式
+     * Enter emergency move mode
      * 
-     * @param playerIndex    需要移动的玩家索引
-     * @param availableTiles 可用的目标板块列表
+     * @param playerIndex     Player index that needs to move
+     * @param availableTiles  List of available target tiles
      */
     public void enterEmergencyMoveMode(int playerIndex, List<Tile> availableTiles) {
         isInEmergencyMoveMode = true;
         emergencyMovePlayerIndex = playerIndex;
         emergencyMoveAvailableTiles = availableTiles;
 
-        // 高亮显示可用的目标板块
+        // Highlight available target tiles
         for (Tile tile : availableTiles) {
             mapView.highlightTile(tile.getRow(), tile.getCol());
         }
     }
 
     /**
-     * 退出紧急移动模式
+     * Exit emergency move mode
      */
     public void exitEmergencyMoveMode() {
         isInEmergencyMoveMode = false;
         emergencyMovePlayerIndex = -1;
         emergencyMoveAvailableTiles = null;
-        // 清除所有高亮
+        // Clear all highlights
         mapView.clearHighlights();
-        // 通知GameController继续处理下一个紧急移动
+        // Notify GameController to continue processing next emergency move
         gameController.processNextEmergencyMove();
     }
 }

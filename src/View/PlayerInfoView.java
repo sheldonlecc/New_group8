@@ -16,12 +16,12 @@ public class PlayerInfoView extends JPanel {
     private JButton sandbagButton;
     private JButton helicopterButton;
     private JLabel roleIconLabel;
-    private int playerCount; // 新增玩家数量字段
-    private JButton[] actionButtons; // 添加这行声明
+    private int playerCount; // Add player count field
+    private JButton[] actionButtons; // Add this declaration
 
     public PlayerInfoView(GameController gameController) {
         this.gameController = gameController;
-        this.playerCount = gameController.getPlayerCount(); // 获取玩家数量
+        this.playerCount = gameController.getPlayerCount(); // Get player count
         initializeUI();
         setPlayerName("Player");
     }
@@ -30,64 +30,64 @@ public class PlayerInfoView extends JPanel {
         setLayout(new BorderLayout(3, 3));
         setBorder(BorderFactory.createTitledBorder(""));
     
-        // 根据玩家数量动态设置面板尺寸
+        // Dynamically set panel size based on player count
         int panelWidth, panelHeight;
         if (playerCount <= 2) {
             panelWidth = 750;
             panelHeight = 170;
         } else {
-            // 3-4人游戏时减小宽度
+            // Reduce width for 3-4 player games
             panelWidth = 750;
-            panelHeight = 165; // 稍微减小高度
+            panelHeight = 165; // Slightly reduce height
         }
         
         setMaximumSize(new Dimension(panelWidth, panelHeight));
         setPreferredSize(new Dimension(panelWidth - 20, panelHeight - 20));
 
-        // 左侧区域：玩家信息
+        // Left area: Player information
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 
-        // 隐藏roleLabel和playerNameLabel，只在标题中显示
+        // Hide roleLabel and playerNameLabel, only show in title
         roleLabel = new JLabel("Role");
         roleLabel.setVisible(false);
 
         playerNameLabel = new JLabel("Player");
         playerNameLabel.setVisible(false);
 
-        // 只显示行动点数
+        // Only show action points
         actionPointsLabel = new JLabel("Actions: 3");
         actionPointsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         leftPanel.add(actionPointsLabel);
         leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // 添加"使用沙袋卡"按钮
+        // Add "Use Sandbag Card" button
         sandbagButton = new JButton("Sandbag");
         sandbagButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sandbagButton.setPreferredSize(new Dimension(90, 25)); // 统一尺寸
+        sandbagButton.setPreferredSize(new Dimension(90, 25)); // Uniform size
         sandbagButton.setBackground(new Color(255, 204, 102));
-        sandbagButton.setFont(new Font("Arial", Font.BOLD, 11)); // 减小字体
+        sandbagButton.setFont(new Font("Arial", Font.BOLD, 11)); // Reduce font size
         sandbagButton.setFocusPainted(false);
         sandbagButton.setEnabled(true);
 
-        // 添加"使用直升机卡"按钮
+        // Add "Use Helicopter Card" button
         helicopterButton = new JButton("Helicopter");
-        helicopterButton.setPreferredSize(new Dimension(90, 25)); // 保持统一尺寸
+        helicopterButton.setPreferredSize(new Dimension(90, 25)); // Keep uniform size
         helicopterButton.setBackground(new Color(102, 204, 255));
-        helicopterButton.setFont(new Font("Arial", Font.BOLD, 11)); // 减小字体
+        helicopterButton.setFont(new Font("Arial", Font.BOLD, 11)); // Reduce font size
         helicopterButton.setFocusPainted(false);
         helicopterButton.setEnabled(true);
         helicopterButton.addActionListener(e -> {
-            System.out.println("\n========== 直升机按钮被点击 ==========");
-            System.out.println("当前玩家索引: " + gameController.getPlayerInfoViews().indexOf(this));
-            System.out.println("直升机按钮状态: " + (helicopterButton.isEnabled() ? "启用" : "禁用"));
-            System.out.println("正在检查直升机卡...");
+            System.out.println("\n========== Helicopter button clicked ==========");
+            System.out.println("Current player index: " + gameController.getPlayerInfoViews().indexOf(this));
+            System.out.println("Helicopter button state: " + (helicopterButton.isEnabled() ? "Enabled" : "Disabled"));
+            System.out.println("Checking helicopter card...");
             gameController.handleHelicopterCard(gameController.getPlayerInfoViews().indexOf(this));
-            System.out.println("========== 直升机按钮点击事件结束 ==========\n");
+            System.out.println("========== Helicopter button click event ended ==========\n");
         });
 
-        // 创建一个水平布局的面板来放置这两个按钮
+        // Create a horizontal layout panel for these two buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonPanel.add(sandbagButton);
@@ -95,13 +95,13 @@ public class PlayerInfoView extends JPanel {
         leftPanel.add(buttonPanel);
         leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // 添加动作按钮面板
-        JPanel actionButtonsPanel = new JPanel(new GridLayout(3, 2, 2, 2)); // 减小间距
+        // Add action buttons panel
+        JPanel actionButtonsPanel = new JPanel(new GridLayout(3, 2, 2, 2)); // Reduce spacing
         actionButtonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        actionButtonsPanel.setMaximumSize(new Dimension(200, 100)); // 增加宽度
+        actionButtonsPanel.setMaximumSize(new Dimension(200, 100)); // Increase width
 
-        // 创建并添加动作按钮
-        String[] actionNames = { "Move", "Shore up", "Give Cards", "Special", "Treasure", "Skip" }; // 缩短文本
+        // Create and add action buttons
+        String[] actionNames = { "Move", "Shore up", "Give Cards", "Special", "Treasure", "Skip" }; // Shorten text
         actionButtons = new JButton[actionNames.length];
         for (int i = 0; i < actionNames.length; i++) {
             actionButtons[i] = createActionButton(actionNames[i]);
@@ -111,37 +111,37 @@ public class PlayerInfoView extends JPanel {
         leftPanel.add(actionButtonsPanel);
         add(leftPanel, BorderLayout.WEST);
 
-        // 中间区域：卡牌 - 根据玩家数量调整卡牌区域大小
+        // Middle area: Cards - Adjust card area size based on player count
         cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 1, 1));
         cardsPanel.setBorder(BorderFactory.createTitledBorder("Cards"));
         cardsPanel.setBackground(new Color(240, 240, 240));
         
-        int cardsPanelWidth = (playerCount <= 2) ? 120 : 100; // 3-4人时减小卡牌区域
+        int cardsPanelWidth = (playerCount <= 2) ? 120 : 100; // Reduce card area for 3-4 players
         cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 100));
         add(cardsPanel, BorderLayout.CENTER);
         
-        // 右侧区域：角色图标 - 根据玩家数量调整图标区域大小
+        // Right area: Role icon - Adjust icon area size based on player count
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBorder(BorderFactory.createTitledBorder("Role"));
         
-        int iconPanelWidth = (playerCount <= 2) ? 90 : 80; // 3-4人时减小图标区域
+        int iconPanelWidth = (playerCount <= 2) ? 90 : 80; // Reduce icon area for 3-4 players
         rightPanel.setPreferredSize(new Dimension(iconPanelWidth, 100));
         
         roleIconLabel = new JLabel();
         roleIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         roleIconLabel.setVerticalAlignment(SwingConstants.CENTER);
         
-        int iconSize = (playerCount <= 2) ? 60 : 50; // 3-4人时减小图标尺寸
+        int iconSize = (playerCount <= 2) ? 60 : 50; // Reduce icon size for 3-4 players
         roleIconLabel.setPreferredSize(new Dimension(iconSize, 80));
         
         rightPanel.add(roleIconLabel, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
-        // 设置最终尺寸
+        // Set final size
         setPreferredSize(new Dimension(panelWidth, panelHeight));
         setMinimumSize(new Dimension(panelWidth, panelHeight));
 
-        // 调整卡牌区域的大小
+        // Adjust card area size
         cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 3)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -165,33 +165,33 @@ public class PlayerInfoView extends JPanel {
             BorderFactory.createEmptyBorder(8, 8, 8, 8)
         ));
         
-        // 增加卡牌面板宽度以适应更大的卡牌
-        cardsPanelWidth = (playerCount <= 2) ? 160 : 140;  // 从140/120增加到160/140
-        cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 135));  // 高度也稍微增加
+        // Increase card panel width to accommodate larger cards
+        cardsPanelWidth = (playerCount <= 2) ? 160 : 140;  // Increase from 140/120 to 160/140
+        cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 135));  // Also slightly increase height
         add(cardsPanel, BorderLayout.CENTER);
         
-        // 右侧区域：角色图标 - 根据玩家数量调整图标区域大小
+        // Right area: Role icon - Adjust icon area size based on player count
         rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBorder(BorderFactory.createTitledBorder("Role"));
         
-        iconPanelWidth = (playerCount <= 2) ? 90 : 80; // 3-4人时减小图标区域
+        iconPanelWidth = (playerCount <= 2) ? 90 : 80; // Reduce icon area for 3-4 players
         rightPanel.setPreferredSize(new Dimension(iconPanelWidth, 100));
         
         roleIconLabel = new JLabel();
         roleIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         roleIconLabel.setVerticalAlignment(SwingConstants.CENTER);
         
-        iconSize = (playerCount <= 2) ? 60 : 50; // 3-4人时减小图标尺寸
+        iconSize = (playerCount <= 2) ? 60 : 50; // Reduce icon size for 3-4 players
         roleIconLabel.setPreferredSize(new Dimension(iconSize, 80));
         
         rightPanel.add(roleIconLabel, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
-        // 设置最终尺寸
+        // Set final size
         setPreferredSize(new Dimension(panelWidth, panelHeight));
         setMinimumSize(new Dimension(panelWidth, panelHeight));
 
-        // 调整卡牌区域的大小
+        // Adjust card area size
         cardsPanel.setPreferredSize(new Dimension(cardsPanelWidth, 120));
     }
     
@@ -203,21 +203,21 @@ public class PlayerInfoView extends JPanel {
     public void setRole(String role) {
         roleLabel.setText(role);
         updateTitle();
-        updateRoleIcon(role); // 更新角色图标
+        updateRoleIcon(role); // Update role icon
     }
     
-    // 新增方法：更新角色图标
+    // New method: Update role icon
     private void updateRoleIcon(String role) {
         if (role != null && !role.equals("Role") && !role.equals("Not Assigned")) {
             try {
                 String iconPath = "src/resources/Player/" + role + "_Icon.png";
                 ImageIcon icon = new ImageIcon(iconPath);
-                // 缩放图标到合适大小
+                // Scale icon to appropriate size
                 Image scaledImage = icon.getImage().getScaledInstance(60, 80, Image.SCALE_SMOOTH);
                 roleIconLabel.setIcon(new ImageIcon(scaledImage));
                 roleIconLabel.setText("");
             } catch (Exception e) {
-                System.err.println("无法加载角色图标: " + role);
+                System.err.println("Failed to load role icon: " + role);
                 roleIconLabel.setIcon(null);
                 roleIconLabel.setText(role);
             }
@@ -263,22 +263,22 @@ public class PlayerInfoView extends JPanel {
 
     private JButton createActionButton(String actionName) {
         JButton button = new JButton(actionName);
-        button.setPreferredSize(new Dimension(90, 30)); // 统一尺寸
+        button.setPreferredSize(new Dimension(90, 30)); // Uniform size
         button.setFocusPainted(false);
         button.setBackground(new Color(51, 122, 183));
         button.setForeground(Color.WHITE);
-        button.setFont(new Font("Arial", Font.BOLD, 12)); // 减小字体以适应按钮
+        button.setFont(new Font("Arial", Font.BOLD, 12)); // Reduce font size to fit button
         button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(46, 109, 164), 1),
-                BorderFactory.createEmptyBorder(2, 4, 2, 4))); // 减小内边距
+                BorderFactory.createEmptyBorder(2, 4, 2, 4))); // Reduce padding
         button.addActionListener(e -> performAction(actionName));
         return button;
     }
 
     private void performAction(String actionName) {
-        // 获取当前玩家的索引
+        // Get current player's index
         int currentPlayerIndex = gameController.getPlayerInfoViews().indexOf(this);
-        // 调用GameController的performAction方法
+        // Call GameController's performAction method
         gameController.performAction(currentPlayerIndex, actionName);
     }
 

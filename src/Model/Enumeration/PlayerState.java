@@ -1,41 +1,41 @@
 package Model.Enumeration;
 
 /**
- * 玩家状态枚举
- * 定义玩家可能的状态
+ * Player State Enumeration
+ * Defines possible states for players
  */
 public enum PlayerState {
     /**
-     * 正常状态
-     * 玩家可以正常进行所有行动
+     * Normal State
+     * Player can perform all actions normally
      */
     NORMAL,
 
     /**
-     * 溺水状态
-     * 玩家当前所在瓦片被淹没，需要立即移动到相邻的未淹没瓦片
-     * 如果无法移动，则玩家死亡
+     * Drowned State
+     * Player's current tile is flooded, must immediately move to an adjacent unflooded tile
+     * If unable to move, player dies
      */
     DROWNED,
 
     /**
-     * 已获救状态
-     * 玩家已经通过直升机救援到达直升机场并获救
-     * 获救的玩家不再参与游戏
+     * Rescued State
+     * Player has been rescued by helicopter to the helipad
+     * Rescued players no longer participate in the game
      */
     RESCUED,
 
     /**
-     * 死亡状态
-     * 玩家因溺水或其他原因死亡
-     * 死亡的玩家不再参与游戏
+     * Dead State
+     * Player has died due to drowning or other reasons
+     * Dead players no longer participate in the game
      */
     DEAD,
 
     /**
-     * 行动受限状态
-     * 玩家因特殊卡牌效果或其他原因导致行动受限
-     * 例如：被沙袋卡限制移动等
+     * Restricted State
+     * Player's actions are limited due to special card effects or other reasons
+     * Example: Movement restricted by sandbag card
      */
     RESTRICTED
 } 

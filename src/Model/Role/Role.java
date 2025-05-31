@@ -31,27 +31,27 @@ public abstract class Role {
         return player;
     }
 
-    // 检查是否可以使用特殊能力
+    // Check if special ability can be used
     public abstract boolean canUseAbility();
 
-    // 使用特殊能力
+    // Use special ability
     public abstract void useSpecialAbility();
 
-    // 获取可移动的瓦片列表
+    // Get list of movable tiles
     public abstract List<Tile> getMovableTiles();
 
-    // 检查是否可以移动到指定瓦片
+    // Check if can move to specified tile
     public abstract boolean canMoveTo(Tile tile);
 
-    // 检查是否可以加固指定瓦片
+    // Check if can shore up specified tile
     public abstract boolean canShoreUp(Tile tile);
 
-    // 检查瓦片是否可以移动（基础检查）
+    // Check if tile is movable (basic check)
     protected boolean isTileMovable(Tile tile) {
         if (tile == null) {
             return false;
         }
-        // 只检查是否沉没，被淹没的瓦片可以移动
+        // Only check if sunk, flooded tiles can be moved to
         return tile.getState() != TileState.SUNK;
     }
 }

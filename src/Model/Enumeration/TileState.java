@@ -1,11 +1,11 @@
 package Model.Enumeration;
 
 /**
- * 瓦片状态枚举
- * 定义瓦片可能的状态
+ * Tile State Enumeration
+ * Defines possible states for tiles
  */
 public enum TileState {
-    NORMAL,     // 正常状态
-    FLOODED,    // 被淹没状态
-    SUNK        // 沉没状态
+    NORMAL,     // Normal state
+    FLOODED,    // Flooded state
+    SUNK        // Sunk state
 } 
