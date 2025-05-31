@@ -86,7 +86,7 @@ public class MapView extends JPanel {
             button.setHorizontalTextPosition(SwingConstants.CENTER);
             button.setVerticalTextPosition(SwingConstants.BOTTOM);
         } catch (Exception e) {
-            System.err.println("Unable to load image: " + tile.getImagePath(tile.getState()));
+            System.err.println("Cannot load image: " + tile.getImagePath(tile.getState()));
         }
     }
 
@@ -103,7 +103,7 @@ public class MapView extends JPanel {
         
         for (int i = 0; i < MAP_SIZE; i++) {
             for (int j = 0; j < MAP_SIZE; j++) {
-                // Create layered panel
+                // Create layered pane
                 layeredPanes[i][j] = new JLayeredPane();
                 layeredPanes[i][j].setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
                 layeredPanes[i][j].setMinimumSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
@@ -116,7 +116,7 @@ public class MapView extends JPanel {
                 mapButtons[i][j].setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
                 mapButtons[i][j].setMinimumSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
 
-                // Add button to layered panel
+                // Add button to layered pane
                 layeredPanes[i][j].add(mapButtons[i][j], JLayeredPane.DEFAULT_LAYER);
 
                 // Set initial state
@@ -137,7 +137,7 @@ public class MapView extends JPanel {
                         mapButtons[i][j].setHorizontalTextPosition(SwingConstants.CENTER);
                         mapButtons[i][j].setVerticalTextPosition(SwingConstants.BOTTOM);
                     } catch (Exception e) {
-                        System.err.println("Unable to load image: " + tiles[i][j].getImagePath(tiles[i][j].getState()));
+                        System.err.println("Cannot load image: " + tiles[i][j].getImagePath(tiles[i][j].getState()));
                     }
                     tileNameIndex++;
                 } else {
@@ -149,11 +149,11 @@ public class MapView extends JPanel {
                         mapButtons[i][j].setIcon(new ImageIcon(image));
                         mapButtons[i][j].setText("");
                     } catch (Exception e) {
-                        System.err.println("Unable to load image: src/resources/Tiles/Sea.png");
+                        System.err.println("Cannot load image: src/resources/Tiles/Sea.png");
                     }
                 }
 
-                // Add layered panel using GridBagConstraints
+                // Add layered pane using GridBagConstraints
                 gbc.gridx = j;
                 gbc.gridy = i;
                 add(layeredPanes[i][j], gbc);
@@ -237,7 +237,7 @@ public class MapView extends JPanel {
         // Reset tile name index
         tileNameIndex = 0;
         
-        // Reinitialize UI
+        // Re-initialize UI
         initializeUI();
         
         // Refresh layout
@@ -364,7 +364,7 @@ public class MapView extends JPanel {
             players.add(playerIndex);
             labels.add(playerLabel);
 
-            // Add label to layered panel
+            // Add label to layered pane
             layeredPanes[row][col].add(playerLabel, JLayeredPane.PALETTE_LAYER);
             layeredPanes[row][col].revalidate();
             layeredPanes[row][col].repaint();
@@ -385,7 +385,7 @@ public class MapView extends JPanel {
         List<JLabel> labels = tilePlayerLabels.get(tileKey);
 
         if (players != null && labels != null) {
-            // Find player's index in list
+            // Find player's index in the list
             int index = players.indexOf(playerIndex);
             if (index != -1) {
                 // Remove corresponding label
@@ -393,7 +393,7 @@ public class MapView extends JPanel {
                 layeredPanes[row][col].remove(label);
                 players.remove(index);
 
-                // If no players on tile, clean up data
+                // Clean up data if no players on tile
                 if (players.isEmpty()) {
                     tilePlayers.remove(tileKey);
                     tilePlayerLabels.remove(tileKey);
@@ -407,24 +407,24 @@ public class MapView extends JPanel {
 
     public void setHelicopterMode(boolean enabled) {
         System.out.println("\n========== MapView.setHelicopterMode Start ==========");
-        System.out.println("Method called, parameter enabled: " + enabled);
+        System.out.println("Method called with enabled parameter: " + enabled);
         System.out.println("Current isHelicopterMode: " + isHelicopterMode);
         System.out.println("MapView instance: " + this);
         System.out.println("Number of tiles returned by getAllTiles(): " + getAllTiles().size());
         
         isHelicopterMode = enabled;
         if (enabled) {
-            System.out.println("Start highlighting unsunken tiles");
+            System.out.println("Start highlighting non-sunken tiles");
             int highlightedCount = 0;
-            // Highlight all unsunken tiles
+            // Highlight all non-sunken tiles
             for (Tile tile : getAllTiles()) {
                 if (tile.getState() != TileState.SUNK) {
-                    System.out.println("Highlight tile: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]");
+                    System.out.println("Highlighting tile: " + tile.getName() + " [" + tile.getRow() + "," + tile.getCol() + "]");
                     highlightTile(tile.getRow(), tile.getCol());
                     highlightedCount++;
                 }
             }
-            System.out.println("Total highlighted tiles: " + highlightedCount);
+            System.out.println("Total highlighted " + highlightedCount + " tiles");
         } else {
             System.out.println("Clear all highlights");
             // Clear all highlights

@@ -23,7 +23,6 @@ public class SetupView extends JPanel {
 
     public SetupView(MainView mainView) {
         this.mainView = mainView;
-        // Load background image
         try {
             backgroundImage = ImageIO.read(new File("src/resources/background.png"));
         } catch (IOException e) {
@@ -59,17 +58,17 @@ public class SetupView extends JPanel {
         setPreferredSize(new Dimension(800, 600));
         setLayout(new BorderLayout());
 
-        // Add larger top spacing to move selection area down more
+        // 添加更大的顶部空白区域，让选择区域向下移动更多
         JPanel topSpacer = new JPanel();
         topSpacer.setOpaque(false);
-        topSpacer.setPreferredSize(new Dimension(0, 400)); // Increase from 50 to 100 pixels
+        topSpacer.setPreferredSize(new Dimension(0, 400)); // 从50增加到100像素
         add(topSpacer, BorderLayout.NORTH);
 
-        // Create central control panel
+        // 创建中央控制面板
         JPanel centerPanel = createCenterPanel();
         add(centerPanel, BorderLayout.CENTER);
 
-        // Create map preview panel
+        // 创建地图预览面板
         createMapPreviewPanel();
         add(mapPreviewPanel, BorderLayout.SOUTH);
     }
@@ -206,7 +205,7 @@ public class SetupView extends JPanel {
 
     private void createMapPreviewPanel() {
         mapPreviewPanel = new JPanel();
-        // Increase distance between maps from 30 to 50
+        // 增加地图之间的距离从30增加到50
         mapPreviewPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 150, 20));
         mapPreviewPanel.setOpaque(false);
         mapPreviewPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
@@ -219,16 +218,16 @@ public class SetupView extends JPanel {
             mapContainer.setLayout(new BorderLayout());
             mapContainer.setOpaque(false);
             
-            // Create map name label
+            // 创建地图名称标签
             JLabel nameLabel = new JLabel(mapNames[i]);
             nameLabel.setForeground(Color.WHITE);
             nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
             nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
             
-            // Create map image label
+            // 创建地图图片标签
             mapImageLabels[i] = new JLabel();
             if (mapImages[i] != null) {
-                // Scale image to appropriate size
+                // 缩放图片到合适大小
                 Image scaledImage = mapImages[i].getScaledInstance(180, 180, Image.SCALE_SMOOTH);
                 mapImageLabels[i].setIcon(new ImageIcon(scaledImage));
             }
@@ -241,7 +240,7 @@ public class SetupView extends JPanel {
             mapPreviewPanel.add(mapContainer);
         }
         
-        // Highlight first map initially
+        // 初始化时高亮第一个地图
         updateMapPreview();
     }
     
@@ -250,10 +249,10 @@ public class SetupView extends JPanel {
         
         for (int i = 0; i < mapImageLabels.length; i++) {
             if (i == selectedIndex) {
-                // Highlight selected map
+                // 高亮选中的地图
                 mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
             } else {
-                // Normal border
+                // 普通边框
                 mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
             }
         }

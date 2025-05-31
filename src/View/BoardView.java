@@ -15,12 +15,12 @@ public class BoardView extends JPanel {
     private int playerCount;
     private GameController gameController;
     private int initialWaterLevel; // Add member variable to save initial water level
-
+    
     // Add new constructor in BoardView class
     public BoardView(int playerCount, String mapType, int initialWaterLevel) {
         this.playerCount = playerCount;
         this.initialWaterLevel = initialWaterLevel; // Save initial water level
-        // Create helicopter tile (use FOOLS_LANDING as helicopter pad)
+        // Create helicopter landing tile (use FOOLS_LANDING as helicopter landing)
         Tile helicopterTile = new Tile(TileName.FOOLS_LANDING, 2, 2);
         
         // Create WaterLevelView instance first
@@ -104,7 +104,7 @@ public class BoardView extends JPanel {
         gbc.weighty = 0.15; // Reduced from 0.2 to 0.15
         contentPanel.add(topPanel, gbc);
 
-        // Middle area (treasure status, map, water level) - increase map weight
+        // Middle area (treasure status, map, water level meter) - increase map weight
         gbc.gridy = 1;
         gbc.gridwidth = 1;
         gbc.weighty = 0.7; // Increased from 0.6 to 0.7
@@ -116,14 +116,14 @@ public class BoardView extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         contentPanel.add(treasureView, gbc);
 
-        // Middle map - increase width weight
+        // Center map - increase width weight
         gbc.gridx = 1;
         gbc.weightx = 0.7; // Increased from 0.6 to 0.7
         JPanel mapCenterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20)); // Reduce vertical spacing
         mapCenterPanel.add(mapView);
         contentPanel.add(mapCenterPanel, gbc);
 
-        // Right water level - reduce width weight
+        // Right water level meter - reduce width weight
         waterLevelView.updateWaterLevel(initialWaterLevel); // Modified here
         WaterLevel.setWaterLevelView(waterLevelView);
         gbc.gridx = 2;

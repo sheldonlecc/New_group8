@@ -11,10 +11,10 @@ import java.awt.event.MouseEvent;
 
 public class CardView extends JButton {
     private Card card;
-    private static final int CARD_WIDTH = 65;  // Reduce width to avoid overflow
+    private static final int CARD_WIDTH = 65; 
     private int cardHeight;
-    private static final Font CARD_FONT = new Font("Microsoft YaHei", Font.BOLD, 10);
-    private static final Font TITLE_FONT = new Font("Microsoft YaHei", Font.BOLD, 8);
+    private static final Font CARD_FONT = new Font("Arial", Font.BOLD, 10);
+    private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 8);
     private static final String CARD_PATH = "/resources/Card/";
     
     private boolean isHovered = false;
@@ -84,7 +84,7 @@ public class CardView extends JButton {
         } else {
             switch (card.getType()) {
                 case FLOOD:
-                    // Regular flood cards use gray border
+                    // Normal flood cards use gray border
                     baseColor = new Color(156, 163, 175);  // Gray
                     borderColor = new Color(75, 85, 99);
                     break;
@@ -120,7 +120,7 @@ public class CardView extends JButton {
             setIcon(new ImageIcon(image));
             setText("");
         } catch (Exception e) {
-            System.err.println("Unable to load image: " + imagePath);
+            System.err.println("Cannot load image: " + imagePath);
             setIcon(null);
             setText(card.getName());
         }
@@ -135,7 +135,7 @@ public class CardView extends JButton {
         int width = getWidth();
         int height = getHeight();
         
-        // Modify scaling logic: further reduce hover effect for 3-4 player games
+        // Modified scaling logic: further reduce hover effect for 3-4 player games
         float hoverScale;
         if (playerCount == 2) {
             hoverScale = 1.02f;  // Keep 1.02x for 2 players
