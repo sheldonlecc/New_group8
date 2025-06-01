@@ -581,7 +581,7 @@ public class GameController {
         }
     }
 
-    // 辅助方法：判断指定名称的板块是否沉没
+    // Helper method: Check if a tile with the specified name is sunk
     private boolean isTileSunk(String tileName) {
         for (Tile tile : mapController.getMapView().getAllTiles()) {
             if (tile.getName().name().equals(tileName)) {
@@ -591,7 +591,7 @@ public class GameController {
         return false;
     }
 
-    // 游戏失败处理
+    // Game over handling for lose condition
     public void endGameWithLose(String reason) {
         for (PlayerInfoView view : playerInfoViews) {
             view.setButtonsEnabled(false);
@@ -623,7 +623,7 @@ public class GameController {
         boolean consumesAction = actionName.equals("Move") ||
                 actionName.equals("Give Cards") ||
                 actionName.equals("Treasure") ||
-                actionName.equals("Shore up"); // 添加加固操作到消耗行动点的操作列表中
+                actionName.equals("Shore up"); // Added shore up to action point consuming operations
 
         if (!consumesAction || currentActions > 0) {
             boolean actionSuccess = true;
@@ -636,12 +636,12 @@ public class GameController {
                     handleShoreUp(playerIndex);
                     break;
                 case "Give Cards":
-                    // 先尝试给牌，如果成功，后续流程在CardController里处理行动点
+                    // First try to give cards, if successful, action points are handled in CardController
                     actionSuccess = requestGiveCard(playerIndex);
-                    // 不在这里消耗行动点
+                    // Don't consume action points here
                     break;
                 case "Special":
-                    // 特殊技能不在这里消耗行动点，而是在技能完成后消耗
+                    // Special skills don't consume action points here, but after skill completion
                     handleSpecialSkill(playerIndex);
                     break;
                 case "Treasure":
@@ -661,49 +661,49 @@ public class GameController {
     }
 
     /**
-     * 处理玩家移动
+     * Handle player movement
      * 
-     * @param playerIndex 玩家索引
+     * @param playerIndex Player index
      */
     private void handleMove(int playerIndex) {
-        System.out.println("\n========== 处理玩家移动 ==========");
-        // 进入移动模式，等待玩家点击目标位置
+        System.out.println("\n========== Handling player movement ==========");
+        // Enter move mode, wait for player to click target position
         mapController.enterMoveMode(playerIndex);
-        System.out.println("========== 移动处理完成 ==========\n");
+        System.out.println("========== Movement handling completed ==========\n");
     }
 
     /**
-     * 处理获取宝物
+     * Handle treasure acquisition
      * 
-     * @param playerIndex 玩家索引
+     * @param playerIndex Player index
      */
     private void handleGetTreasure(int playerIndex) {
-        System.out.println("\n========== 处理获取宝物 ==========");
+        System.out.println("\n========== Handling treasure acquisition ==========");
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
 
-        // 计算玩家拥有的每种宝物卡的数量
+        // Count the number of each treasure card the player has
         Map<TreasureType, Integer> treasureCardCounts = countTreasureCards(player);
 
-        // 检查玩家是否在对应的宝物地点
+        // Check if player is at corresponding treasure location
         TreasureType matchingTreasureType = getTreasureTypeForTile(currentTile.getName());
 
         if (matchingTreasureType == null) {
-            System.out.println("当前位置不是宝物地点");
-            JOptionPane.showMessageDialog(null, "当前位置不是宝物地点，无法获取宝物！");
+            System.out.println("Current position is not a treasure location");
+            JOptionPane.showMessageDialog(null, "Current position is not a treasure location, cannot acquire treasure!");
             return;
         }
 
-        // 检查是否有足够的宝物卡
+        // Check if player has enough treasure cards
         Integer cardCount = treasureCardCounts.getOrDefault(matchingTreasureType, 0);
         if (cardCount < 4) {
-            System.out.println("没有足够的宝物卡，需要4张" + matchingTreasureType.getDisplayName() + "宝物卡，当前只有" + cardCount + "张");
+            System.out.println("Not enough treasure cards, need 4 " + matchingTreasureType.getDisplayName() + " treasure cards, currently only have " + cardCount);
             JOptionPane.showMessageDialog(null,
-                    "没有足够的宝物卡，需要4张" + matchingTreasureType.getDisplayName() + "宝物卡，当前只有" + cardCount + "张");
+                    "Not enough treasure cards, need 4 " + matchingTreasureType.getDisplayName() + " treasure cards, currently only have " + cardCount);
             return;
         }
 
-        // 移除4张宝物卡
+        // Remove 4 treasure cards
         List<Card> cardsToRemove = new ArrayList<>();
         int removed = 0;
 
@@ -717,48 +717,48 @@ public class GameController {
             }
         }
 
-        // 从玩家手牌中移除这些卡，不再丢弃到弃牌堆（直接销毁）
+        // Remove these cards from player's hand (directly destroy, not discard)
         for (Card card : cardsToRemove) {
             player.getHandCard().removeCard(card);
             playerInfoViews.get(playerIndex).removeCard(card);
-            // 不再调用 treasureDeck.discard(card);
+            // No longer call treasureDeck.discard(card);
         }
 
-        // 记录宝物收集
+        // Record treasure collection
         treasureDeck.recordTreasureCollection(matchingTreasureType);
 
-        // 更新宝物视图
+        // Update treasure view
         int treasureIndex = getTreasureIndex(matchingTreasureType);
         updateTreasureViewStatus(treasureIndex, true);
 
-        System.out.println("成功获取宝物：" + matchingTreasureType.getDisplayName());
-        JOptionPane.showMessageDialog(null, "成功获取宝物：" + matchingTreasureType.getDisplayName() + "！");
+        System.out.println("Successfully acquired treasure: " + matchingTreasureType.getDisplayName());
+        JOptionPane.showMessageDialog(null, "Successfully acquired treasure: " + matchingTreasureType.getDisplayName() + "!");
 
-        // 检查是否收集齐所有宝物
+        // Check if all treasures have been collected
         if (treasureDeck.allTreasuresCollected()) {
-            System.out.println("已收集齐全部宝物！");
-            JOptionPane.showMessageDialog(null, "恭喜！已收集齐全部宝物！现在前往直升机场逃离岛屿吧！");
+            System.out.println("All treasures collected!");
+            JOptionPane.showMessageDialog(null, "Congratulations! All treasures collected! Now head to the helipad to escape the island!");
         }
 
-        // 消耗一个行动点
+        // Consume one action point
         PlayerInfoView playerView = playerInfoViews.get(playerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         playerView.setActionPoints(currentActions - 1);
 
-        // 新增：如果行动点为0，自动切换回合
+        // New: If action points reach 0, automatically switch turns
         if (currentActions - 1 == 0) {
             endTurn(playerIndex);
         }
 
-        System.out.println("========== 获取宝物处理完成 ==========\n");
+        System.out.println("========== Treasure acquisition handling completed ==========\n");
     }
 
     /**
-     * 统计玩家拥有的每种宝物卡的数量
+     * Count the number of each treasure card a player has
      * 
-     * @param player 玩家
-     * @return 每种宝物卡的数量
+     * @param player The player
+     * @return Count of each treasure card type
      */
     private Map<TreasureType, Integer> countTreasureCards(Player player) {
         Map<TreasureType, Integer> treasureCardCounts = new HashMap<>();
@@ -775,56 +775,56 @@ public class GameController {
     }
 
     /**
-     * 根据瓦片名称获取对应的宝物类型
+     * Get the treasure type corresponding to a tile name
      * 
-     * @param tileName 瓦片名称
-     * @return 对应的宝物类型，如果不是宝物地点则返回null
+     * @param tileName Tile name
+     * @return Corresponding treasure type, or null if not a treasure location
      */
     private TreasureType getTreasureTypeForTile(TileName tileName) {
         switch (tileName) {
             case TEMPLE_OF_THE_MOON:
             case TEMPLE_OF_THE_SUN:
-                return TreasureType.EARTH; // 地球宝藏 - 神庙
+                return TreasureType.EARTH; // Earth treasure - temples
             case WHISPERING_GARDEN:
             case HOWLING_GARDEN:
-                return TreasureType.WIND; // 风之宝藏 - 花园
+                return TreasureType.WIND; // Wind treasure - gardens
             case CAVE_OF_SHADOWS:
             case CAVE_OF_EMBERS:
-                return TreasureType.FIRE; // 火焰宝藏 - 洞穴
+                return TreasureType.FIRE; // Fire treasure - caves
             case CORAL_PALACE:
             case TIDAL_PALACE:
-                return TreasureType.WATER; // 水之宝藏 - 宫殿
+                return TreasureType.WATER; // Water treasure - palaces
             default:
-                return null; // 不是宝物地点
+                return null; // Not a treasure location
         }
     }
 
     /**
-     * 获取宝物类型对应的宝物视图索引
+     * Get the view index for a treasure type
      * 
-     * @param treasureType 宝物类型
-     * @return 宝物视图索引
+     * @param treasureType Treasure type
+     * @return Treasure view index
      */
     private int getTreasureIndex(TreasureType treasureType) {
         switch (treasureType) {
             case EARTH:
-                return 0; // Earth索引为0
+                return 0; // Earth index is 0
             case FIRE:
-                return 1; // Fire索引为1
+                return 1; // Fire index is 1
             case WIND:
-                return 2; // Wind索引为2
+                return 2; // Wind index is 2
             case WATER:
-                return 3; // Water索引为3
+                return 3; // Water index is 3
             default:
                 return -1;
         }
     }
 
     /**
-     * 更新宝物视图的状态
+     * Update treasure view status
      * 
-     * @param treasureIndex 宝物索引
-     * @param found         是否已找到宝物
+     * @param treasureIndex Treasure index
+     * @param found Whether treasure has been found
      */
     private void updateTreasureViewStatus(int treasureIndex, boolean found) {
         if (boardView != null) {
@@ -834,15 +834,15 @@ public class GameController {
                 return;
             }
         }
-        System.out.println("无法找到TreasureView，宝物状态更新失败");
+        System.out.println("Unable to find TreasureView, treasure status update failed");
     }
 
     /**
-     * 移动玩家到指定位置
+     * Move player to specified position
      * 
-     * @param playerIndex 玩家索引
-     * @param row         目标行
-     * @param col         目标列
+     * @param playerIndex Player index
+     * @param row Target row
+     * @param col Target column
      */
     public void movePlayer(int playerIndex, int row, int col) {
         if (playerIndex < 0 || playerIndex >= players.size()) {
@@ -851,39 +851,39 @@ public class GameController {
 
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
-        System.out.printf("玩家 %d 当前位置: %s [%d, %d]\n",
+        System.out.printf("Player %d current position: %s [%d, %d]\n",
                 playerIndex + 1,
                 currentTile.getName(),
                 currentTile.getRow(),
                 currentTile.getCol());
 
-        // 获取目标板块对象（唯一Tile）
+        // Get target tile object (unique Tile)
         Tile targetTile = mapController.getMapView().getTile(row, col);
         if (targetTile != null) {
-            // 隐藏原位置的玩家图像
+            // Hide player image at original position
             mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(), playerIndex);
 
-            // 更新玩家位置
+            // Update player position
             player.setCurrentTile(targetTile);
 
-            // 显示新位置的玩家图像
+            // Show player image at new position
             String roleName = player.getRole().getClass().getSimpleName().toLowerCase();
             String playerImagePath = "src/resources/Player/" + roleName + "2.png";
             mapController.getMapView().showPlayerImage(row, col, playerImagePath, playerIndex);
 
-            // 减少行动点数
+            // Decrease action points
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             String actionText = playerView.getActionPointsLabel().getText();
             int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
             playerView.setActionPoints(currentActions - 1);
 
-            System.out.printf("玩家 %d 移动到: %s [%d, %d]\n",
+            System.out.printf("Player %d moved to: %s [%d, %d]\n",
                     playerIndex + 1,
                     targetTile.getName(),
                     targetTile.getRow(),
                     targetTile.getCol());
 
-            // 检查行动点数是否为0，如果是则自动结束回合
+            // Check if action points reached 0, if so automatically end turn
             if (currentActions - 1 == 0) {
                 endTurn(playerIndex);
             }
@@ -893,20 +893,20 @@ public class GameController {
     public void endTurn(int playerIndex) {
         Player currentPlayer = players.get(playerIndex);
 
-        // 在回合结束时抽两张宝藏卡
+        // Draw two treasure cards at end of turn
         List<Card> drawnCards = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
             Card card = treasureDeck.draw();
             if (card != null) {
                 drawnCards.add(card);
-                // 直接添加卡牌到玩家手中，不检查手牌上限
+                // Add cards directly to player's hand without checking hand limit
                 currentPlayer.getHandCard().addCardWithoutCheck(card);
                 PlayerInfoView playerInfoView = playerInfoViews.get(playerIndex);
                 cardController.addCard(playerInfoView, card);
             }
         }
 
-        // 检查是否有WaterRise卡牌并立即使用
+        // Check for WaterRise cards and use them immediately
         List<Card> cards = currentPlayer.getHandCard().getCards();
         for (Card card : new ArrayList<>(cards)) {
             if (card instanceof WaterRiseCard) {
@@ -914,69 +914,69 @@ public class GameController {
                 currentPlayer.getHandCard().removeCard(card);
                 playerInfoViews.get(playerIndex).removeCard(card);
                 treasureDeck.discard(card);
-                // 更新水位
+                // Update water level
                 currentWaterLevel++;
                 waterLevelView.updateWaterLevel(currentWaterLevel);
-                JOptionPane.showMessageDialog(null, "水位上升了一格！当前水位：" + currentWaterLevel);
+                JOptionPane.showMessageDialog(null, "Water level has risen by one! Current water level: " + currentWaterLevel);
             }
         }
 
-        // 检查手牌数量，如果超过5张，进入弃牌阶段
+        // Check hand size, if over 5 cards, enter discard phase
         int cardCount = currentPlayer.getHandCard().getCards().size();
-        System.out.println("当前玩家手牌数量: " + cardCount); // 调试信息
+        System.out.println("Current player hand size: " + cardCount); // Debug info
 
         if (cardCount > 5) {
             int cardsToDiscard = cardCount - 5;
-            System.out.println("需要弃掉 " + cardsToDiscard + " 张卡牌"); // 调试信息
+            System.out.println("Need to discard " + cardsToDiscard + " cards"); // Debug info
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
 
-            // 禁用所有动作按钮，只允许选择弃牌
+            // Disable all action buttons, only allow card selection
             playerView.setButtonsEnabled(false);
 
-            // 启用卡牌选择模式
-            System.out.println("准备进入弃牌模式，当前玩家: " + playerIndex); // 调试信息
+            // Enable card discard mode
+            System.out.println("Preparing to enter discard mode, current player: " + playerIndex); // Debug info
             cardController.enableDiscardMode(playerView, cardsToDiscard);
-            System.out.println("已进入弃牌模式"); // 调试信息
-            return; // 不开始新回合，等待玩家选择弃牌
+            System.out.println("Entered discard mode"); // Debug info
+            return; // Don't start new turn, wait for player to discard cards
         }
 
-        // 检查行动点数是否为0，如果是则开始新回合
+        // Check if action points are 0, if so start new turn
         PlayerInfoView playerView = playerInfoViews.get(playerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
 
         if (currentActions == 0) {
-            // 只有在不需要弃牌时才直接开始新回合
+            // Only start new turn directly if no discarding is needed
             startNewTurn();
         }
     }
 
-    // 添加设置MapView的方法
+    // Add method to set MapView
     public void setMapView(MapView mapView) {
-        System.out.println("\n========== 设置MapView ==========");
-        System.out.println("MapView对象: " + (mapView != null ? "非空" : "为空"));
+        System.out.println("\n========== Setting MapView ==========");
+        System.out.println("MapView object: " + (mapView != null ? "not null" : "null"));
         this.tilePosition = mapView.getTilePosition();
         this.mapController = new MapController(this, mapView);
 
-        // 每次设置地图时都重新初始化洪水牌堆
+        // Reinitialize flood deck each time map is set
         List<Tile> allTiles = mapView.getAllTiles();
         this.floodDeck = new FloodDeck(allTiles);
-        System.out.println("tilePosition对象: " + (this.tilePosition != null ? "非空" : "为空"));
+        System.out.println("tilePosition object: " + (this.tilePosition != null ? "not null" : "null"));
         if (this.tilePosition != null) {
             Map<String, int[]> positions = this.tilePosition.getAllTilePositions();
-            System.out.println("可用板块数量: " + (positions != null ? positions.size() : 0));
+            System.out.println("Available tiles count: " + (positions != null ? positions.size() : 0));
             if (positions != null) {
-                System.out.println("可用板块列表:");
+                System.out.println("Available tiles list:");
                 positions.forEach((name, pos) -> System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
             }
-            // 在设置完tilePosition后初始化玩家位置
-            System.out.println("正在初始化玩家位置...");
+            // Initialize player positions after setting tilePosition
+            System.out.println("Initializing player positions...");
             initializePlayerPositions(mapView);
         }
-        System.out.println("========== MapView设置完成 ==========\n");
+        System.out.println("========== MapView setup completed ==========\n");
     }
 
-    // 获取特定板块的位置
+    // Get position of specific tile
     public int[] getTilePosition(String tileName) {
         if (tilePosition != null) {
             return tilePosition.getTilePosition(tileName);
@@ -984,7 +984,7 @@ public class GameController {
         return null;
     }
 
-    // 获取所有板块位置信息
+    // Get all tile position information
     public Map<String, int[]> getAllTilePositions() {
         if (tilePosition != null) {
             return tilePosition.getAllTilePositions();
@@ -993,105 +993,105 @@ public class GameController {
     }
 
     /**
-     * 初始化玩家位置
-     * 将玩家随机分配到不同的板块上
+     * Initialize player positions
+     * Randomly assign players to different tiles
      */
     private void initializePlayerPositions(MapView mapView) {
-        System.out.println("\n========== 开始初始化玩家位置 ==========");
-        System.out.println("当前玩家数量: " + players.size());
+        System.out.println("\n========== Starting player position initialization ==========");
+        System.out.println("Current player count: " + players.size());
 
         if (tilePosition == null) {
-            System.err.println("错误：tilePosition未初始化");
-            System.out.println("tilePosition对象: " + (tilePosition != null ? "非空" : "为空"));
-            System.out.println("========== 玩家位置初始化失败 ==========\n");
+            System.err.println("Error: tilePosition not initialized");
+            System.out.println("tilePosition object: " + (tilePosition != null ? "not null" : "null"));
+            System.out.println("========== Player position initialization failed ==========\n");
             return;
         }
 
-        // 获取所有可用的板块位置
+        // Get all available tile positions
         Map<String, int[]> allPositions = tilePosition.getAllTilePositions();
-        System.out.println("获取到的板块位置信息: " + (allPositions != null ? "非空" : "为空"));
+        System.out.println("Retrieved tile position info: " + (allPositions != null ? "not null" : "null"));
 
         if (allPositions == null || allPositions.isEmpty()) {
-            System.err.println("错误：没有可用的板块位置");
-            System.out.println("可用板块数量: " + (allPositions != null ? allPositions.size() : 0));
-            System.out.println("========== 玩家位置初始化失败 ==========\n");
+            System.err.println("Error: No available tile positions");
+            System.out.println("Available tiles count: " + (allPositions != null ? allPositions.size() : 0));
+            System.out.println("========== Player position initialization failed ==========\n");
             return;
         }
 
-        System.out.println("可用板块数量: " + allPositions.size());
-        System.out.println("可用板块列表:");
+        System.out.println("Available tiles count: " + allPositions.size());
+        System.out.println("Available tiles list:");
         allPositions.forEach((name, pos) -> System.out.printf("  - %s: [%d, %d]\n", name, pos[0], pos[1]));
 
-        // 将板块位置转换为列表，方便随机选择
+        // Convert tile positions to list for random selection
         List<String> availableTiles = new ArrayList<>(allPositions.keySet());
-        System.out.println("随机打乱前的板块顺序:");
+        System.out.println("Tile order before shuffling:");
         availableTiles.forEach(tile -> System.out.println("  - " + tile));
 
-        java.util.Collections.shuffle(availableTiles); // 随机打乱顺序
+        java.util.Collections.shuffle(availableTiles); // Random shuffle
 
-        System.out.println("随机打乱后的板块顺序:");
+        System.out.println("Tile order after shuffling:");
         availableTiles.forEach(tile -> System.out.println("  - " + tile));
 
-        // 为每个玩家分配位置
-        System.out.println("\n开始为玩家分配位置:");
+        // Assign positions to each player
+        System.out.println("\nStarting player position assignment:");
         for (int i = 0; i < players.size(); i++) {
             if (i >= availableTiles.size()) {
-                System.err.println("警告：可用板块数量不足");
+                System.err.println("Warning: Not enough available tiles");
                 break;
             }
 
             String tileName = availableTiles.get(i);
             int[] position = allPositions.get(tileName);
 
-            System.out.printf("正在为玩家 %d 分配位置:\n", i + 1);
-            System.out.printf("  选择的板块: %s\n", tileName);
-            System.out.printf("  板块位置: [%d, %d]\n", position[0], position[1]);
+            System.out.printf("Assigning position to player %d:\n", i + 1);
+            System.out.printf("  Selected tile: %s\n", tileName);
+            System.out.printf("  Tile position: [%d, %d]\n", position[0], position[1]);
 
-            // 用MapView的Tile对象
+            // Use MapView's Tile object
             Tile tile = mapView.getTile(position[0], position[1]);
             players.get(i).setCurrentTile(tile);
 
-            // 显示玩家图像
+            // Show player image
             String roleName = players.get(i).getRole().getClass().getSimpleName().toLowerCase();
             String playerImagePath = "src/resources/Player/" + roleName + "2.png";
             mapView.showPlayerImage(position[0], position[1], playerImagePath, i);
 
-            System.out.printf("  玩家 %d 位置设置完成\n", i + 1);
+            System.out.printf("  Player %d position set\n", i + 1);
         }
 
-        // 显示所有玩家的位置信息
+        // Display all player position information
         displayPlayerPositions();
-        System.out.println("========== 玩家位置初始化完成 ==========\n");
+        System.out.println("========== Player position initialization completed ==========\n");
     }
 
     /**
-     * 显示所有玩家的位置信息
+     * Display all player position information
      */
     private void displayPlayerPositions() {
-        System.out.println("\n========== 玩家位置信息 ==========");
+        System.out.println("\n========== Player Position Information ==========");
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
             Tile currentTile = player.getCurrentTile();
             if (currentTile != null) {
-                System.out.printf("玩家 %d (%s):\n",
+                System.out.printf("Player %d (%s):\n",
                         i + 1,
-                        player.getRole() != null ? player.getRole().getClass().getSimpleName() : "未分配角色");
-                System.out.printf("  板块: %s\n", currentTile.getName());
-                System.out.printf("  位置: [%d, %d]\n", currentTile.getRow(), currentTile.getCol());
-                System.out.printf("  状态: %s\n", currentTile.getState());
+                        player.getRole() != null ? player.getRole().getClass().getSimpleName() : "No role assigned");
+                System.out.printf("  Tile: %s\n", currentTile.getName());
+                System.out.printf("  Position: [%d, %d]\n", currentTile.getRow(), currentTile.getCol());
+                System.out.printf("  State: %s\n", currentTile.getState());
             } else {
-                System.out.printf("玩家 %d: 未分配位置\n", i + 1);
+                System.out.printf("Player %d: No position assigned\n", i + 1);
             }
         }
         System.out.println("================================\n");
     }
 
     /**
-     * 检查玩家是否可以加固指定瓦片
+     * Check if player can shore up specified tile
      * 
-     * @param playerIndex 玩家索引
-     * @param targetTile  目标瓦片
-     * @return 如果可以加固则返回true
+     * @param playerIndex Player index
+     * @param targetTile  Target tile
+     * @return Returns true if can shore up
      */
     public boolean canShoreUpTile(int playerIndex, Tile targetTile) {
         if (playerIndex != currentPlayerIndex || targetTile == null) {
@@ -1101,7 +1101,7 @@ public class GameController {
         Role role = player.getRole();
         Tile currentTile = player.getCurrentTile();
 
-        // 检查是否有沙袋卡
+        // Check if player has sandbag card
         boolean hasSandbag = false;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
@@ -1110,19 +1110,19 @@ public class GameController {
             }
         }
 
-        // 如果有沙袋卡，可以加固任意被淹没的板块
+        // If has sandbag card, can shore up any flooded tile
         if (hasSandbag && targetTile.getState() == TileState.FLOODED) {
             return true;
         }
 
-        // 检查是否是探险家
+        // Check if is Explorer
         boolean isExplorer = role instanceof Model.Role.Explorer;
 
-        // 计算曼哈顿距离
+        // Calculate Manhattan distance
         int distance = Math.abs(currentTile.getRow() - targetTile.getRow()) +
                 Math.abs(currentTile.getCol() - targetTile.getCol());
 
-        // 如果是探险家，允许斜向加固（距离为2）
+        // If Explorer, allow diagonal shore up (distance 2)
         boolean isAdjacent = isExplorer ? (Math.abs(currentTile.getRow() - targetTile.getRow()) <= 1 &&
                 Math.abs(currentTile.getCol() - targetTile.getCol()) <= 1)
                 : (currentTile.isAdjacentTo(targetTile) || currentTile.equals(targetTile));
@@ -1132,12 +1132,12 @@ public class GameController {
     }
 
     /**
-     * 检查玩家是否可以给卡
+     * Check if player can give card
      * 
-     * @param fromPlayerIndex 给卡玩家索引
-     * @param toPlayerIndex   收卡玩家索引
-     * @param card            要给的卡牌
-     * @return 如果可以给卡则返回true
+     * @param fromPlayerIndex Giving player index
+     * @param toPlayerIndex   Receiving player index
+     * @param card            Card to give
+     * @return Returns true if can give card
      */
     public boolean canGiveCard(int fromPlayerIndex, int toPlayerIndex, Card card) {
         if (fromPlayerIndex != currentPlayerIndex ||
@@ -1154,10 +1154,10 @@ public class GameController {
     }
 
     /**
-     * 检查玩家是否可以使用特殊技能
+     * Check if player can use special skill
      * 
-     * @param playerIndex 玩家索引
-     * @return 如果可以使用特殊技能则返回true
+     * @param playerIndex Player index
+     * @return Returns true if can use special skill
      */
     public boolean canUseSpecialSkill(int playerIndex) {
         if (playerIndex != currentPlayerIndex) {
@@ -1188,29 +1188,29 @@ public class GameController {
     }
 
     /**
-     * View层调用此方法发起给牌流程
+     * View layer calls this method to initiate card giving process
      * 
-     * @return 如果成功发起给牌流程返回true，否则返回false
+     * @return Returns true if successfully initiated card giving process, otherwise false
      */
     public boolean requestGiveCard(int fromPlayerIndex) {
         Player fromPlayer = players.get(fromPlayerIndex);
         List<Integer> candidateIndexes = new ArrayList<>();
         boolean sameLocation = false;
 
-        // 构建玩家选项列表
+        // Build player options list
         List<String> playerOptionsList = new ArrayList<>();
 
-        // 遍历所有玩家
+        // Iterate through all players
         for (int i = 0; i < players.size(); i++) {
             if (i != fromPlayerIndex) {
                 Player targetPlayer = players.get(i);
-                // 检查是否在同一位置
+                // Check if at same location
                 sameLocation = fromPlayer.getCurrentTile().equals(targetPlayer.getCurrentTile());
-                // 如果是信使或者在同一位置，则可以给牌
+                // If Messenger or at same location, can give card
                 if (fromPlayer.getRole() instanceof Model.Role.Messenger || sameLocation) {
                     candidateIndexes.add(i);
-                    String location = sameLocation ? "(同一位置)" : "(不同位置)";
-                    playerOptionsList.add(String.format("玩家%d - %s %s",
+                    String location = sameLocation ? "(Same location)" : "(Different location)";
+                    playerOptionsList.add(String.format("Player %d - %s %s",
                             i + 1,
                             targetPlayer.getRole().getClass().getSimpleName(),
                             location));
@@ -1218,22 +1218,22 @@ public class GameController {
             }
         }
 
-        // 添加取消选项
-        playerOptionsList.add("取消");
+        // Add cancel option
+        playerOptionsList.add("Cancel");
 
         if (candidateIndexes.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "没有可以给牌的玩家！");
+            JOptionPane.showMessageDialog(null, "No players available to give cards to!");
             return false;
         }
 
-        // 将List转换为数组
+        // Convert List to array
         String[] playerOptions = playerOptionsList.toArray(new String[0]);
 
-        // 让玩家选择目标玩家
+        // Let player select target player
         int selectedOption = JOptionPane.showOptionDialog(
                 null,
-                "请选择要给牌的玩家：",
-                "选择目标玩家",
+                "Please select player to give cards to:",
+                "Select Target Player",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -1241,39 +1241,39 @@ public class GameController {
                 playerOptions[0]);
 
         if (selectedOption == -1 || selectedOption == playerOptions.length - 1) {
-            System.out.println("[日志] 玩家取消了选择目标玩家。");
+            System.out.println("[Log] Player canceled target player selection.");
             return false;
         }
 
-        // 获取选中的目标玩家索引
+        // Get selected target player index
         int toPlayerIndex = candidateIndexes.get(selectedOption);
-        System.out.println("[日志] 玩家选择了目标玩家: " + (toPlayerIndex + 1));
+        System.out.println("[Log] Player selected target player: " + (toPlayerIndex + 1));
 
-        // 获取当前玩家的手牌
+        // Get current player's hand cards
         List<Card> handCards = fromPlayer.getHandCard().getCards();
         if (handCards.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "您没有可以给牌的卡牌！");
+            JOptionPane.showMessageDialog(null, "You have no cards to give!");
             return false;
         }
 
-        // 构建卡牌选项
+        // Build card options
         String[] cardOptions = new String[handCards.size() + 1];
         for (int i = 0; i < handCards.size(); i++) {
             Card card = handCards.get(i);
             if (card instanceof TreasureCard) {
                 TreasureCard treasureCard = (TreasureCard) card;
-                cardOptions[i] = treasureCard.getTreasureType().getDisplayName() + "宝藏卡";
+                cardOptions[i] = treasureCard.getTreasureType().getDisplayName() + " Treasure Card";
             } else {
                 cardOptions[i] = card.getClass().getSimpleName();
             }
         }
-        cardOptions[handCards.size()] = "取消";
+        cardOptions[handCards.size()] = "Cancel";
 
-        // 让玩家选择要给的卡牌
+        // Let player select card to give
         int selectedCard = JOptionPane.showOptionDialog(
                 null,
-                "请选择要给的卡牌：",
-                "选择卡牌",
+                "Please select card to give:",
+                "Select Card",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -1281,27 +1281,27 @@ public class GameController {
                 cardOptions[0]);
 
         if (selectedCard == -1 || selectedCard == cardOptions.length - 1) {
-            System.out.println("[日志] 玩家取消了选择卡牌。");
+            System.out.println("[Log] Player canceled card selection.");
             return false;
         }
 
-        // 执行给牌操作
+        // Execute card giving
         Card selectedCardObj = handCards.get(selectedCard);
         cardController.pendingGiveCardPlayerIndex = fromPlayerIndex;
         return cardController.giveCard(fromPlayerIndex, toPlayerIndex, selectedCardObj);
     }
 
     /**
-     * 处理加固操作
+     * Handle shore up action
      * 
-     * @param playerIndex 玩家索引
-     * @return 如果成功发起加固操作返回true，否则返回false
+     * @param playerIndex Player index
+     * @return Returns true if successfully initiated shore up action, otherwise false
      */
     public boolean handleShoreUp(int playerIndex) {
         Player player = players.get(playerIndex);
         Role role = player.getRole();
 
-        // 检查玩家是否有沙袋卡
+        // Check if player has sandbag card
         boolean hasSandbag = false;
         for (Card card : player.getHandCard().getCards()) {
             if (card instanceof SandbagCard) {
@@ -1310,23 +1310,23 @@ public class GameController {
             }
         }
 
-        // 如果没有沙袋卡，检查是否有足够的行动点
+        // If no sandbag card, check if has enough action points
         if (!hasSandbag) {
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             String actionText = playerView.getActionPointsLabel().getText();
             int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
 
             if (currentActions <= 0) {
-                System.out.println("[日志] 玩家没有足够的行动点进行加固");
-                JOptionPane.showMessageDialog(null, "你没有足够的行动点进行加固！");
+                System.out.println("[Log] Player doesn't have enough action points to shore up");
+                JOptionPane.showMessageDialog(null, "You don't have enough action points to shore up!");
                 return false;
             }
         }
 
-        // 如果是工程师，可以加固两个板块
+        // If Engineer, can shore up two tiles
         if (role instanceof Model.Role.Engineer) {
-            System.out.println("[日志] 工程师可以加固两个板块");
-            JOptionPane.showMessageDialog(null, "作为工程师，你可以连续加固最多两个板块！");
+            System.out.println("[Log] Engineer can shore up two tiles");
+            JOptionPane.showMessageDialog(null, "As Engineer, you can shore up two tiles consecutively!");
             engineerShoreUpCount = 0;
             isEngineerShoreUpMode = true;
             engineerSandbagConsumed = false;
@@ -1334,67 +1334,67 @@ public class GameController {
             isEngineerShoreUpMode = false;
         }
 
-        // 进入加固模式，等待玩家选择要加固的瓦片
-        System.out.println("[日志] 进入加固模式，请选择要加固的瓦片");
+        // Enter shore up mode, wait for player to select tile to shore up
+        System.out.println("[Log] Entering shore up mode, please select tile to shore up");
         mapController.enterShoreUpMode(playerIndex);
         return true;
     }
 
     /**
-     * 处理特殊技能
+     * Handle special skill
      * 
-     * @param playerIndex 玩家索引
+     * @param playerIndex Player index
      */
     private void handleSpecialSkill(int playerIndex) {
         Player player = players.get(playerIndex);
         Role role = player.getRole();
 
         if (role == null) {
-            System.out.println("[日志] 玩家没有角色，无法使用特殊技能");
+            System.out.println("[Log] Player has no role, cannot use special skill");
             return;
         }
 
-        // 检查是否可以使用特殊技能
+        // Check if can use special skill
         if (!role.canUseAbility()) {
-            System.out.println("[日志] 当前无法使用特殊技能");
-            JOptionPane.showMessageDialog(null, "当前无法使用特殊技能！");
+            System.out.println("[Log] Cannot use special skill currently");
+            JOptionPane.showMessageDialog(null, "Cannot use special skill currently!");
             return;
         }
 
-        // 根据角色类型处理特殊技能
+        // Handle special skill based on role type
         if (role instanceof Model.Role.Pilot) {
-            // 飞行员可以飞到任何位置
-            System.out.println("[日志] 飞行员可以使用飞行能力");
+            // Pilot can fly to any location
+            System.out.println("[Log] Pilot can use flying ability");
             mapController.enterMoveMode(playerIndex);
             role.useSpecialAbility();
 
-            // 飞行员使用特殊技能后立即消耗一个行动点
+            // Pilot consumes one action point immediately after using special skill
             PlayerInfoView playerView = playerInfoViews.get(playerIndex);
             String actionText = playerView.getActionPointsLabel().getText();
             int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
             playerView.setActionPoints(currentActions - 1);
 
-            // 如果行动点用完，结束回合
+            // If action points exhausted, end turn
             if (currentActions - 1 == 0) {
                 endTurn(playerIndex);
             }
         } else if (role instanceof Model.Role.Navigator) {
-            // 领航员可以移动其他玩家
-            System.out.println("[日志] 领航员可以使用移动其他玩家的能力");
+            // Navigator can move other players
+            System.out.println("[Log] Navigator can use ability to move other players");
             handleNavigatorAbility(playerIndex);
         } else {
-            System.out.println("[日志] 该角色没有需要主动使用的特殊技能");
-            JOptionPane.showMessageDialog(null, "该角色没有需要主动使用的特殊技能！");
+            System.out.println("[Log] This role has no active special skill to use");
+            JOptionPane.showMessageDialog(null, "This role has no active special skill to use!");
         }
     }
 
     /**
-     * 处理领航员的特殊能力
+     * Handle Navigator's special ability
      * 
-     * @param navigatorIndex 领航员玩家索引
+     * @param navigatorIndex Navigator player index
      */
     private void handleNavigatorAbility(int navigatorIndex) {
-        // 获取所有其他玩家
+        // Get all other players
         List<Player> otherPlayers = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
             if (i != navigatorIndex) {
@@ -1403,23 +1403,23 @@ public class GameController {
         }
 
         if (otherPlayers.isEmpty()) {
-            System.out.println("[日志] 没有其他玩家可以移动");
-            JOptionPane.showMessageDialog(null, "没有其他玩家可以移动！");
+            System.out.println("[Log] No other players to move");
+            JOptionPane.showMessageDialog(null, "No other players to move!");
             return;
         }
 
-        // 创建玩家选择对话框
+        // Create player selection dialog
         String[] playerOptions = new String[otherPlayers.size()];
         for (int i = 0; i < otherPlayers.size(); i++) {
             Player p = otherPlayers.get(i);
-            playerOptions[i] = "玩家 " + (players.indexOf(p) + 1) + " (" + p.getRole().getClass().getSimpleName() + ")";
+            playerOptions[i] = "Player " + (players.indexOf(p) + 1) + " (" + p.getRole().getClass().getSimpleName() + ")";
         }
 
-        // 显示玩家选择对话框
+        // Show player selection dialog
         int selectedPlayerIndex = JOptionPane.showOptionDialog(
                 null,
-                "选择要移动的玩家：",
-                "领航员能力",
+                "Select player to move:",
+                "Navigator Ability",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -1427,43 +1427,43 @@ public class GameController {
                 playerOptions[0]);
 
         if (selectedPlayerIndex == -1) {
-            System.out.println("[日志] 玩家取消了选择");
+            System.out.println("[Log] Player canceled selection");
             return;
         }
 
-        // 获取选中的玩家
+        // Get selected player
         Player targetPlayer = otherPlayers.get(selectedPlayerIndex);
         int targetPlayerIndex = players.indexOf(targetPlayer);
 
-        // 设置目标玩家的移动次数为2
+        // Set target player's move count to 2
         PlayerInfoView targetPlayerView = playerInfoViews.get(targetPlayerIndex);
         targetPlayerView.setActionPoints(2);
 
-        // 使用领航员的能力
+        // Use Navigator's ability
         Role navigatorRole = players.get(navigatorIndex).getRole();
         if (navigatorRole != null) {
             navigatorRole.useSpecialAbility();
         }
 
-        // 进入移动模式，但移动的是目标玩家
-        System.out.println("[日志] 进入领航员移动模式，移动玩家 " + (targetPlayerIndex + 1));
+        // Enter move mode, but moving target player
+        System.out.println("[Log] Entering Navigator move mode, moving player " + (targetPlayerIndex + 1));
         mapController.enterNavigatorMoveMode(navigatorIndex, targetPlayerIndex);
 
-        // 显示提示信息
+        // Show message
         JOptionPane.showMessageDialog(null,
-                "玩家 " + (targetPlayerIndex + 1) + " 现在可以移动两次！\n" +
-                        "完成两次移动后，将消耗领航员的一个行动点。",
-                "领航员能力",
+                "Player " + (targetPlayerIndex + 1) + " can now move twice!\n" +
+                        "After completing two moves, will consume one action point from Navigator.",
+                "Navigator Ability",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
-     * 移动其他玩家到指定位置（领航员使用）
+     * Move other player to specified position (used by Navigator)
      * 
-     * @param navigatorIndex    领航员玩家索引
-     * @param targetPlayerIndex 目标玩家索引
-     * @param row               目标行
-     * @param col               目标列
+     * @param navigatorIndex    Navigator player index
+     * @param targetPlayerIndex Target player index
+     * @param row               Target row
+     * @param col               Target column
      */
     public void moveOtherPlayer(int navigatorIndex, int targetPlayerIndex, int row, int col) {
         if (navigatorIndex < 0 || navigatorIndex >= players.size() ||
@@ -1474,71 +1474,71 @@ public class GameController {
 
         Player targetPlayer = players.get(targetPlayerIndex);
         Tile currentTile = targetPlayer.getCurrentTile();
-        System.out.printf("玩家 %d 当前位置: %s [%d, %d]\n",
+        System.out.printf("Player %d current position: %s [%d, %d]\n",
                 targetPlayerIndex + 1,
                 currentTile.getName(),
                 currentTile.getRow(),
                 currentTile.getCol());
 
-        // 获取目标板块对象
+        // Get target tile object
         Tile targetTile = mapController.getMapView().getTile(row, col);
         if (targetTile != null) {
-            // 检查移动是否合法
+            // Check if move is valid
             if (isValidNavigatorMove(targetPlayer, targetTile)) {
-                // 隐藏原位置的玩家图像
+                // Hide player image at original position
                 mapController.getMapView().hidePlayerImage(currentTile.getRow(), currentTile.getCol(),
                         targetPlayerIndex);
 
-                // 更新玩家位置
+                // Update player position
                 targetPlayer.setCurrentTile(targetTile);
 
-                // 显示新位置的玩家图像
+                // Show player image at new position
                 String roleName = targetPlayer.getRole().getClass().getSimpleName().toLowerCase();
                 String playerImagePath = "src/resources/Player/" + roleName + "2.png";
                 mapController.getMapView().showPlayerImage(row, col, playerImagePath, targetPlayerIndex);
 
-                System.out.printf("领航员移动玩家 %d 到: %s [%d, %d]\n",
+                System.out.printf("Navigator moved player %d to: %s [%d, %d]\n",
                         targetPlayerIndex + 1,
                         targetTile.getName(),
                         targetTile.getRow(),
                         targetTile.getCol());
 
-                // 减少目标玩家的移动次数
+                // Decrease target player's move count
                 PlayerInfoView targetPlayerView = playerInfoViews.get(targetPlayerIndex);
                 String actionText = targetPlayerView.getActionPointsLabel().getText();
                 int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
                 targetPlayerView.setActionPoints(currentActions - 1);
 
-                // 如果目标玩家没有剩余移动次数，消耗领航员的一个行动点并退出移动模式
+                // If target player has no remaining moves, consume one action point from Navigator and exit move mode
                 if (currentActions - 1 == 0) {
-                    // 退出领航员移动模式
+                    // Exit Navigator move mode
                     mapController.exitNavigatorMoveMode();
 
-                    // 显示提示信息
+                    // Show message
                     JOptionPane.showMessageDialog(null,
-                            "目标玩家已完成两次移动！\n" +
-                                    "已消耗领航员的一个行动点。",
-                            "领航员能力",
+                            "Target player has completed two moves!\n" +
+                                    "Consumed one action point from Navigator.",
+                            "Navigator Ability",
                             JOptionPane.INFORMATION_MESSAGE);
 
-                    // 消耗领航员的一个行动点
+                    // Consume one action point from Navigator
                     PlayerInfoView navigatorView = playerInfoViews.get(navigatorIndex);
                     String navigatorActionText = navigatorView.getActionPointsLabel().getText();
                     int navigatorActions = Integer.parseInt(navigatorActionText.split(":")[1].trim());
                     navigatorView.setActionPoints(navigatorActions - 1);
 
-                    // 如果领航员没有剩余行动点，结束回合
+                    // If Navigator has no remaining action points, end turn
                     if (navigatorActions - 1 == 0) {
                         endTurn(navigatorIndex);
                     }
                 } else {
-                    // 询问是否继续第二次移动
+                    // Ask if want to continue second move
                     int option = JOptionPane.showConfirmDialog(null,
-                            "是否继续进行第二次移动？\n选择'否'将直接消耗领航员的一个行动点并结束本次能力。",
-                            "领航员能力",
+                            "Continue with second move?\nSelect 'No' will directly consume one action point from Navigator and end this ability.",
+                            "Navigator Ability",
                             JOptionPane.YES_NO_OPTION);
                     if (option == JOptionPane.NO_OPTION) {
-                        // 玩家选择不继续第二次移动
+                        // Player chose not to continue second move
                         mapController.exitNavigatorMoveMode();
                         PlayerInfoView navigatorView = playerInfoViews.get(navigatorIndex);
                         String navigatorActionText = navigatorView.getActionPointsLabel().getText();
@@ -1548,95 +1548,95 @@ public class GameController {
                             endTurn(navigatorIndex);
                         }
                     } else {
-                        // 玩家选择继续，提示还可以移动一次
+                        // Player chose to continue, notify can move once more
                         JOptionPane.showMessageDialog(null,
-                                "玩家 " + (targetPlayerIndex + 1) + " 还可以移动 1 次！",
-                                "领航员能力",
+                                "Player " + (targetPlayerIndex + 1) + " can move 1 more time!",
+                                "Navigator Ability",
                                 JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
             } else {
-                System.out.println("[日志] 非法移动：目标位置不可到达");
-                JOptionPane.showMessageDialog(null, "非法移动：目标位置不可到达", "移动错误", JOptionPane.ERROR_MESSAGE);
+                System.out.println("[Log] Invalid move: Target position unreachable");
+                JOptionPane.showMessageDialog(null, "Invalid move: Target position unreachable", "Move Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     /**
-     * 检查领航员移动其他玩家是否合法
+     * Check if Navigator moving other player is valid
      * 
-     * @param targetPlayer 目标玩家
-     * @param targetTile   目标板块
-     * @return 如果移动合法则返回true
+     * @param targetPlayer Target player
+     * @param targetTile   Target tile
+     * @return Returns true if move is valid
      */
     private boolean isValidNavigatorMove(Player targetPlayer, Tile targetTile) {
-        // 只检查是否沉没，被淹没的瓦片可以移动
+        // Only check if sunk, flooded tiles can be moved to
         if (targetTile.getState() == TileState.SUNK) {
-            System.out.println("目标板块已沉没，无法移动");
+            System.out.println("Target tile is sunk, cannot move");
             return false;
         }
 
         Tile currentTile = targetPlayer.getCurrentTile();
         if (currentTile == null) {
-            System.out.println("无法获取当前板块");
+            System.out.println("Cannot get current tile");
             return false;
         }
 
-        // 检查目标玩家是否是飞行员
+        // Check if target player is Pilot
         boolean isPilot = targetPlayer.getRole() instanceof Model.Role.Pilot;
         if (isPilot) {
             return true;
         }
 
-        // 检查目标玩家是否是潜水员
+        // Check if target player is Diver
         boolean isDiver = targetPlayer.getRole().getClass().getSimpleName().equals("Diver");
         if (isDiver) {
-            // 复用MapController的BFS判定
+            // Reuse MapController's BFS check
             return mapController != null && mapController.isDiverReachable(currentTile, targetTile);
         }
 
-        // 检查目标玩家是否是探险家
+        // Check if target player is Explorer
         boolean isExplorer = targetPlayer.getRole() instanceof Model.Role.Explorer;
         int rowDistance = Math.abs(currentTile.getRow() - targetTile.getRow());
         int colDistance = Math.abs(currentTile.getCol() - targetTile.getCol());
         if (isExplorer) {
             return rowDistance <= 1 && colDistance <= 1;
         }
-        // 其他玩家只能移动到相邻格子
+        // Other players can only move to adjacent tiles
         return (rowDistance == 1 && colDistance == 0) || (rowDistance == 0 && colDistance == 1);
     }
 
     /**
-     * 加固指定瓦片
+     * Shore up specified tile
      *
-     * @param playerIndex 玩家索引
-     * @param row         目标行
-     * @param col         目标列
+     * @param playerIndex Player index
+     * @param row         Target row
+     * @param col         Target column
      */
     public void shoreUpTile(int playerIndex, int row, int col) {
-        System.out.println("\n========== 开始加固板块 ==========");
-        System.out.println("玩家索引: " + playerIndex);
-        System.out.println("目标位置: [" + row + "," + col + "]");
+        System.out.println("\n========== Starting tile shoring up ==========");
+        System.out.println("Player index: " + playerIndex);
+        System.out.println("Target position: [" + row + "," + col + "]");
 
         Player player = players.get(playerIndex);
-        System.out.println("玩家角色: " + player.getRole().getClass().getSimpleName());
-        System.out.println("是否是工程师: " + (player.getRole() instanceof Model.Role.Engineer));
+        System.out.println("Player role: " + player.getRole().getClass().getSimpleName());
+        System.out.println("Is Engineer: " + (player.getRole() instanceof Model.Role.Engineer));
 
         Tile targetTile = mapController.getMapView().getTile(row, col);
-        System.out.println("目标板块: " + targetTile.getName());
-        System.out.println("目标板块状态: " + targetTile.getState());
+        System.out.println("Target tile: " + targetTile.getName());
+        System.out.println("Target tile state: " + targetTile.getState());
 
         if (canShoreUpTile(playerIndex, targetTile)) {
-            System.out.println("可以加固该板块");
+            System.out.println("Can shore up this tile");
             targetTile.setState(TileState.NORMAL);
-            System.out.println("板块已加固，新状态: " + targetTile.getState());
+            System.out.println("Tile shored up, new state: " + targetTile.getState());
 
-            // 检查是否是工程师的第二次加固
+            // Check if Engineer's second shore up
             if (player.getRole() instanceof Model.Role.Engineer) {
-                System.out.println("玩家是工程师，检查是否可以继续加固");
-                System.out.println("当前加固次数: " + engineerShoreUpCount);
+                System.out.println("Player is Engineer, check if can continue shoring up");
+                System.out.println("Current shore up count: " + engineerShoreUpCount);
 
-                // 检查周围是否还有其他可加固的板块
+                // Check if more shoreable tiles nearby
                 boolean hasMoreShoreableTiles = false;
                 Tile currentTile = player.getCurrentTile();
                 for (Tile adjacentTile : currentTile.getAdjacentTiles()) {
@@ -1647,52 +1647,52 @@ public class GameController {
                 }
 
                 if (engineerShoreUpCount < 1 && hasMoreShoreableTiles) {
-                    System.out.println("工程师还可以继续加固");
+                    System.out.println("Engineer can continue shoring up");
                     engineerShoreUpCount++;
-                    System.out.println("加固次数更新为: " + engineerShoreUpCount);
+                    System.out.println("Shore up count updated to: " + engineerShoreUpCount);
                     return;
                 }
             }
 
-            System.out.println("加固动作结束");
+            System.out.println("Shore up action complete");
             endShoreUpAction();
         } else {
-            System.out.println("无法加固该板块");
+            System.out.println("Cannot shore up this tile");
         }
-        System.out.println("========== 加固板块结束 ==========\n");
+        System.out.println("========== Tile shoring up complete ==========\n");
     }
 
     private void endShoreUpAction() {
-        System.out.println("\n========== 结束加固动作 ==========");
-        System.out.println("当前加固次数: " + engineerShoreUpCount);
-        System.out.println("当前玩家角色: " + players.get(currentPlayerIndex).getRole().getClass().getSimpleName());
-        System.out.println("是否是工程师: " + (players.get(currentPlayerIndex).getRole() instanceof Model.Role.Engineer));
+        System.out.println("\n========== Ending shore up action ==========");
+        System.out.println("Current shore up count: " + engineerShoreUpCount);
+        System.out.println("Current player role: " + players.get(currentPlayerIndex).getRole().getClass().getSimpleName());
+        System.out.println("Is Engineer: " + (players.get(currentPlayerIndex).getRole() instanceof Model.Role.Engineer));
 
-        // 更新玩家信息视图
+        // Update player info view
         PlayerInfoView playerView = playerInfoViews.get(currentPlayerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         playerView.setActionPoints(currentActions - 1);
-        System.out.println("已更新玩家行动点数: " + (currentActions - 1));
+        System.out.println("Updated player action points: " + (currentActions - 1));
 
-        // 重置工程师加固次数
+        // Reset Engineer shore up count
         engineerShoreUpCount = 0;
-        System.out.println("加固次数已重置为: " + engineerShoreUpCount);
+        System.out.println("Shore up count reset to: " + engineerShoreUpCount);
 
         mapController.exitShoreUpMode();
-        System.out.println("已退出加固模式");
+        System.out.println("Exited shore up mode");
 
-        // 如果行动点用完，结束回合
+        // If action points exhausted, end turn
         if (currentActions - 1 == 0) {
-            System.out.println("行动点已用完，结束回合");
+            System.out.println("Action points exhausted, ending turn");
             endTurn(currentPlayerIndex);
         }
 
-        System.out.println("========== 加固动作结束完成 ==========\n");
+        System.out.println("========== Shore up action complete ==========\n");
     }
 
     /**
-     * 使用沙袋卡加固任意被淹没的板块
+     * Use sandbag card to shore up any flooded tile
      */
     public void sandbagShoreUpTile(int playerIndex, int row, int col) {
         if (playerIndex < 0 || playerIndex >= players.size()) {
@@ -1701,10 +1701,10 @@ public class GameController {
         Player player = players.get(playerIndex);
         Tile targetTile = mapController.getMapView().getTile(row, col);
         if (targetTile == null || targetTile.getState() != Model.Enumeration.TileState.FLOODED) {
-            JOptionPane.showMessageDialog(null, "只能加固被淹没的板块！");
+            JOptionPane.showMessageDialog(null, "Can only shore up flooded tiles!");
             return;
         }
-        // 查找一张沙袋卡
+        // Find a sandbag card
         Model.Cards.Card sandbagCard = null;
         for (Model.Cards.Card card : player.getHandCard().getCards()) {
             if (card instanceof Model.Cards.SandbagCard) {
@@ -1713,15 +1713,15 @@ public class GameController {
             }
         }
         if (sandbagCard == null) {
-            JOptionPane.showMessageDialog(null, "你没有沙袋卡，无法使用！");
+            JOptionPane.showMessageDialog(null, "You don't have a sandbag card, cannot use!");
             return;
         }
-        // 执行加固
+        // Execute shore up
         targetTile.setState(Model.Enumeration.TileState.NORMAL);
         player.getHandCard().removeCard(sandbagCard);
         playerInfoViews.get(playerIndex).removeCard(sandbagCard);
         treasureDeck.discard(sandbagCard);
-        JOptionPane.showMessageDialog(null, "成功使用沙袋卡修复板块！");
+        JOptionPane.showMessageDialog(null, "Successfully used sandbag card to repair tile!");
     }
 
     public List<Player> getPlayers() {
@@ -1740,16 +1740,16 @@ public class GameController {
         for (PlayerInfoView view : playerInfoViews) {
             view.setButtonsEnabled(false);
         }
-        JOptionPane.showMessageDialog(null, "恭喜！你们集齐宝物并成功逃脱，获得胜利！");
-        System.out.println("========== 游戏胜利 ==========");
-        // 返回主菜单
+        JOptionPane.showMessageDialog(null, "Congratulations! You collected all treasures and escaped, you win!");
+        System.out.println("========== Game Victory ==========");
+        // Return to main menu
         View.MainView mainView = View.MainView.getInstance();
         if (mainView != null) {
             mainView.showStartScreen();
         }
     }
 
-    // 添加设置BoardView的方法
+    // Add method to set BoardView
     public void setBoardView(BoardView boardView) {
         this.boardView = boardView;
     }
@@ -1763,16 +1763,16 @@ public class GameController {
     }
 
     /**
-     * 检查游戏胜利条件
-     * 当所有宝物都被收集且所有玩家都在直升机场时，游戏胜利
+     * Check game win condition
+     * When all treasures are collected and all players are at helipad, game is won
      */
     public void checkGameWin() {
-        // 检查是否收集齐所有宝物
+        // Check if all treasures collected
         if (!treasureDeck.allTreasuresCollected()) {
             return;
         }
 
-        // 检查所有玩家是否都在直升机场
+        // Check if all players at helipad
         boolean allPlayersAtHelicopter = true;
         for (Player player : players) {
             Tile currentTile = player.getCurrentTile();
@@ -1788,16 +1788,16 @@ public class GameController {
     }
 
     public void resumeGiveCardTurn(int playerIndex) {
-        // 检查A是否还有行动点
+        // Check if A still has action points
         PlayerInfoView playerView = playerInfoViews.get(playerIndex);
         String actionText = playerView.getActionPointsLabel().getText();
         int currentActions = Integer.parseInt(actionText.split(":")[1].trim());
         if (currentActions <= 0) {
-            // 没有行动点，直接切换到下一个玩家
+            // No action points, directly switch to next player
             startNewTurn();
             return;
         }
-        // 恢复A的按钮和行动点显示，不切换回合
+        // Restore A's buttons and action points display, don't switch turn
         for (int i = 0; i < playerInfoViews.size(); i++) {
             playerInfoViews.get(i).setButtonsEnabled(i == playerIndex);
         }

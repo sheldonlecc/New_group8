@@ -8,19 +8,35 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * RuleView class represents a full-screen window for displaying game rules.
+ * It shows rule pages in pairs (left and right) with navigation controls.
+ * Users can navigate through pages using buttons or keyboard shortcuts.
+ */
 public class RuleView extends JFrame implements KeyListener {
+    // UI components for rule display
     private JPanel imagePanel;
     private JButton prevButton;
     private JButton nextButton;
     private JButton closeButton;
     private JLabel pageLabel;
+    
+    // Page navigation variables
     private int currentPagePair = 1;
     private final int totalPagePairs = 4;
+    
+    // Image resources
     private Image[] ruleImages;
     private Image backgroundImage;
+    
+    // Layout panels
     private JPanel mainPanel;
     private JPanel controlPanel;
     
+    /**
+     * Constructor for RuleView
+     * Initializes the rule viewer window with all necessary components
+     */
     public RuleView() {
         initializeFrame();
         loadImages();
@@ -35,6 +51,10 @@ public class RuleView extends JFrame implements KeyListener {
         });
     }
     
+    /**
+     * Initialize the main frame properties
+     * Sets up full-screen, undecorated window with key listener
+     */
     private void initializeFrame() {
         setTitle("Game Rules");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -44,6 +64,9 @@ public class RuleView extends JFrame implements KeyListener {
         setFocusable(true);
     }
     
+    /**
+     * Load all required images including background and rule pages
+     */
     private void loadImages() {
         // Load background image
         try {
@@ -53,7 +76,7 @@ public class RuleView extends JFrame implements KeyListener {
             e.printStackTrace();
         }
         
-        // Load rule images
+        // Load rule images (8 pages total)
         ruleImages = new Image[8];
         for (int i = 1; i <= 8; i++) {
             try {
@@ -66,8 +89,11 @@ public class RuleView extends JFrame implements KeyListener {
         }
     }
     
+    /**
+     * Create all UI components including panels, buttons, and labels
+     */
     private void createComponents() {
-        // Main panel with background
+        // Main panel with background painting
         mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -77,9 +103,9 @@ public class RuleView extends JFrame implements KeyListener {
                 }
             }
         };
-        mainPanel.setLayout(null); // 使用绝对布局
+        mainPanel.setLayout(null); // Use absolute layout
         
-        // Image display panel
+        // Image display panel for rule pages
         imagePanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -89,12 +115,12 @@ public class RuleView extends JFrame implements KeyListener {
         };
         imagePanel.setOpaque(false);
         
-        // Control buttons
+        // Create navigation and control buttons
         prevButton = createStyledButton("Previous");
         nextButton = createStyledButton("Next");
         closeButton = createStyledButton("Close");
         
-        // Page label
+        // Page indicator label
         pageLabel = new JLabel();
         pageLabel.setForeground(Color.WHITE);
         pageLabel.setFont(new Font("Arial", Font.BOLD, 12));
@@ -116,47 +142,55 @@ public class RuleView extends JFrame implements KeyListener {
         controlPanel.add(closeButton);
     }
     
+    /**
+     * Create a styled button with consistent appearance and hover effects
+     * @param text The text to display on the button
+     * @return A styled JButton with brown theme and hover effects
+     */
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setBackground(new Color(139, 69, 19, 200)); // 棕色
+        button.setBackground(new Color(139, 69, 19, 200)); 
         button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createRaisedSoftBevelBorder(),
-            BorderFactory.createEmptyBorder(8, 20, 8, 20) // 减少左右内边距从20改为12
+            BorderFactory.createEmptyBorder(8, 20, 8, 20) 
         ));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setOpaque(true);
         
-        // Hover effect - 悬停时的棕色效果
+        // Hover effect - brown color effect on hover
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(160, 82, 45, 220)); // 悬停时的浅棕色
+                button.setBackground(new Color(160, 82, 45, 220)); 
             }
             
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(139, 69, 19, 200)); // 恢复原棕色
+                button.setBackground(new Color(139, 69, 19, 200)); 
             }
         });
         
         return button;
     }
     
+    /**
+     * Setup the layout of components within the main panel
+     */
     private void setupLayout() {
         setContentPane(mainPanel);
         
-        // 添加组件到主面板
+        // Add components to main panel
         mainPanel.add(imagePanel);
         mainPanel.add(controlPanel);
         
-        // 确保控制面板在最上层
+        // Ensure control panel is on top layer
         mainPanel.setComponentZOrder(controlPanel, 0);
         mainPanel.setComponentZOrder(imagePanel, 1);
         
-        // 响应窗口大小变化
+        // Respond to window size changes
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
@@ -165,29 +199,36 @@ public class RuleView extends JFrame implements KeyListener {
             
             @Override
             public void componentShown(java.awt.event.ComponentEvent e) {
-                // 窗口显示时也更新布局
+                // Update layout when window is shown
                 SwingUtilities.invokeLater(() -> updateLayout());
             }
         });
     }
     
+    /**
+     * Update the layout and positioning of components based on current window size
+     */
     private void updateLayout() {
         if (imagePanel != null && controlPanel != null && getWidth() > 0 && getHeight() > 0) {
-            // 图片面板填充整个窗口
+            // Image panel fills the entire window
             imagePanel.setBounds(0, 0, getWidth(), getHeight());
             
-            // 控制面板位于底部，稍微再靠下一点
+            // Control panel at bottom, positioned slightly lower
             int controlHeight = 60;
-            int controlY = getHeight() - controlHeight - 5; // 距离底部5像素（原来是20像素）
+            int controlY = getHeight() - controlHeight - 5;
             controlPanel.setBounds(0, controlY, getWidth(), controlHeight);
             
-            // 强制重绘
+            // Force repaint
             imagePanel.repaint();
             controlPanel.repaint();
             mainPanel.repaint();
         }
     }
     
+    /**
+     * Paint the current pair of rule pages (left and right)
+     * @param g Graphics context for painting
+     */
     private void paintRulePages(Graphics g) {
         if (ruleImages == null) return;
         
@@ -198,9 +239,7 @@ public class RuleView extends JFrame implements KeyListener {
         int panelWidth = imagePanel.getWidth();
         int panelHeight = imagePanel.getHeight();
         
-        if (panelWidth <= 0 || panelHeight <= 0) return;
-        
-        // Calculate page indices
+        // Calculate page indices for current page pair
         int leftPageIndex = (currentPagePair - 1) * 2;
         int rightPageIndex = leftPageIndex + 1;
         
@@ -228,12 +267,19 @@ public class RuleView extends JFrame implements KeyListener {
         g2d.dispose();
     }
     
+    /**
+     * Setup event listeners for all interactive components
+     */
     private void setupEventListeners() {
         prevButton.addActionListener(e -> previousPagePair());
         nextButton.addActionListener(e -> nextPagePair());
         closeButton.addActionListener(e -> dispose());
     }
     
+    /**
+     * Update the display to show the current page pair
+     * Updates page label and button states
+     */
     private void displayCurrentPagePair() {
         // Update page label and button states
         int startPage = (currentPagePair - 1) * 2 + 1;
@@ -247,6 +293,9 @@ public class RuleView extends JFrame implements KeyListener {
         imagePanel.repaint();
     }
     
+    /**
+     * Navigate to the previous page pair
+     */
     private void previousPagePair() {
         if (currentPagePair > 1) {
             currentPagePair--;
@@ -254,6 +303,9 @@ public class RuleView extends JFrame implements KeyListener {
         }
     }
     
+    /**
+     * Navigate to the next page pair
+     */
     private void nextPagePair() {
         if (currentPagePair < totalPagePairs) {
             currentPagePair++;
@@ -261,35 +313,47 @@ public class RuleView extends JFrame implements KeyListener {
         }
     }
     
+    /**
+     * Handle key press events for keyboard navigation
+     * @param e KeyEvent containing the pressed key information
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_A:
+            case KeyEvent.VK_LEFT:   // Left arrow key
+            case KeyEvent.VK_A:      // A key
                 previousPagePair();
                 break;
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_D:
-            case KeyEvent.VK_SPACE:
+            case KeyEvent.VK_RIGHT:  // Right arrow key
+            case KeyEvent.VK_D:      // D key
+            case KeyEvent.VK_SPACE:  // Space bar
                 nextPagePair();
                 break;
-            case KeyEvent.VK_ESCAPE:
+            case KeyEvent.VK_ESCAPE: // Escape key to close
                 dispose();
                 break;
-            case KeyEvent.VK_HOME:
+            case KeyEvent.VK_HOME:   // Home key to go to first page
                 currentPagePair = 1;
                 displayCurrentPagePair();
                 break;
-            case KeyEvent.VK_END:
+            case KeyEvent.VK_END:    // End key to go to last page
                 currentPagePair = totalPagePairs;
                 displayCurrentPagePair();
                 break;
         }
     }
     
+    /**
+     * Handle key typed events (not used in this implementation)
+     * @param e KeyEvent containing the typed key information
+     */
     @Override
     public void keyTyped(KeyEvent e) {}
     
+    /**
+     * Handle key released events (not used in this implementation)
+     * @param e KeyEvent containing the released key information
+     */
     @Override
     public void keyReleased(KeyEvent e) {}
 }

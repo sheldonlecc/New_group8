@@ -9,18 +9,34 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import Controller.AudioManager;
 
+/**
+ * SetupView class represents the game setup screen where players can configure
+ * game settings including player count, map selection, difficulty level, and music preferences.
+ * This panel provides a user-friendly interface for customizing the game before starting.
+ */
 public class SetupView extends JPanel {
+    // Setup confirmation state
     private boolean confirmed = false;
+    
+    // UI components for game configuration
     private JComboBox<String> playerCountSelector;
     private JComboBox<String> mapSelector;
     private JComboBox<String> difficultySelector;
     private JCheckBox musicCheckBox;
+    
+    // Reference to main view and visual resources
     private MainView mainView;
     private Image backgroundImage;
+    
+    // Map preview components
     private JPanel mapPreviewPanel;
     private JLabel[] mapImageLabels;
     private Image[] mapImages;
 
+    /**
+     * Constructor for SetupView
+     * @param mainView Reference to the main view for navigation
+     */
     public SetupView(MainView mainView) {
         this.mainView = mainView;
         try {
@@ -32,6 +48,9 @@ public class SetupView extends JPanel {
         initializeUI();
     }
 
+    /**
+     * Load map preview images for display in the setup screen
+     */
     private void loadMapImages() {
         String[] mapNames = {"CLASSIC", "ADVANCED", "EXPERT"};
         mapImages = new Image[3];
@@ -46,6 +65,10 @@ public class SetupView extends JPanel {
         }
     }
 
+    /**
+     * Paint the background image on the panel
+     * @param g Graphics context for painting
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -54,25 +77,32 @@ public class SetupView extends JPanel {
         }
     }
 
+    /**
+     * Initialize the user interface components and layout
+     */
     private void initializeUI() {
         setPreferredSize(new Dimension(800, 600));
         setLayout(new BorderLayout());
 
-        // 添加更大的顶部空白区域，让选择区域向下移动更多
+        // Add larger top spacer to move selection area down more
         JPanel topSpacer = new JPanel();
         topSpacer.setOpaque(false);
-        topSpacer.setPreferredSize(new Dimension(0, 400)); // 从50增加到100像素
+        topSpacer.setPreferredSize(new Dimension(0, 400)); 
         add(topSpacer, BorderLayout.NORTH);
 
-        // 创建中央控制面板
+        // Create central control panel
         JPanel centerPanel = createCenterPanel();
         add(centerPanel, BorderLayout.CENTER);
 
-        // 创建地图预览面板
+        // Create map preview panel
         createMapPreviewPanel();
         add(mapPreviewPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Create the central panel containing all game setup controls
+     * @return JPanel containing setup controls
+     */
     private JPanel createCenterPanel() {
         JPanel centerPanel = new JPanel();
         centerPanel.setOpaque(false);
@@ -198,14 +228,18 @@ public class SetupView extends JPanel {
         buttonPanel.add(confirmButton);
         buttonPanel.add(Box.createHorizontalStrut(20));
         buttonPanel.add(cancelButton);
+        
         centerPanel.add(buttonPanel, gbc);
         
         return centerPanel;
     }
 
+    /**
+     * Create the map preview panel showing all available maps
+     */
     private void createMapPreviewPanel() {
         mapPreviewPanel = new JPanel();
-        // 增加地图之间的距离从30增加到50
+        // Increase distance between maps from 30 to 50
         mapPreviewPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 150, 20));
         mapPreviewPanel.setOpaque(false);
         mapPreviewPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
@@ -218,16 +252,16 @@ public class SetupView extends JPanel {
             mapContainer.setLayout(new BorderLayout());
             mapContainer.setOpaque(false);
             
-            // 创建地图名称标签
+            // Create map name label
             JLabel nameLabel = new JLabel(mapNames[i]);
             nameLabel.setForeground(Color.WHITE);
             nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
             nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
             
-            // 创建地图图片标签
+            // Create map image label
             mapImageLabels[i] = new JLabel();
             if (mapImages[i] != null) {
-                // 缩放图片到合适大小
+                // Scale image to appropriate size
                 Image scaledImage = mapImages[i].getScaledInstance(180, 180, Image.SCALE_SMOOTH);
                 mapImageLabels[i].setIcon(new ImageIcon(scaledImage));
             }
@@ -240,37 +274,56 @@ public class SetupView extends JPanel {
             mapPreviewPanel.add(mapContainer);
         }
         
-        // 初始化时高亮第一个地图
+        // Highlight first map on initialization
         updateMapPreview();
     }
     
+    /**
+     * Update the map preview to highlight the currently selected map
+     */
     private void updateMapPreview() {
         int selectedIndex = mapSelector.getSelectedIndex();
         
         for (int i = 0; i < mapImageLabels.length; i++) {
             if (i == selectedIndex) {
-                // 高亮选中的地图
+                // Highlight selected map
                 mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
             } else {
-                // 普通边框
+                // Normal border
                 mapImageLabels[i].setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
             }
         }
     }
 
+    /**
+     * Check if the setup has been confirmed by the user
+     * @return true if setup is confirmed, false otherwise
+     */
     public boolean isConfirmed() {
         return confirmed;
     }
 
+    /**
+     * Get the selected number of players
+     * @return The number of players selected (2, 3, or 4)
+     */
     public int getPlayerCount() {
         String selected = (String) playerCountSelector.getSelectedItem();
         return Character.getNumericValue(selected.charAt(0));
     }
 
+    /**
+     * Get the selected map name
+     * @return The name of the selected map
+     */
     public String getSelectedMap() {
         return (String) mapSelector.getSelectedItem();
     }
 
+    /**
+     * Get the initial water level based on selected difficulty
+     * @return The initial water level (1-4 corresponding to difficulty)
+     */
     public int getInitialWaterLevel() {
         int selectedIndex = difficultySelector.getSelectedIndex();
         return selectedIndex + 1; // NOVICE=1, NORMAL=2, ELITE=3, LEGENDAIRE=4
