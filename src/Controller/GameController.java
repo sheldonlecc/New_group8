@@ -356,7 +356,7 @@ public class GameController {
         mapController.enterEmergencyMoveMode(playerIndex, availableTiles);
     }
 
-    // performEmergencyMove完成后，自动处理下一个
+    // performEmergencyMove finished moving
     public boolean performEmergencyMove(int playerIndex, Tile targetTile) {
         Player player = players.get(playerIndex);
         Tile currentTile = player.getCurrentTile();
@@ -387,15 +387,14 @@ public class GameController {
     }
 
     /**
-     * 检查并处理所有需要紧急移动的玩家
+     * Check and handle emergency moves for all players
      * 
-     * @return 如果所有玩家都成功移动返回true，否则返回false
+     * @return If all players have successfully moved, return true, otherwise return false
      */
     private boolean checkAndHandleEmergencyMoves() {
         System.out.println("\n========== Checking Emergency Moves ==========");
         boolean allSuccess = true;
 
-        // 收集所有需要紧急移动的玩家
         List<Integer> playersToMove = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
@@ -404,7 +403,6 @@ public class GameController {
             }
         }
 
-        // 逐个处理需要移动的玩家
         for (int playerIndex : playersToMove) {
             if (!handleEmergencyMove(playerIndex)) {
                 allSuccess = false;
@@ -422,12 +420,10 @@ public class GameController {
         currentPlayerView.setActionPoints(MAX_ACTIONS_PER_TURN);
         updatePlayerView(currentPlayerIndex);
 
-        // 更新所有玩家的按钮状态
         for (int i = 0; i < playerInfoViews.size(); i++) {
             playerInfoViews.get(i).setButtonsEnabled(i == currentPlayerIndex);
         }
 
-        // 检查水位是否达到10
         if (currentWaterLevel >= 10) {
             System.out.println("\n========== Game Over ==========");
             System.out.println("Water level has reached 10, game over!");
@@ -438,7 +434,6 @@ public class GameController {
 
         System.out.println("\n========== Drawing Flood Cards ==========");
         int floodCardCount;
-        // 根据水位决定抽取的洪水卡数量
         if (currentWaterLevel <= 2) {
             floodCardCount = 2;
         } else if (currentWaterLevel <= 5) {
@@ -484,7 +479,6 @@ public class GameController {
                         ", State change: " + stateChange +
                         ", Current state: " + stateMsg);
 
-                // 如果板块沉没，立即检查是否有玩家需要紧急移动
                 if (targetTile.getState() == TileState.SUNK) {
                     System.out.println("[Log] Tile " + targetTile.getName() + " has sunk, checking if players need emergency movement");
                     for (int j = 0; j < players.size(); j++) {
@@ -505,11 +499,9 @@ public class GameController {
         }
         System.out.println("========== Flood Card Drawing Complete ==========");
 
-        // 检查所有失败条件
         checkGameOver();
     }
 
-    // 游戏失败判定
     private void checkGameOver() {
         // 1. Fool's Landing sinks
         Tile foolsLanding = null;
