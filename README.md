@@ -64,6 +64,7 @@ Multiple object-oriented design patterns were applied in this project to enhance
 
 The project source code is organized according to the MVC architectural pattern:
 
+```plaintext
 src/  
 ├── Controller/                # Controller Layer  
 │   ├── GameController.java  
@@ -86,12 +87,14 @@ src/
 │   ├── MapView.java  
 │   └── PlayerInfoView.java  
 └── resources/                 # Resource Files (images, audio, etc.)
+```
 
 ## 👥 Team Members (Group 8)
 
 * **Zhixiao Li (23219669):** Model / Testing
 * **Jiuzhou Zhu (23219655):** View / Foundation Framework
 * **Haoyang You (23219612):** Controller / Testing
+
 
 
 
