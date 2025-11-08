@@ -24,11 +24,9 @@ This project was developed as a course project for "COMP2008J Software Engineeri
 
 ## 📸 Project Screenshots
 
-*(It is highly recommended to upload screenshots from your Phase-2 report (pages 33-35), such as the main menu, game setup screen, and main game interface, and display them here.)*
+**Main Game Interface:**
 
-**Main Game Interface (Example):**
-
-**Game Setup (Example):**
+**Game Setup:**
 
 ## 🛠️ Tech Stack & Architecture
 
@@ -58,35 +56,35 @@ Multiple object-oriented design patterns were applied in this project to enhance
 
 The project source code is organized according to the MVC architectural pattern:
 
-src/ 
-├── Controller/ # Controller Layer 
-│ ├── GameController.java 
-│ ├── CardController.java 
-│ ├── MapController.java 
-│ ├── RoleManager.java 
-│ └── AudioManager.java 
-├── Model/ # Model Layer 
-│ ├── Player.java 
-│ ├── Tile.java 
-│ ├── WaterLevel.java 
-│ ├── Cards/ 
-│ ├── Deck/ 
-│ ├── Enumeration/ 
-│ └── Role/ 
-├── View/ # View Layer 
-│ ├── MainView.java 
-│ ├── SetupView.java 
-│ ├── BoardView.java 
-│ ├── MapView.java 
-│ └── PlayerInfoView.java 
-└── resources/ # Resource Files (images, audio, etc.)
-
+src/  
+├── Controller/                # Controller Layer  
+│   ├── GameController.java  
+│   ├── CardController.java  
+│   ├── MapController.java  
+│   ├── RoleManager.java  
+│   └── AudioManager.java  
+├── Model/                     # Model Layer  
+│   ├── Player.java  
+│   ├── Tile.java  
+│   ├── WaterLevel.java  
+│   ├── Cards/  
+│   ├── Deck/  
+│   ├── Enumeration/  
+│   └── Role/  
+├── View/                      # View Layer  
+│   ├── MainView.java  
+│   ├── SetupView.java  
+│   ├── BoardView.java  
+│   ├── MapView.java  
+│   └── PlayerInfoView.java  
+└── resources/                 # Resource Files (images, audio, etc.)
 
 ## 👥 Team Members (Group 8)
 
 * **Zhixiao Li (23219669):** Model / Foundation Framework / Testing
 * **Jiuzhou Zhu (23219655):** View / Testing
 * **Haoyang You (23219612):** Controller / Testing
+
 
 
 
