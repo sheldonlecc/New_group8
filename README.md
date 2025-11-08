@@ -81,9 +81,10 @@ src/
 
 ## 👥 Team Members (Group 8)
 
-* **Zhixiao Li (23219669):** Model / Foundation Framework / Testing
-* **Jiuzhou Zhu (23219655):** View / Testing
+* **Zhixiao Li (23219669):** Model / Testing
+* **Jiuzhou Zhu (23219655):** View / Foundation Framework
 * **Haoyang You (23219612):** Controller / Testing
+
 
 
 
