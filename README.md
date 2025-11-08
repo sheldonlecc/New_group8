@@ -25,16 +25,16 @@ This project was developed as a course project for "COMP2008J Software Engineeri
 ## 📸 Project Screenshots
 
 ## Main Page
-![Main Page](MainPage.png)
+![Main Page](src/resources/img/MainPage.png)
 
 ## Set Up Page
-![Set Up Page](SetupPage.png)
+![Set Up Page](src/resources/img/SetupPage.png)
 
 ## Rules Page
-![Rules Page](RulesPage.png)
+![Rules Page](src/resources/img/RulesPage.png)
 
 ## Game Page
-![Game Page](GamePage.png)
+![Game Page](src/resources/img/GamePage.png)
 
 ## 🛠️ Tech Stack & Architecture
 
