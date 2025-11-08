@@ -24,9 +24,17 @@ This project was developed as a course project for "COMP2008J Software Engineeri
 
 ## 📸 Project Screenshots
 
-**Main Game Interface:**
+## Main Page
+![Main Page](Main Page.png)
 
-**Game Setup:**
+## Set Up Page
+![Set Up Page](Set up.png)
+
+## Rules Page
+![Rules Page](Rules Page.png)
+
+## Game Page
+![Game Page](Game Page.png)
 
 ## 🛠️ Tech Stack & Architecture
 
@@ -84,6 +92,7 @@ src/
 * **Zhixiao Li (23219669):** Model / Testing
 * **Jiuzhou Zhu (23219655):** View / Foundation Framework
 * **Haoyang You (23219612):** Controller / Testing
+
 
 
 
