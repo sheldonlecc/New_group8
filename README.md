@@ -25,16 +25,16 @@ This project was developed as a course project for "COMP2008J Software Engineeri
 ## 📸 Project Screenshots
 
 ## Main Page
-![Main Page](Main Page.png)
+![Main Page](MainPage.png)
 
 ## Set Up Page
-![Set Up Page](Set up.png)
+![Set Up Page](SetupPage.png)
 
 ## Rules Page
-![Rules Page](Rules Page.png)
+![Rules Page](RulesPage.png)
 
 ## Game Page
-![Game Page](Game Page.png)
+![Game Page](GamePage.png)
 
 ## 🛠️ Tech Stack & Architecture
 
@@ -92,6 +92,7 @@ src/
 * **Zhixiao Li (23219669):** Model / Testing
 * **Jiuzhou Zhu (23219655):** View / Foundation Framework
 * **Haoyang You (23219612):** Controller / Testing
+
 
 
 
