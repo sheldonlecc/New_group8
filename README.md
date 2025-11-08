@@ -7,13 +7,13 @@ This project is a Java digital version of the classic cooperative board game **"
 ## ✨ Key Features
 
 * **Complete Game Setup:**
-    * [cite_start]**Player Count:** Supports 2-4 players[cite: 1209, 1512, 1515].
-    * [cite_start]**Map Selection:** Offers three different map layouts (Classic, Advanced, Expert)[cite: 1211, 1212, 1213].
-    * [cite_start]**Difficulty Selection:** Provides four difficulty levels (Novice, Normal, Elite, Legendary), which affect the game's initial water level[cite: 1214, 1215, 1216, 1217, 1218, 1454, 1455].
+    * **Player Count:** Supports 2-4 players[cite: 1209, 1512, 1515].
+    * **Map Selection:** Offers three different map layouts (Classic, Advanced, Expert)[cite: 1211, 1212, 1213].
+    * **Difficulty Selection:** Provides four difficulty levels (Novice, Normal, Elite, Legendary), which affect the game's initial water level[cite: 1214, 1215, 1216, 1217, 1218, 1454, 1455].
 * **Core Gameplay Mechanics:**
-    * [cite_start]**Dynamic Island Sinking:** Map tiles dynamically become Flooded and Sunk as Flood cards are drawn[cite: 53, 353, 358, 1233, 1921].
-    * [cite_start]**Treasure Collection:** Players must collect 4 matching Treasure cards and be on the corresponding tile to claim a treasure (4 types total: Earth, Wind, Fire, Water)[cite: 55, 572, 573, 576, 577, 578, 1248, 1249, 1250, 1251, 1252, 1599, 1949].
-    * [cite_start]**Card System:** Includes a Treasure Deck and a Flood Deck[cite: 52, 175, 176, 508, 513, 515, 516]. [cite_start]The Treasure Deck also contains special cards (Sandbag, Helicopter, and Water Rise)[cite: 457, 458, 459, 1254, 1255, 1256, 1257].
+    * **Dynamic Island Sinking:** Map tiles dynamically become Flooded and Sunk as Flood cards are drawn[cite: 53, 353, 358, 1233, 1921].
+    * **Treasure Collection:** Players must collect 4 matching Treasure cards and be on the corresponding tile to claim a treasure (4 types total: Earth, Wind, Fire, Water)[cite: 55, 572, 573, 576, 577, 578, 1248, 1249, 1250, 1251, 1252, 1599, 1949].
+    * **Card System:** Includes a Treasure Deck and a Flood Deck[cite: 52, 175, 176, 508, 513, 515, 516]. [cite_start]The Treasure Deck also contains special cards (Sandbag, Helicopter, and Water Rise)[cite: 457, 458, 459, 1254, 1255, 1256, 1257].
     * [cite_start]**Water Level Management:** The water level rises throughout the game, increasing the number of Flood cards drawn each turn and raising the difficulty[cite: 54, 174, 380, 381, 385, 386, 1241, 1243, 1455].
 * **Role System:**
     * [cite_start]**6 Unique Roles:** At the start of the game, players are randomly assigned one of 6 roles, each with a unique special ability[cite: 281, 1936].
@@ -51,4 +51,5 @@ Multiple object-oriented design patterns were applied in this project to enhance
 * [cite_start]**Zhixiao Li (23219669):** Model / Foundation Framework / Testing [cite: 11, 1314]
 * [cite_start]**Jiuzhou Zhu (23219655):** View / Testing [cite: 11, 1314]
 * [cite_start]**Haoyang You (23219612):** Controller / Testing [cite: 11, 1315]
+
 
